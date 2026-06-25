@@ -754,6 +754,92 @@ Actions Euro/Monde/Émerg. & 3 & B & EM (Hamilton+Kim) / BS par régime \\
 \end{table}
 
 % =====================================================================
+\section{Algorithme d'implémentation (prêt pour automatisation)}
+\label{sec:algo}
+% =====================================================================
+
+Cette section spécifie, de bout en bout, l'algorithme du cadre d'application (\S\ref{sec:appli}) sous une forme directement implémentable (par un humain ou un agent). Deux options de configuration y sont intégrées~: (O1)~\textbf{fixer certains paramètres} au calibrage (les autres restant estimés)~; (O2)~rendre, au choix, \textbf{certaines corrélations insensibles au régime} $\Ecal$.
+
+\subsection{Contrats d'entrée / sortie}
+\begin{definitionbox}
+\textbf{Entrées.}
+\begin{itemize}[nosep]
+\item Séries mensuelles alignées (après pré-traitements), $t=0,\dots,n$~: $q^s,q^l$ (inflation), $r,l$ (taux réels), $s^{\mathrm{cr}}>0$ (spread CIR), $s^{\mathrm{pd}}>0$ (spread dette privée~; $y^{\mathrm{pd}}=\ln s^{\mathrm{pd}}$), $x^{\mathrm{pe}},x^{\mathrm{re}},x^{\mathrm{in}}$ et $x^{\mathrm{eu}},x^{\mathrm{wd}},x^{\mathrm{em}}$ (log-rendements).
+\item Pas $\Dt=1/12$.
+\item Config~: $\mathcal F$ (paramètres fixés, O1), $S$ (masque de sensibilité au régime, O2), $K_{\max}$, plancher de variance $\underline v$, tolérance/itérations EM, $N$ (trajectoires), horizon $T$, graine.
+\end{itemize}
+\textbf{Sorties.} Marges estimées par facteur~; $\hat P,\hat\pi,K^\star$~; $\{\Omega^{\mathrm{SDP}}(a),L(a)\}_{a\le K^\star}$~; trajectoires simulées~; diagnostics.
+\end{definitionbox}
+
+\subsection{Les deux options de configuration}
+
+\paragraph{(O1) Paramètres fixés $\mathcal F$.} $\mathcal F$ associe à un nom de paramètre une valeur imposée (sinon le paramètre est \emph{libre}). Principe~: \textbf{vraisemblance profilée} --- on maximise la vraisemblance conditionnelle sur les seuls paramètres \emph{libres}, les fixés restant à leur valeur. Pour une marge gaussienne à moyenne imposée, c'est une \emph{MCO contrainte} (régression « passant par la moyenne fixée »), en forme fermée~; sinon on profile l'objectif (EM ou numérique) sur le sous-ensemble libre. Cas d'usage~: épingler $\mu_l$ (cible COR), $\theta^p$ (cible incluant la prime de liquidité), une volatilité à dire d'expert, ou le nombre d'états $K$. Les valeurs de $\mathcal F$ servent aussi au calcul des résidus PIT et à la simulation.
+
+\paragraph{(O2) Sensibilité des corrélations au régime, masque $S$.} $S\in\{0,1\}^{d\times d}$ symétrique~: $S_{ij}=1$ $\Rightarrow$ l'entrée $(i,j)$ de $\Omega$ est \emph{propre au régime}~; $S_{ij}=0$ $\Rightarrow$ elle est \emph{commune}, donc \emph{insensible} à $\Ecal$. Préréglages~: \texttt{full} ($S\equiv1$, défaut --- dépendance pleinement par régime)~; \texttt{none} ($S\equiv0$ --- une seule $\Omega$ commune)~; \texttt{blocB} ($S_{ij}=1$ uniquement sur le bloc actions et ses croisements)~; ou masque sur mesure (p.\,ex.\ corrélations de taux insensibles, dépendances actions/crédit sensibles).
+
+\subsection{Pseudo-code maître}
+\begin{algobox}[\textsc{CalibrateAndSimulate}$(\text{données},\mathcal F,S,\dots)$]
+\begin{enumerate}[leftmargin=1.5em,nosep]
+\item \textbf{Étape 1 --- marges Groupe~A.} Pour chaque $i\in A$~: $\hat\theta_i\leftarrow\textsc{FitMargin}_i(\text{série};\mathcal F)$ (sous-routines ci-dessous)~; calculer les résidus PIT $\widehat\eps^{(i)}$ (\S\ref{sec:residus}, avec les valeurs de $\mathcal F$).
+\item \textbf{Étape 2 --- marges Groupe~B + régime.} Si $K\in\mathcal F$, poser $K^\star=K$~; sinon, pour $K=1,\dots,K_{\max}$, lancer \textsc{FitGroupB-EM}$(X^B,K;\mathcal F)$, relever $\ell^\star(K)$, retenir $K^\star=\argmin_K\mathrm{BIC}(K)$. Sortir $\hat P,\hat\pi,\{m^j_a,v^j_a\},\hat\xi_t(a)$~; résidus $\widehat\eps^{B}$.
+\item \textbf{Étape 3 --- dépendance.} $\{\Omega^{\mathrm{SDP}}(a)\}\leftarrow\textsc{EstimateDependence}(\widehat\eps,\hat\xi,S)$~; poser $L(a)=\chol(\Omega^{\mathrm{SDP}}(a))$.
+\item \textbf{Simulation.} Pour $N$ trajectoires, dérouler la simulation jointe (\S\ref{sec:appli}, algorithme de simulation complet).
+\item \textbf{Diagnostics} (optionnel)~: uniformité PIT, blancheur des résidus, réplication des moments cibles.
+\end{enumerate}
+\end{algobox}
+
+\subsection{Sous-routines de calibrage à paramètres fixables (O1)}
+
+\paragraph{\textsc{FitScalarOU}$(y;\mathcal F)$ --- BK et brique de base.}
+Modèle $y_{t+\Dt}=\beta y_t+\theta(1-\beta)+\xi$, $\beta=e^{-k\Dt}$, $\bar y_-,\bar y_+$ moyennes de $(y_t),(y_{t+\Dt})$.
+\begin{definitionbox}
+\begin{itemize}[nosep]
+\item \emph{Tout libre}~: $\hat\beta=\frac{\sum(y_t-\bar y_-)(y_{t+\Dt}-\bar y_+)}{\sum(y_t-\bar y_-)^2}$, $\ \hat\theta=\frac{\bar y_+-\hat\beta\bar y_-}{1-\hat\beta}$.
+\item \emph{$\theta$ fixé $=\theta_0$}~: $\hat\beta=\frac{\sum(y_t-\theta_0)(y_{t+\Dt}-\theta_0)}{\sum(y_t-\theta_0)^2}$ (régression \emph{sans constante}).
+\item \emph{$k$ fixé $=k_0$}~: $\beta_0=e^{-k_0\Dt}$ imposé~; $\hat\theta=\frac{\bar y_+-\beta_0\bar y_-}{1-\beta_0}$ (si $\theta$ libre).
+\end{itemize}
+Puis $\hat k=-\ln\hat\beta/\Dt$, résidus $\widehat\xi_{t+\Dt}=y_{t+\Dt}-\hat\beta y_t-\hat\theta(1-\hat\beta)$, $\hat v=\frac1n\sum\widehat\xi^2$. \emph{Si $\sigma$ libre}~: $\hat\sigma=\sqrt{\hat v\,\frac{-2\ln\hat\beta}{\Dt(1-\hat\beta^2)}}$~; \emph{si $\sigma$ fixé $=\sigma_0$}~: la variance conditionnelle servant à standardiser est $\sigma_0^2\frac{1-\hat\beta^2}{2\hat k}$.
+\end{definitionbox}
+
+\paragraph{\textsc{FitV2F}$(q^s,q^l;\mathcal F)$.}
+\begin{definitionbox}
+\begin{itemize}[nosep]
+\item \emph{Moyenne libre}~: MCO multivarié \emph{avec constante} de $X_{t+\Dt}=(q^s_{t+\Dt},q^l_{t+\Dt})$ sur $(1,q^s_t,q^l_t)$ $\Rightarrow\widehat\Phi,\hat c,\widehat\Sigma_{\mathrm{cond}}$ (covariance résiduelle).
+\item \emph{Moyenne fixée $\mu_\infty^0=(\mu^0,\mu^0)$}~: MCO \emph{sans constante} de $(X_{t+\Dt}-\mu_\infty^0)$ sur $(X_t-\mu_\infty^0)$ $\Rightarrow\widehat\Phi$~; $\hat c=(I-\widehat\Phi)\mu_\infty^0$~; $\widehat\Sigma_{\mathrm{cond}}$ = covariance résiduelle.
+\end{itemize}
+Puis $\hat A=-\Dt^{-1}\log\widehat\Phi$ (valeurs propres $\hat\kappa_1,\hat\kappa_2$), $(V_r,V_m)=\diag(\widehat\Sigma_{\mathrm{cond}})$. Fixer un $\kappa_i$ ou une volatilité~: profiler la vraisemblance gaussienne sur les paramètres libres (initialisée par le cas libre, via Lyapunov pour $\sigma_i,\rho$).
+\end{definitionbox}
+
+\paragraph{\textsc{FitBS}$(x;\mathcal F)$.} $\hat m=\frac1n\sum x_t$, $\hat v=\frac1n\sum(x_t-\hat m)^2$~; $\hat\sigma=\sqrt{\hat v/\Dt}$, $\hat\mu=\hat m/\Dt+\frac12\hat\sigma^2$. Si $\mu$ (resp.\ $\sigma$) $\in\mathcal F$, ne pas l'estimer et déduire l'autre du moment correspondant.
+
+\paragraph{\textsc{FitCIR}$(s;\mathcal F)$.} Initialisation Euler fermée ($\hat\kappa=-\hat c_2/\Dt$, $\hat\theta=-\hat c_1/\hat c_2$, $(\hat\sigma)^2=\widehat\Var(\eta)/\Dt$), puis EMV $\chi^2$ décentré \emph{profilé} sur les paramètres libres de $\mathcal F$.
+
+\paragraph{\textsc{FitGroupB-EM}$(X^B,K;\mathcal F)$.} EM (Hamilton $+$ Kim, \S\ref{sec:calib}). À l'étape M, ne mettre à jour que les paramètres \emph{libres}~; les $m_a,v_a,p_{ab}$ listés dans $\mathcal F$ restent à leur valeur. Imposer $v_a\ge\underline v$ et ordonner les régimes par volatilité croissante (anti-\emph{label switching}). Renvoyer $\ell^\star(K),\hat P,\hat\pi,\{m^j_a,v^j_a\},\hat\xi_t(a)$ et les résidus $\widehat\eps^B$.
+
+\subsection{Estimation de la dépendance à sensibilité réglable (O2)}
+\begin{algobox}[\textsc{EstimateDependence}$(\widehat\eps,\hat\xi,S)$]
+Soit $\widehat\eps_t\in\R^{d}$ le résidu standardisé complet. Pour chaque couple $(i,j)$, calculer la corrélation \emph{par régime} et \emph{poolée}~:
+\[
+G^{\mathrm{reg}}_{ij}(a)=\frac{\sum_t\hat\xi_t(a)\,\widehat\eps_{it}\widehat\eps_{jt}}{\sum_t\hat\xi_t(a)},\qquad
+G^{\mathrm{pool}}_{ij}=\frac1n\sum_t\widehat\eps_{it}\widehat\eps_{jt}.
+\]
+Assembler, pour $a=1,\dots,K^\star$, la matrice mixte pilotée par le masque~:
+\[
+\widehat\Omega(a)_{ij}=S_{ij}\,G^{\mathrm{reg}}_{ij}(a)+(1-S_{ij})\,G^{\mathrm{pool}}_{ij}\ \ (i\neq j),\qquad \widehat\Omega(a)_{ii}=1,
+\]
+puis projeter~: $\Omega^{\mathrm{SDP}}(a)=\textsc{NearestCorr}(\widehat\Omega(a))$ (Higham). Cas limites~: $S\equiv1$ redonne la dépendance pleinement propre au régime~; $S\equiv0$ donne une \emph{unique} $\Omega$ commune, insensible à $\Ecal$.
+\end{algobox}
+
+\subsection{Détails numériques et garde-fous}
+\begin{itemize}[nosep]
+\item \textbf{Logarithme matriciel} ($\hat A=-\Dt^{-1}\log\widehat\Phi$)~: via décomposition de Schur réelle~; exiger les valeurs propres de $\widehat\Phi$ dans $(0,1)$ (stabilité)~; sinon contraindre/retirer la composante instable.
+\item \textbf{\textsc{NearestCorr}}~: projections alternées de Higham (symétrisation, diagonale unité, troncature SDP du spectre) jusqu'à tolérance~; appliquée \emph{par régime}.
+\item \textbf{CIR}~: PIT $\widehat\eps^{(\mathrm{cr})}=\Phi^{-1}\!\big(F_{\chi'^2}(2c_\chi s_{t+\Dt};\nu,\lambda)\big)$ et inverse-PIT par le quantile $\chi'^2$~; vérifier $\sigma^2\le4\kappa\theta$ (Alfonsi) et $1-\tfrac{\kappa}{2}\Dt>0$.
+\item \textbf{Cohérence options}~: $\mathcal F$ et $S$ s'appliquent \emph{identiquement} à l'estimation, aux résidus et à la simulation, garantissant une seule loi par régime de bout en bout.
+\item \textbf{Reproductibilité}~: graine fixée~; $v_a\ge\underline v$~; régimes ordonnés~; consigner $(\mathcal F,S,K^\star)$ avec les sorties.
+\end{itemize}
+
+% =====================================================================
 \section{Conclusion}
 % =====================================================================
 Cette note construit, pour le GSE du régime, un cadre unifié d'\emph{estimation} et de \emph{simulation}~: chaque facteur, ramené à sa discrétisation, s'écrit comme une récurrence autorégressive dont les coefficients peuvent dépendre d'un \emph{régime latent commun}~; l'ensemble s'agrège en un \emph{unique} MS-VAR calibré par \emph{maximum de vraisemblance jointe} en trois étapes (marges en formes fermées, régime commun par EM, \emph{matrice de dépendance pleine par régime} sur résidus standardisés), et se simule directement à partir de cette représentation. Le cadre est \emph{général}~: aucune corrélation n'est fixée --- ni à zéro, ni à dire d'expert, ni indépendante du régime --- y compris la corrélation interne des facteurs vectoriels~; toute la dépendance est estimée. Cinq des six familles d'estimateurs admettent une forme fermée (exacte ou par itération EM)~; la dépendance, portée par une copule gaussienne par régime cohérente avec la simulation et par une chaîne d'état unique de cardinalité $K^\star$ parcimonieuse, est estimée sur un bruit blanc stationnaire. Le chapitre d'application en donne toutes les expressions littérales, directement implémentables. Tout calibrage embarque une erreur d'estimation~; le choix final des méthodes et paramètres relève de l'IRCANTEC.
