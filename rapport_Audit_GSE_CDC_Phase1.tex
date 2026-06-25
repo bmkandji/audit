@@ -1,0 +1,823 @@
+% =====================================================================
+% AUDIT DU GSE IRCANTEC — PHASE 1 : DESCRIPTION & SPÉCIFICATION
+% Nexialog Consulting — Pôle Risques Financiers & Actuariat
+% Charte v2 (mai 2026) — pdflatex (x2)
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+% --------- PACKAGES ---------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[default]{sourcesanspro}
+\usepackage{montserrat}
+\usepackage{microtype}
+\usepackage{cmap}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+\usepackage{textcomp}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[hyperref]{etoc}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{tabularx}
+\usepackage{needspace}
+\usepackage{etoolbox}
+
+% --------- CHARTE NEXIALOG (officielle v2) ----------------------------
+\definecolor{nxnavy}{HTML}{002060}
+\definecolor{nxred}{HTML}{B10031}
+\definecolor{nxteal}{HTML}{409ABB}
+\definecolor{nxslate}{HTML}{223E55}
+\definecolor{nxgray}{HTML}{9A999E}
+\definecolor{nxlightgray}{HTML}{D0D1D4}
+\definecolor{nxoffwhite}{HTML}{F2F2F2}
+\definecolor{nxlightblue}{HTML}{E6ECF7}
+
+% --------- PAGE SETUP -------------------------------------------------
+\geometry{a4paper, top=32mm, bottom=22mm, left=25mm, right=25mm,
+          headheight=19mm, headsep=6mm}
+
+% --------- HEADER / FOOTER --------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\parbox[c][14mm][c]{52mm}{\includegraphics[height=13mm]{logo_nexialog.pdf}}}
+\fancyhead[R]{\parbox[c][14mm][c]{110mm}{\raggedleft\small Audit GSE IRCANTEC~~\textbar~~\textit{Audit GSE}}}
+\fancyfoot[L]{\small Audit du GSE IRCANTEC --- Phase 1 --- Confidentiel}
+\fancyfoot[R]{\small Page \thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.3pt}
+\renewcommand{\footrule}{\hbox to\headwidth{\color{nxlightgray}\leaders\hrule height \footrulewidth\hfill}}
+
+% --------- STYLES DE SECTION (Montserrat) -----------------------------
+\titleformat{\section}{\sffamily\Large\bfseries\color{nxnavy}}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\sffamily\large\bfseries\color{nxnavy}}{}{0em}{\thesubsection.~}
+
+% --------- TABLE DES MATIÈRES (etoc) ----------------------------------
+\etocsetstyle{section}
+  {}{}
+  {\par\noindent\sffamily\large\bfseries%
+   \textcolor{nxred}{\etocname}\hfill\textcolor{nxred}{\etocpage}\par\medskip}{}
+\etocsetstyle{subsection}
+  {}{}
+  {\par\noindent\hspace*{5mm}\sffamily\normalsize\mdseries%
+   \textcolor{nxnavy}{\etocname}\hfill\textcolor{nxnavy}{\etocpage}\par\vspace{6pt}}{}
+\etocsettocstyle{}{}
+
+% --------- ENVIRONNEMENTS PERSONNALISÉS -------------------------------
+\tcbuselibrary{skins,breakable}
+\newtcolorbox{definitionbox}[1][]{
+  enhanced, breakable,
+  colback=nxlightblue, frame hidden, boxrule=0pt, arc=3pt,
+  before skip=4mm, after skip=3mm, left=4mm, right=4mm, top=3mm, bottom=3mm}
+\newtcolorbox{insightbox}[1][Point clé]{
+  enhanced, breakable,
+  colback=nxoffwhite, frame hidden, boxrule=0pt, arc=3pt,
+  fonttitle=\sffamily\bfseries\color{nxred}, title=#1,
+  detach title, before upper={\tcbtitle\par\nobreak\medskip\nobreak},
+  before skip=4mm, after skip=3mm, left=4mm, right=4mm, top=3mm, bottom=3mm}
+
+% --------- CAPTIONS ---------------------------------------------------
+\setlength{\abovecaptionskip}{4pt}\setlength{\belowcaptionskip}{4pt}
+\captionsetup{font=small,labelfont={bf,color=nxnavy},textfont=it}
+
+% --------- PAGINATION FIGURES / TABLES --------------------------------
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+\widowpenalty=10000\clubpenalty=10000
+\setlength{\emergencystretch}{2em}
+
+% --------- LISTES & ANTI-ORPHELINS ------------------------------------
+\setlist{leftmargin=*, labelindent=0pt, itemsep=2pt, topsep=4pt}
+\pretocmd{\section}{\needspace{6\baselineskip}}{}{}
+\pretocmd{\subsection}{\needspace{5\baselineskip}}{}{}
+\BeforeBeginEnvironment{definitionbox}{\needspace{5\baselineskip}}
+\BeforeBeginEnvironment{insightbox}{\needspace{5\baselineskip}}
+
+% --------- HYPERREF ---------------------------------------------------
+\hypersetup{colorlinks=true, linkcolor=nxred, citecolor=nxred, urlcolor=nxred,
+  linktoc=all, pdftitle={Audit du GSE IRCANTEC -- Phase 1 -- Description},
+  pdfauthor={Nexialog Consulting}}
+
+% --------- HELPERS -----------------------------------------------------
+\newcommand{\tablehead}[1]{{\sffamily\bfseries\color{nxnavy}#1}}
+\newcommand{\ph}[1]{\textcolor{nxgray}{\itshape #1}}
+\newcolumntype{R}{>{\raggedright\arraybackslash}X}
+
+% =====================================================================
+\begin{document}
+% =====================================================================
+
+% --------- PAGE DE GARDE ----------------------------------------------
+\begin{titlepage}
+\thispagestyle{empty}
+\vspace*{-5mm}
+\begin{center}\includegraphics[width=0.55\textwidth]{logo_nexialog.pdf}\end{center}
+\vspace{1.4cm}
+\begin{center}
+  {\color{nxred}\rule{0.55\textwidth}{1.5pt}}\\[10mm]
+  {\sffamily\bfseries\color{nxnavy}\fontsize{26pt}{32pt}\selectfont
+   \MakeUppercase{Audit du GSE IRCANTEC}\\[4mm]\MakeUppercase{Phase 1}}\\[10mm]
+  {\color{nxred}\rule{0.55\textwidth}{1.5pt}}\\[12mm]
+  {\sffamily\normalsize\color{nxnavy}Juin 2026}
+\end{center}
+\vspace{10mm}
+\noindent\begin{minipage}{\textwidth}\small
+Ce document constitue le \textbf{livrable de Phase~1} de la revue indépendante du Générateur de Scénarios Économiques (GSE) qui sous-tend le modèle d'allocation d'actifs du régime de retraite IRCANTEC, géré par la Caisse des Dépôts. Il \textbf{spécifie}, composante par composante, le modèle de diffusion retenu, la méthode de calibrage et le schéma de simulation, en explicitant des expressions littérales finales --- discrétisations, calibrage, pricing zéro-coupon calcule de la prime de liquidité et corrections de covariance --- ainsi que les données, la fenêtre de calibrage de 20~ans et les paramètres retenus pour l'exercice d'allocation~2026.
+
+\vspace{2mm}
+La validation statistique des modèles (Phase~2) et les points d'attention assortis d'approches alternatives (Phase~3) font l'objet de livrables distincts. Ce rapport est confidentiel et préparé pour l'usage exclusif de l'IRCANTEC et de la Caisse des Dépôts.
+\end{minipage}
+\vfill
+\begin{center}{\sffamily\bfseries\large\color{nxnavy}THINK SMART~~\textcolor{nxred}{$\bullet$}~~ACT DIFFERENT}\end{center}
+\end{titlepage}
+
+% --------- AVERTISSEMENT ----------------------------------------------
+\section*{Avertissement et restrictions d'usage}
+\addcontentsline{toc}{section}{Avertissement et restrictions d'usage}
+Ce rapport a été préparé par Nexialog Consulting pour l'usage exclusif de la Caisse des Dépôts (CDC). Il est confidentiel ; toute distribution à un tiers requiert l'accord écrit préalable de Nexialog Consulting. 
+
+Nos travaux ont été conduits conformément aux pratiques actuarielles et quantitatives communé-
+ment admises, sur la base des données, codes et documentations transmis par l’Ircantec et la Caisse
+des Dépôts, sans contrôle exhaustif de leur exactitude. La modification de certaines hypothèses ou
+données pourrait conduire à des résultats significativement différents de ceux présentés. Tout proces-
+sus de calibrage embarque une erreur d’estimation traduisant l’incertitude sur les valeurs estimées
+des paramètres. Le choix final des paramètres retenus pour la sélection de l’allocation stratégique
+demeure de la responsabilité de la CDC.
+\clearpage
+
+% --------- TABLE DES MATIÈRES -----------------------------------------
+\begingroup
+\hypersetup{hidelinks}
+\vspace*{\stretch{0.5}}
+{\noindent\sffamily\Huge\bfseries\color{nxnavy}Table des matières\par}
+\vspace{18mm}
+\tableofcontents
+\vspace*{\stretch{2}}
+\endgroup
+\newpage
+
+% =====================================================================
+\section{Contexte de la mission}
+
+L'IRCANTEC (Institution de Retraite Complémentaire des Agents Non Titulaires de l'État et des Collectivités publiques) est l'un des principaux régimes de retraite complémentaire par répartition provisionnée, géré par la Caisse des Dépôts (CDC). La sélection de l'allocation stratégique des réserves repose, depuis 2009, sur un modèle d'allocation d'actifs adossé à un Générateur de Scénarios Économiques (GSE) en univers monde réel, qui simule par Monte-Carlo l'ensemble des facteurs de risque sur un horizon ALM long.
+
+À la suite des revues antérieures (Mercer~2016, Milliman~2022), le Pôle ALM \& Risques Financiers a engagé une refonte du modèle pour l'exercice d'allocation~2026. Cette refonte porte sur plusieurs axes structurants : la prise en compte des corrélations taux réels~/~inflation et taux courts~/~taux longs dans le \emph{pricing} des zéro-coupons nominaux ; la migration du schéma de simulation du CIR de crédit ; l'introduction d'un modèle log-Vasicek (Black-Karasinski) pour la dette privée ; l'ajout des classes actions émergentes et infrastructure ; enfin la mise à jour complète des calibrages et de la matrice de corrélation. L'Ircantec souhaite disposer d'un avis indépendant sur la pertinence des modèles, la qualité des calibrages et la robustesse du dispositif.
+
+\section{Architecture de l'audit en trois phases}
+
+La revue se déploie, pour chaque classe d'actif et chaque étape du GSE, en trois phases complémentaires faisant chacune l'objet d'un livrable dédié. Le présent document couvre la \textbf{Phase~1}.
+
+\begin{enumerate}[label=\textbf{\color{nxred}Phase~\arabic*.}]
+  \item \textbf{Description et vérification} \emph{(présent livrable)}. Rappel du modèle retenu, des techniques de calibrage et de simulation \emph{avec leurs équations}, des données et de la fenêtre de calibrage, et localisation des implémentations. Le point d'audit central consiste à~: (i)~vérifier l'\emph{exactitude analytique} des équations dérivées des modèles ; (ii)~confirmer la \emph{conformité de l'implémentation} au regard de la technique documentée ; (iii)~s'assurer que les \emph{paramètres obtenus par un \emph{run} indépendant} coïncident avec ceux en production dans le modèle ALM.
+  \item \textbf{Validation des modèles et des données.} Restitution des tests statistiques et indicateurs de validation (normalité, autocorrélation, réplication des cibles, \emph{backtesting} des moments simulés).
+  \item \textbf{Points d'attention et alternatives.} Identification des limites et proposition de modèles et d'approches plus pertinents sur les plans économique et mathématique.
+\end{enumerate}
+
+% 
+
+\subsection{Cartographie des composantes}
+Le tableau~\ref{tab:carto} recense les composantes du GSE, le modèle de diffusion, la méthode de calibrage et le schéma de simulation. Il fixe les notations de la suite.
+
+\begingroup\small\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.2}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.8cm}>{\raggedright\arraybackslash}p{2.7cm}>{\raggedright\arraybackslash}p{2.8cm}>{\raggedright\arraybackslash}p{2.1cm}}
+\toprule
+\tablehead{Composante} & \tablehead{Modèle} & \tablehead{Calibrage} & \tablehead{Simulation} & \tablehead{Implém.} \\
+\midrule
+\endfirsthead
+\toprule
+\tablehead{Composante} & \tablehead{Modèle} & \tablehead{Calibrage} & \tablehead{Simulation} & \tablehead{Implém.} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\rowcolor{nxlightblue} Inflation (CT~/~LT) & Vasicek 2 facteurs & MCO + Cibles distributionnelles & Schéma exact V2F & R~/~MATLAB \\
+Taux réels (CT~/~LT) & Vasicek 2 facteurs & MCO + Cibles distributionnelles & Schéma exact V2F & R~/~MATLAB \\
+\rowcolor{nxlightblue} Courbe nominale (ZC) & Fisher + corrections de covariance & Hérité ; primes de risque & Formules fermées V2F & MATLAB \\
+Crédit (spread IG) & CIR & Régression ou max.\ vraisemblance & Schéma d'Euler, Alfonsi ou Diop, pas mensuel & MATLAB \\
+\rowcolor{nxlightblue} Dette privée (spread) & Black-Karasinski & Régression (log-spreads) & Schéma exact log-OU & Excel~/~MATLAB \\
+Prime de liquidité & Écart CDS~/~obligataire ; ajust.\ de $\theta$ & Calcul + dire d'expert & --- & Excel \\
+\rowcolor{nxlightblue} Actions (Euro~/~Monde~/~Émergent) & Hardy RSLN-2 (2 régimes) & Maximum de vraisemblance & BS par régime, pas mensuel & R~/~MATLAB \\
+Action non cotée (PE) & BS (après \emph{unsmoothing}) & \emph{Unsmoothing} AR(1) + régression & BS, pas mensuel & Excel~/~MATLAB \\
+\rowcolor{nxlightblue} Immobilier & BS (après \emph{unsmoothing}) & \emph{Unsmoothing} AR(1) + régression & BS, pas mensuel & Excel~/~MATLAB \\
+Infrastructure & BS (après \emph{unsmoothing}) & \emph{Unsmoothing} AR(1) + régression & BS, pas mensuel & Excel~/~MATLAB \\
+\rowcolor{nxlightblue} Corrélations & Copule gaussienne ; passage cibles $\to$ browniens & Pearson + formules de passage & Cholesky & Python~/~MATLAB \\
+Moteur de simulation & Monte-Carlo (5\,000 traj., $dt=1/12$) & --- & Diffusion jointe corrélée & MATLAB \\
+\caption{Cartographie des composantes du GSE.}
+\label{tab:carto}
+\end{longtable}
+\endgroup
+
+\subsection{Justification de la fenêtre de calibrage retenue (20~ans)}
+\label{sec:fenetre}
+
+Le GSE alimente des projections ALM dont l'horizon est de l'ordre de \textbf{30~ans}. Deux profondeurs d'historique ont été testées (15 et 20~ans) ; nous retenons la fenêtre de \textbf{20~ans}, justifiée économiquement par la couverture des cycles des facteurs modélisés.
+
+\begin{itemize}
+  \item une fenêtre de 20~ans englobe au moins \textbf{deux cycles d'affaires complets} (cycle de Juglar, de 8 à 11~ans, lié à la dynamique de l'investissement) ainsi qu'un \textbf{cycle financier moyen} (8 à 25~ans selon les indicateurs usuels) ;
+  \item elle intègre des régimes de marché contrastés et plusieurs épisodes de stress (crise financière 2008-2009, crise des dettes souveraines 2011-2012, choc Covid~2020, remontée de l'inflation et des taux 2022-2023), indispensables pour calibrer les volatilités, les régimes stressés des modèles actions et les corrélations en tension ;
+  \item elle offre un nombre de points mensuels ($\sim$240) compatible avec le nombre de paramètres à estimer, là où une fenêtre de 15~ans réduit l'échantillon et peut exclure la crise de 2008-2009 pour les séries démarrant plus tard.
+\end{itemize}
+
+\clearpage
+
+\section{Démarche}
+
+La vérification s'articule autour de trois contrôles:
+
+\begin{enumerate}
+  \item \textbf{Exactitude analytique.} Revue des équations posées (solution des processus, formules de calibrage, expressions de \emph{pricing} et de corrélation) à partir du modèle, et confrontation aux formules implémentées.
+  \item \textbf{Conformité de l'implémentation.} Lecture du code (R, Python, MATLAB, Excel) et confirmation qu'il reproduit fidèlement la technique documentée.
+  \item \textbf{Réplication des paramètres.} Ré-estimation, sur les mêmes données, et comparaison paramètre par paramètre avec la production.
+\end{enumerate}
+
+Le détail des tests statistiques de validation (normalité, autocorrélation, \emph{backtesting} des moments, réplication des cibles) relève du livrable de Phase~2 ; il n'est pas reproduit ici.
+
+% =====================================================================
+\section{Inflation}
+% =====================================================================
+L'inflation est diffusée par un Vasicek à deux facteurs (V2F) calibré par cibles distributionnelles et simulé par discrétisation exacte.
+
+\subsection{Modèle}
+\begin{definitionbox}
+Un facteur court $q_t^{s}$ revient vers un facteur long stochastique $q_t^{l}$, lui-même en retour à la moyenne vers la cible COR $\mu_l=1{,}75\,\%$~:
+\[
+dq_t^{s}=\kappa_1(q_t^{l}-q_t^{s})\,dt+\sigma_1\,dW_t^1,\qquad
+dq_t^{l}=\kappa_2(\mu_l-q_t^{l})\,dt+\sigma_2\,dW_t^2 .
+\]
+\end{definitionbox}
+
+\subsection{Calibrage par cibles distributionnelles}
+\label{sec:cibles}
+On estime $\bm{\Theta}_d=\{\kappa_1,\kappa_2,\sigma_1,\sigma_2\}$ pour répliquer trois cibles aux maturités $\tau_1=2$ et $\tau_2=10$~ans (volatilité des variations de taux, corrélation inter-maturités, écart-type des taux). Le taux est affine, $R(t,t+\tau)=\tfrac{1}{\tau}\big(B_1(\tau)q_t^{s}+B_2(\tau)q_t^{l}\big)+\text{cste}$, de matrice de chargement $B_{ik}=B_k(\tau_i)/\tau_i$, avec
+\[
+B_1(\tau)=\frac{1-e^{-\kappa_1\tau}}{\kappa_1},\qquad
+B_2(\tau)=\frac{\kappa_1}{\kappa_1-\kappa_2}\Big(\frac{1-e^{-\kappa_2\tau}}{\kappa_2}-\frac{1-e^{-\kappa_1\tau}}{\kappa_1}\Big).
+\]
+\begin{definitionbox}
+En notant $\bm{Y}_t=(R(t,t+\tau_i))_i$, $\bm{\Delta Y}_t=\bm{Y}_{t+\Delta}-\bm{Y}_t$, et les variance-covariances stationnaires $\bm{\Sigma}^{\Delta Y}_\infty=\bm{B}\,\bm{\Sigma}^{\Delta X}_\infty\,\bm{B}^\top$ et $\bm{\Sigma}^{Y}_\infty=\bm{B}\,\bm{\Sigma}^{X}_\infty\,\bm{B}^\top$, les trois cibles induites sont
+\[
+\sigma^{\mathrm{mod}}_{\Delta Y}(\tau_i)=\sqrt{\tfrac{1}{\Delta}\big(\bm{\Sigma}^{\Delta Y}_\infty\big)_{ii}},\quad
+\rho^{\mathrm{mod}}_{\Delta Y}(\tau_i,\tau_j)=\frac{\big(\bm{\Sigma}^{\Delta Y}_\infty\big)_{ij}}{\sqrt{\big(\bm{\Sigma}^{\Delta Y}_\infty\big)_{ii}\big(\bm{\Sigma}^{\Delta Y}_\infty\big)_{jj}}},\quad
+\sigma^{\mathrm{mod}}_{Y}(\tau_i)=\sqrt{\big(\bm{\Sigma}^{Y}_\infty\big)_{ii}} .
+\]
+Les paramètres résolvent
+\[
+\bm{\Theta}_d^{\star}=\operatorname*{arg\,min}_{\bm{\Theta}_d\in\mathbb{R}_+^4}
+\frac{\lambda_{\mathrm{v}}}{m}\sum_{i}\!\Big(\tfrac{\sigma^{\mathrm{mod}}_{\Delta Y}(\tau_i)}{\sigma^{\mathrm{hist}}_{\Delta Y}(\tau_i)}-1\Big)^2
++\frac{2\lambda_{\mathrm{c}}}{m(m-1)}\sum_{i<j}\!\big(\rho^{\mathrm{mod}}_{\Delta Y}-\rho^{\mathrm{hist}}_{\Delta Y}\big)^2
++\frac{\lambda_{\mathrm{s}}}{m}\sum_{i}\!\Big(\tfrac{\sigma^{\mathrm{mod}}_{Y}(\tau_i)}{\sigma^{\mathrm{hist}}_{Y}(\tau_i)}-1\Big)^2 .
+\]
+\end{definitionbox}
+L'écart-type historique des taux, biaisé par l'autocorrélation de niveau, est corrigé par $\sigma^{\mathrm{hist}}_Y=\sqrt{\widehat\Omega^2}$ avec $\widehat\Omega^2=\tfrac{1}{n}\sum_k(Y_{t_k}-\bar Y)^2\big/\big(1-\tfrac{1}{n^2}\sum_{l}(n-|l|)\rho^Y_\infty(l\Delta)_{ii}/\rho^Y_\infty(0)_{ii}\big)$.
+
+\subsection{Simulation : discrétisation exacte}
+\label{sec:exactv2f}
+\begin{definitionbox}
+La loi conditionnelle jointe de $(q^{s}_{t+\Delta},q^{l}_{t+\Delta})$ sachant $(q^{s}_t,q^{l}_t)$ est gaussienne bivariée et simulée exactement~:
+\[
+\begin{aligned}
+q^{l}_{t+\Delta}&=q^{l}_t e^{-\kappa_2\Delta}+\mu_l(1-e^{-\kappa_2\Delta})+\sqrt{\mathbb V_m}\;\varepsilon^{1}_t,\\
+q^{s}_{t+\Delta}&=q^{s}_t e^{-\kappa_1\Delta}+\mu_l(1-e^{-\kappa_1\Delta})+\tfrac{\kappa_1}{\kappa_1-\kappa_2}(q^{l}_t-\mu_l)\big(e^{-\kappa_2\Delta}-e^{-\kappa_1\Delta}\big)\\
+&\quad+\sqrt{\mathbb V_r}\,\big(\rho_c\,\varepsilon^{1}_t+\sqrt{1-\rho_c^2}\,\varepsilon^{2}_t\big),
+\end{aligned}
+\]
+avec $\varepsilon^{1}_t,\varepsilon^{2}_t\sim\mathcal N(0,1)$ i.i.d.\ et $\rho_c=\mathbb C_{mr}/\sqrt{\mathbb V_m\,\mathbb V_r}$. Les moments conditionnels sont
+{\small
+\[
+\begin{aligned}
+\mathbb V_m&=\tfrac{\sigma_2^2}{2\kappa_2}\big(1-e^{-2\kappa_2\Delta}\big),\qquad
+\mathbb C_{mr}=\tfrac{\kappa_1}{\kappa_1-\kappa_2}\sigma_2^2\Big[\tfrac{1-e^{-2\kappa_2\Delta}}{2\kappa_2}-\tfrac{1-e^{-(\kappa_1+\kappa_2)\Delta}}{\kappa_1+\kappa_2}\Big],\\
+\mathbb V_r&=\Big(\tfrac{\kappa_1}{\kappa_1-\kappa_2}\Big)^{2}\sigma_2^2\Big[\tfrac{1-e^{-2\kappa_2\Delta}}{2\kappa_2}-\tfrac{2\big(1-e^{-(\kappa_1+\kappa_2)\Delta}\big)}{\kappa_1+\kappa_2}+\tfrac{1-e^{-2\kappa_1\Delta}}{2\kappa_1}\Big]+\tfrac{\sigma_1^2}{2\kappa_1}\big(1-e^{-2\kappa_1\Delta}\big).
+\end{aligned}
+\]}
+Le schéma étant exact, il est sans biais quel que soit le pas $\Delta$.
+\end{definitionbox}
+
+\subsection{Données et paramètres retenus}
+Calibrage sur la structure par terme d'inflation point mort (BEIR), à pas mensuel, fenêtre 20~ans.
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\linewidth}{R c c >{\raggedright\arraybackslash}p{3.4cm}}
+\toprule
+\tablehead{Paramètre} & \tablehead{2026 (20~ans)} & \tablehead{2022} & \tablehead{Commentaire} \\
+\midrule
+\rowcolor{nxlightblue} $\kappa_2$ (retour LT) & $26{,}18\,\%$ & $35{,}8\,\%$ & Facteur long \\
+$\sigma_2$ (vol.\ LT) & $1{,}06\,\%$ & $1{,}3\,\%$ & \\
+\rowcolor{nxlightblue} $\mu_l$ (moyenne LT) & $1{,}75\,\%$ & $1{,}75\,\%$ & Cible COR \\
+$\kappa_1$ (retour CT) & $78{,}01\,\%$ & $73{,}9\,\%$ & Facteur court \\
+\rowcolor{nxlightblue} $\sigma_1$ (vol.\ CT) & $1{,}567\,\%$ & $1{,}4\,\%$ & \\
+Valeurs initiales (CT~/~LT) & $1{,}167\,\%$ / $1{,}806\,\%$ & --- & \\
+\bottomrule
+\end{tabularx}
+\caption{Paramètres retenus --- inflation.}
+\end{table}
+
+\clearpage
+% =====================================================================
+\section{Taux réels}
+% =====================================================================
+Les taux réels reprennent le V2F, le calibrage par cibles distributionnelles (\S\ref{sec:cibles}) et le schéma exact (\S\ref{sec:exactv2f}) de l'inflation ; seule la construction des observables diffère et également  le calibrage de $\mu$ est préalalblement effectué par regression.
+
+\subsection{Modèle et reconstruction des observables}
+\begin{definitionbox}
+Le facteur court $r_t$ revient vers le facteur long $l_t$~:
+\[
+dr_t=\kappa_1(l_t-r_t)\,dt+\sigma_1\,dW_t^1,\qquad dl_t=\kappa_2(\mu-l_t)\,dt+\sigma_2\,dW_t^2 .
+\]
+Les taux réels sont reconstruits des taux nominaux $R^n(0,m)$ et de l'inflation BEIR $i(m)$ par la relation de Fisher (en remplacement de l'«~effet miroir~»)~:
+\[
+R^{r}(0,m)=\frac{1+R^{n}(0,m)}{1+i(m)}-1 .
+\]
+\end{definitionbox}
+Calibrage et simulation~: identiques à l'inflation (\S\ref{sec:cibles}, \S\ref{sec:exactv2f}).
+
+\subsection{Paramètres retenus}
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\linewidth}{R c c >{\raggedright\arraybackslash}p{3.6cm}}
+\toprule
+\tablehead{Paramètre} & \tablehead{2026 (20~ans)} & \tablehead{2022} & \tablehead{Commentaire} \\
+\midrule
+\rowcolor{nxlightblue} $\kappa_2$ (retour LT) & $11{,}89\,\%$ & $10{,}8\,\%$ & Facteur long \\
+$\sigma_2$ (vol.\ LT) & $1{,}086\,\%$ & $0{,}9\,\%$ & \\
+\rowcolor{nxlightblue} $\mu$ (moyenne LT) & $0{,}41\,\%$ & $-0{,}2\,\%$ & Repasse positif \\
+$\kappa_1$ (retour CT) & $61{,}75\,\%$ & $60{,}0\,\%$ & Facteur court \\
+\rowcolor{nxlightblue} $\sigma_1$ (vol.\ CT) & $1{,}545\,\%$ & $1{,}3\,\%$ & \\
+Valeurs initiales (CT~/~LT) & $1{,}146\,\%$ / $1{,}82\,\%$ & --- & Forte révision \\
+\bottomrule
+\end{tabularx}
+\caption{Paramètres retenus --- taux réels.}
+\end{table}
+
+\clearpage
+% =====================================================================
+\section{Courbe des taux nominaux et pricing des zéro-coupons}
+\label{sec:zc}
+% =====================================================================
+Les zéro-coupons (ZC) nominaux sont reconstruits par Fisher à partir des ZC réels et d'inflation, dont le prix admet une forme fermée affine ; la refonte 2026 lève l'hypothèse d'indépendance par deux corrections de covariance.
+
+\subsection{Formule fermée de pricing (V2F)}
+\begin{definitionbox}
+Le prix d'un zéro-coupon de maturité $T$ s'écrit $P(0,T)=\exp\!\big(A(T)-B_1(T)\,r_0-B_2(T)\,m_0\big)$, avec $B_1,B_2$ donnés en \S\ref{sec:cibles} et, en notant $\bar\mu=\mu+\tfrac{\gamma_2\sigma_2}{\kappa_2}+\tfrac{\gamma_1\sigma_1}{\kappa_1}$ (moyenne LT risque-neutre, $\gamma_1,\gamma_2$ primes de risque)~:
+{\small
+\[
+\begin{aligned}
+A(T)={}&\big(B_1(T)-T\big)\Big(\bar\mu-\tfrac{\sigma_1^2}{2\kappa_1^2}\Big)+B_2(T)\,\bar\mu-\tfrac{\sigma_1^2\,B_1(T)^2}{4\kappa_1}\\
+&+\tfrac{\sigma_2^2}{2}\bigg[\tfrac{T}{\kappa_2^2}-2\,\tfrac{B_2(T)+B_1(T)}{\kappa_2^2}+\tfrac{1-e^{-2\kappa_1 T}}{2\kappa_1(\kappa_1-\kappa_2)^2}
+-\tfrac{2\kappa_1\kappa_2\big(1-e^{-(\kappa_1+\kappa_2)T}\big)}{(\kappa_1-\kappa_2)^2(\kappa_1+\kappa_2)}+\tfrac{\kappa_1^2\kappa_2^2\big(1-e^{-2\kappa_2 T}\big)}{2\kappa_2(\kappa_1-\kappa_2)^2}\bigg].
+\end{aligned}
+\]}
+\end{definitionbox}
+
+\subsection{Corrections de covariance (2026)}
+\label{sec:corrections}
+\begin{definitionbox}
+Le taux réel $R_r(t,T)$ est gaussien, de variance
+\[
+s_r^2=\tfrac{1}{(T-t)^2}\big(B_1^2\,V_r+B_2^2\,V_m+2\,B_1 B_2\,C_{mr}\big),
+\]
+où $V_r,V_m,C_{mr}$ sont les (co)variances des facteurs à l'horizon de pricing (mêmes formes fermées qu'au \S\ref{sec:exactv2f}).
+
+\medskip
+Le prix ZC réel étant log-normal, $\operatorname{Var}\!\big[e^{-R_r}\big]=\big(e^{s_r^2}-1\big)e^{-2\bar R_r+s_r^2}$ (idem inflation, $\operatorname{Var}[e^{-R_i}]$), et le prix nominal corrigé s'écrit
+\[
+P^{\mathrm{nom}}(t,T)=P^{\mathrm{r\acute eel}}(t,T)\,P^{\mathrm{inf}}(t,T)+\rho_{r,i}\,\sqrt{\operatorname{Var}\!\big[e^{-R_r}\big]\,\operatorname{Var}\!\big[e^{-R_i}\big]}.
+\]
+\end{definitionbox}
+
+
+\subsection{Hypothèses de corrélation sous-jacentes}
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{5pt}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.2cm} R >{\raggedright\arraybackslash}p{1.9cm}}
+\toprule
+\tablehead{Hypothèse} & \tablehead{Couples concernés} & \tablehead{Valeur} \\
+\midrule
+\rowcolor{nxlightblue} Décorrélation interne d'un V2F & Infl.\,CT~$\times$~Infl.\,LT ; Taux réel CT~$\times$~LT & $0\,\%$ \\
+Adossement court~$\to$~long & Corrél.\ du facteur court avec les autres & $=$~long \\
+\rowcolor{nxlightblue} Décorrélation croisée inter-V2F & Infl.\,LT~$\times$~Taux réel CT ; Infl.\,CT~$\times$~Taux réel LT & $0\,\%$ \\
+Corrél.\ identique aux 2 facteurs & Formules de passage V2F~$\times$~autre & $\rho_{\varepsilon^1}=\rho_{\varepsilon^2}$ \\
+\rowcolor{nxlightblue} Taux court~/~taux long (pricing) & $\rho_{r,l}$ dans $s_r^2$ & $-22{,}65\,\%$ \\
+\bottomrule
+\end{tabularx}
+\caption{Hypothèses structurelles sur les corrélations.}
+\end{table}
+La courbe ne fait l'objet d'aucun calibrage propre~: elle hérite des paramètres taux réels~/~inflation et des corrélations du module dédié (\S\ref{sec:correl}).
+
+\clearpage
+% =====================================================================
+\section{Crédit --- spreads obligataires Investment Grade}
+% =====================================================================
+Le spread \emph{Investment Grade} (IG, \emph{bucket} 5--7~ans) est diffusé par un CIR, calibré en deux étapes et simulé par un schéma garantissant la positivité.
+
+\subsection{Modèle}
+\begin{definitionbox}
+\[
+ds_t=\kappa(\theta-s_t)\,dt+\sigma\sqrt{s_t}\,dW_t .
+\]
+\end{definitionbox}
+
+\subsection{Calibrage en deux étapes}
+\begin{definitionbox}
+\textbf{Initialisation (régression d'Euler).} En divisant l'incrément par $\sqrt{|s_t|}$, le modèle devient une régression sans constante~:
+\[
+\frac{s_{t+\Delta}-s_t}{\sqrt{|s_t|}}\sim c_1\frac{1}{\sqrt{|s_t|}}+c_2\frac{s_t}{\sqrt{|s_t|}}+\epsilon_t,
+\qquad
+\widehat\kappa=-\tfrac{c_2}{\Delta},\;\;\widehat\theta=-\tfrac{c_1}{c_2},\;\;\widehat\sigma^2=\tfrac{\operatorname{Var}(\epsilon)}{\Delta}.
+\]
+\textbf{Maximum de vraisemblance.} La loi de $s_{t+\Delta}\,|\,s_t$ est un $\chi^2$ décentré, de densité $f(x_{k+1}|x_k)=c\,e^{-(u+v)}(v/u)^{q/2}I_q\!\big(2\sqrt{uv}\big)$, avec $c=\tfrac{2\kappa}{\sigma^2(1-e^{-\kappa\Delta})}$, $u=c\,x_k e^{-\kappa\Delta}$, $v=c\,x_{k+1}$, $q=\tfrac{2\kappa\theta}{\sigma^2}-1$ et $I_q$ la fonction de Bessel modifiée ; l'estimateur final maximise $\sum_k\log f$.
+\end{definitionbox}
+
+\subsection{Simulation : schéma final}
+Le schéma d'Euler $\bar s_{t+\Delta}=\bar s_t+\kappa(\theta-\bar s_t)\Delta+\sigma\sqrt{\bar s_t}\,\sqrt{\Delta}\,\varepsilon_t$ n'est pas exact et autorise des valeurs négatives ($\mathbb P(\bar s_{t+\Delta}<0\,|\,\bar s_t=x)=\mathcal N\!\big(-\kappa(x-\theta)\Delta/(\sigma\sqrt{\Delta x})\big)>0$) dès que la condition de Feller $\sigma^2\le 2\kappa\theta$ n'est pas vérifiée. Le schéma retenu est celui d'Alfonsi $E(0)$, positif et de convergence forte d'ordre~1.
+\begin{definitionbox}
+Le schéma d'Alfonsi $E(0)$, valide sous la condition affaiblie $\sigma^2\le 4\kappa\theta$, propage le spread par
+\[
+\bar s_{t+\Delta}=\Big((1-\tfrac{\kappa}{2}\Delta)\sqrt{\bar s_t}+\frac{\sigma\,\Delta W_t}{2\,(1-\tfrac{\kappa}{2}\Delta)}\Big)^{\!2}+\Big(\kappa\theta-\tfrac{\sigma^2}{4}\Big)\Delta,\qquad \Delta W_t=W_{t+\Delta}-W_t .
+\]
+La simulation exacte (loi du $\chi^2$ décentré ci-dessus) reste possible mais plus coûteuse.
+\end{definitionbox}
+
+\subsection{Paramètres retenus}
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\linewidth}{R c c >{\raggedright\arraybackslash}p{3.4cm}}
+\toprule
+\tablehead{Paramètre} & \tablehead{2026 (20~ans)} & \tablehead{2022} & \tablehead{Commentaire} \\
+\midrule
+\rowcolor{nxlightblue} $\kappa$ (retour moyenne) & $52{,}59\,\%$ & $38{,}0\,\%$ & \\
+$\sigma$ (volatilité) & $5{,}167\,\%$ & $4{,}8\,\%$ & \\
+\rowcolor{nxlightblue} $\theta$ (moyenne LT) & $1{,}42\,\%$ & $1{,}3\,\%$ & \\
+Valeur initiale & $0{,}786\,\%$ & $0{,}926\,\%$ & Niveau de spread \\
+\rowcolor{nxlightblue} Défaut / recouvrement & $0{,}224\,\%$ / $50\,\%$ & $0{,}2\,\%$ / $50\,\%$ & Dire d'expert (hors périmètre) \\
+\bottomrule
+\end{tabularx}
+\caption{Paramètres retenus --- crédit IG.}
+\end{table}
+
+\clearpage
+% =====================================================================
+\section{Dette privée}
+% =====================================================================
+La dette privée (\emph{leveraged loans}) est diffusée par un modèle log-Vasicek (Black-Karasinski), garantissant la positivité du spread, avec une moyenne ajustée pour intégrer la prime de liquidité (\S\ref{sec:liqui}).
+
+\subsection{Modèle et discrétisation exacte}
+\begin{definitionbox}
+Le log-spread suit un Ornstein-Uhlenbeck $d\ln s_t=k(\theta-\ln s_t)\,dt+\sigma\,dW_t$, de discrétisation \textbf{exacte}, pour $y_t=\ln s_t$~:
+\[
+y_{t+\Delta}=y_t\,e^{-k\Delta}+\theta\big(1-e^{-k\Delta}\big)+\sigma\sqrt{\tfrac{1-e^{-2k\Delta}}{2k}}\;\varepsilon_t,\qquad \varepsilon_t\sim\mathcal N(0,1).
+\]
+La loi stationnaire est $\ln s_\infty\sim\mathcal N\!\big(\theta,\tfrac{\sigma^2}{2k}\big)$, d'espérance $\mathbb E[s_\infty]=\exp\!\big(\theta+\tfrac{\sigma^2}{4k}\big)$.
+\end{definitionbox}
+
+\subsection{Calibrage et intégration de la prime de liquidité}
+$(k,\sigma)$ sont estimés par régression sur les log-spreads. La moyenne $\theta$ n'est pas estimée librement~: elle est ajustée pour que l'espérance long terme atteigne le spread-cible incluant la prime de liquidité.
+\begin{definitionbox}
+Pour $\mathbb E[s_\infty]=\exp(\theta+\tfrac{\sigma^2}{4k})$ égal au spread-cible $S^\star$ (base + prime de liquidité), on inverse la moyenne log-normale~:
+\[
+\theta=m-\frac{\sigma^2}{4k},\qquad m=\ln S^\star .
+\]
+\end{definitionbox}
+
+\subsection{Paramètres retenus}
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\linewidth}{R c c >{\raggedright\arraybackslash}p{3.2cm}}
+\toprule
+\tablehead{Paramètre} & \tablehead{2026 (20~ans)} & \tablehead{2022} & \tablehead{Commentaire} \\
+\midrule
+\rowcolor{nxlightblue} $k$ (retour moyenne) & $43{,}64\,\%$ & $34{,}7\,\%$ & Sur log-spread \\
+$\sigma$ (vol.\ log-spread) & $49{,}67\,\%$ & $24{,}1\,\%$ & Forte hausse \\
+\rowcolor{nxlightblue} $\theta$ (moyenne log) & $-3{,}109$ & $-3{,}072$ & \\
+Valeur initiale & $2{,}814\,\%$ & $2{,}91\,\%$ & Niveau de spread \\
+\rowcolor{nxlightblue} Prime de liquidité (surplus) & $4{,}64\,\%$ & --- & Via ajustement de $\theta$ \\
+\bottomrule
+\end{tabularx}
+\caption{Paramètres retenus --- dette privée.}
+\end{table}
+
+\clearpage
+% =====================================================================
+\section{Prime de liquidité}
+\label{sec:liqui}
+% =====================================================================
+La prime de liquidité isole, au sein du spread, la part qui ne rémunère pas le risque de contrepartie.
+
+\subsection{Calcul}
+Le spread obligataire se décompose en une prime de contrepartie (CDS) et une prime de liquidité. Pour le crédit, cette dernière est le différentiel des moyennes long terme ; pour la dette privée, elle est fixée à dire d'expert ($1{,}0\,\%$) puis intégrée à $\theta$ (\S\ref{sec:liqui}).
+\begin{definitionbox}
+Les spreads CDS et obligataire étant log-Vasicek, d'espérance long terme $\mathbb E[s_\infty]=\exp(\theta+\tfrac{\sigma^2}{4k})$, la prime de liquidité est
+\[
+\pi_{\mathrm{liq}}=\mathbb E\big[s^{\mathrm{oblig}}_\infty\big]-\mathbb E\big[s^{\mathrm{CDS}}_\infty\big]
+=\exp\!\Big(\theta_{\mathrm{ob}}+\tfrac{\sigma_{\mathrm{ob}}^2}{4k_{\mathrm{ob}}}\Big)-\exp\!\Big(\theta_{\mathrm{cds}}+\tfrac{\sigma_{\mathrm{cds}}^2}{4k_{\mathrm{cds}}}\Big).
+\]
+\end{definitionbox}
+
+\subsection{Paramètres retenus}
+La prime \emph{High Yield} vaut $0{,}824\,\%=3{,}699\,\%-2{,}875\,\%$ ; la prime de dette privée est fixée à $1{,}0\,\%$.
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\linewidth}{R c c}
+\toprule
+\tablehead{Grandeur} & \tablehead{CDS} & \tablehead{Spread 20~ans} \\
+\midrule
+\rowcolor{nxlightblue} $k$ (sur log-spread) & $1{,}234$ & $0{,}436$ \\
+$\sigma$ & $65{,}97\,\%$ & $49{,}67\,\%$ \\
+\rowcolor{nxlightblue} $\theta$ (log) & $-3{,}461$ & $-3{,}156$ \\
+Moyenne LT du spread & $2{,}875\,\%$ & $3{,}699\,\%$ \\
+\rowcolor{nxlightblue} Prime de liquidité (HY ; dette privée) & --- & $0{,}824\,\%$ ; $1{,}0\,\%$ \\
+\bottomrule
+\end{tabularx}
+\caption{Paramètres retenus --- prime de liquidité.}
+\end{table}
+
+\clearpage
+% =====================================================================
+\section{Actions cotées --- Euro, Monde ex-Europe, Émergent}
+% =====================================================================
+Les actions sont diffusées par le modèle de Hardy à changement de régime (RSLN-2), calibré par maximum de vraisemblance et simulé exactement conditionnellement au régime.
+
+\subsection{Modèle}
+\begin{definitionbox}
+Conditionnellement au régime $\rho_t\in\{1,2\}$ (chaîne de Markov de matrice $(p_{ij})$), les log-rendements suivent un Black-Scholes~:
+\[
+\frac{dS_t}{S_t}=\mu_{\rho_t}\,dt+\sigma_{\rho_t}\,dW_t .
+\]
+\end{definitionbox}
+
+\subsection{Calibrage par maximum de vraisemblance (filtre de Hamilton)}
+\begin{definitionbox}
+La densité conditionnelle au régime est $f_t(y)=\tfrac{1}{\sqrt{2\pi}\sigma_y}\exp\!\big(-\tfrac12((x_t-\mu_y)/\sigma_y)^2\big)$. La probabilité de régime $\xi_t(y)=\mathbb P(Y_t=y|\mathcal X_{t-1})$ et la vraisemblance se calculent par la récursion
+\[
+\xi_t(y)=\sum_{y'}\frac{f_{t-1}(y')\xi_{t-1}(y')}{\sum_{y''}f_{t-1}(y'')\xi_{t-1}(y'')}\,P(y',y),
+\qquad
+p_t(x_t|\mathcal X_{t-1})=\sum_y f_t(y)\xi_t(y),
+\]
+initialisée par la mesure invariante $\pi^1_\infty=\tfrac{1-p_{22}}{2-p_{11}-p_{22}}$ ; les paramètres maximisent $\ell_\theta=\sum_t\log p_t(x_t|\mathcal X_{t-1})$.
+\end{definitionbox}
+Contrôle de cohérence par les moments long terme~: $\mathbb E[\log(S_1/S_0)]=\pi^1_\infty(\mu_1-\tfrac{\sigma_1^2}{2})+(1-\pi^1_\infty)(\mu_2-\tfrac{\sigma_2^2}{2})$.
+
+\subsection{Simulation : discrétisation exacte par régime}
+\begin{definitionbox}
+Le régime $\rho_t$ étant tiré selon $(p_{ij})$, la discrétisation exacte du log-rendement conditionnel s'écrit
+\[
+S(T_k)=S(T_{k-1})\exp\!\Big(\big(\mu_{\rho_t}-\tfrac{\sigma_{\rho_t}^2}{2}\big)\Delta+\sigma_{\rho_t}\sqrt{\Delta}\;\varepsilon_k\Big),\qquad \varepsilon_k\sim\mathcal N(0,1).
+\]
+\end{definitionbox}
+
+\subsection{Paramètres retenus}
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{5.6cm} c c c}
+\toprule
+\tablehead{Paramètre (20~ans)} & \tablehead{Euro} & \tablehead{Monde} & \tablehead{Émerg.} \\
+\midrule
+\rowcolor{nxlightblue} $p_{1\to2}$ (sortie régime 1) & $14{,}83\,\%$ & $14{,}73\,\%$ & $15{,}31\,\%$ \\
+$p_{2\to1}$ (sortie régime 2) & $5{,}27\,\%$ & $5{,}64\,\%$ & $4{,}80\,\%$ \\
+\rowcolor{nxlightblue} Moyenne / vol.\ régime 1 (stressé) & $-13{,}2$ / $21{,}8$ & $-12{,}2$ / $19{,}8$ & $-13{,}6$ / $27{,}1$ \\
+Moyenne / vol.\ régime 2 (normal) & $13{,}6$ / $9{,}5$ & $18{,}0$ / $9{,}1$ & $13{,}1$ / $11{,}1$ \\
+\rowcolor{nxlightblue} Proba.\ stationnaire de stress & $26{,}24\,\%$ & $27{,}68\,\%$ & $23{,}85\,\%$ \\
+\bottomrule
+\end{tabularx}
+\caption{Paramètres retenus --- actions cotées (moyennes / volatilités en \%).}
+\end{table}
+
+\clearpage
+% =====================================================================
+\section{Actions non cotées (Private Equity, composite)}
+% =====================================================================
+Les actifs valorisés à pas espacé sont diffusés par un Black-Scholes appliqué à une série préalablement déslissée, l'autocorrélation de valorisation biaisant à la baisse la volatilité.
+
+\subsection{Unsmoothing AR(1) et modèle}
+\begin{definitionbox}
+À partir des log-rendements $(r_t)$ de coefficient AR(1) $b\in(0,1)$ estimé par $r_t=a+b\,r_{t-1}+\epsilon_t$, la série déslissée est
+\[
+r_t^\ast=\frac{1}{1-b}\,r_t-\frac{b}{1-b}\,r_{t-1},
+\qquad
+\operatorname{Var}(r_t^\ast)=\frac{1-b^2}{(1-b)^2}\,\operatorname{Var}(r_t)\;>\;\operatorname{Var}(r_t),
+\]
+de sorte que $\mathrm{Cov}(r_t^\ast,r_{t-1}^\ast)=0$ et la volatilité corrigée dépasse la volatilité brute. Les paramètres $(\mu,\sigma)$ du Black-Scholes sont estimés sur la série déslissée.
+\end{definitionbox}
+
+\subsection{Simulation : discrétisation exacte}
+\begin{definitionbox}
+\[
+S(T_k)=S(T_{k-1})\exp\!\Big(\big(\mu-\tfrac{\sigma^2}{2}\big)\Delta+\sigma\sqrt{\Delta}\;\varepsilon_k\Big),\qquad \varepsilon_k\sim\mathcal N(0,1).
+\]
+\end{definitionbox}
+
+\subsection{Paramètres retenus}
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\linewidth}{R c >{\raggedright\arraybackslash}p{4.0cm}}
+\toprule
+\tablehead{Paramètre} & \tablehead{2026 (20~ans)} & \tablehead{Commentaire} \\
+\midrule
+\rowcolor{nxlightblue} $\mu$ (rendement, PE) & $7{,}18\,\%$ & Régime faible vol.~: $5{,}97\,\%$ \\
+$\sigma$ (post-\emph{unsmoothing}) & $29{,}70\,\%$ & Régime faible vol.~: $15{,}0\,\%$ \\
+\rowcolor{nxlightblue} «~Ncote composite~» (rdt / vol.) & $6{,}71\,\%$ / $15{,}89\,\%$ & PE + dette privée \\
+\bottomrule
+\end{tabularx}
+\caption{Paramètres retenus --- actions non cotées.}
+\end{table}
+
+\clearpage
+% =====================================================================
+\section{Immobilier}
+% =====================================================================
+L'immobilier reprend le dispositif \emph{unsmoothing} + Black-Scholes (\S\,Private~Equity), sous hypothèse de réinvestissement des loyers ; calibrage et simulation identiques. Indice immobilier d'entreprise France (EDHEC IEIF), série démarrant en 2008.
+
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\linewidth}{R c c}
+\toprule
+\tablehead{Paramètre} & \tablehead{2026 (20~ans)} & \tablehead{2022} \\
+\midrule
+\rowcolor{nxlightblue} $\mu$ (rendement) & $5{,}633\,\%$ & $6{,}288\,\%$ \\
+$\sigma$ (post-\emph{unsmoothing}) & $6{,}128\,\%$ & $7{,}9\,\%$ \\
+\bottomrule
+\end{tabularx}
+\caption{Paramètres retenus --- immobilier.}
+\end{table}
+
+\clearpage
+% =====================================================================
+\section{Infrastructure}
+% =====================================================================
+L'infrastructure (indice coté) reprend également le dispositif \emph{unsmoothing} + Black-Scholes ; calibrage et simulation identiques au \emph{Private Equity}.
+
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\linewidth}{R c c}
+\toprule
+\tablehead{Paramètre} & \tablehead{2026 (20~ans)} & \tablehead{2022} \\
+\midrule
+\rowcolor{nxlightblue} $\mu$ (rendement) & $6{,}516\,\%$ & $7{,}626\,\%$ \\
+$\sigma$ (post-\emph{unsmoothing}) & $13{,}498\,\%$ & $18{,}459\,\%$ \\
+\bottomrule
+\end{tabularx}
+\caption{Paramètres retenus --- infrastructure.}
+\end{table}
+
+\clearpage
+% =====================================================================
+\section{Structure de dépendance --- corrélations}
+\label{sec:correl}
+% =====================================================================
+La dépendance est modélisée par une copule gaussienne sur les browniens du GSE, obtenue par estimation de Pearson, conversion analytique en corrélations de browniens, puis régularisation de semi-définie positivité.
+
+\subsection{Démarche}
+\begin{definitionbox}
+\[
+\rho^{\mathrm{hist}}\ \xrightarrow{\ \text{Pearson}\ }\ \rho^{\mathrm{target}}
+\ \xrightarrow{\ F^{-1}_{\mathcal P_1,\mathcal P_2}\ }\ \rho^{\mathrm{GSE}}
+\ \xrightarrow{\ \text{Higham}\ }\ \rho^{\mathrm{SDP}} .
+\]
+\end{definitionbox}
+
+\subsection{Formules de passage cibles \texorpdfstring{$\to$}{->} browniens}
+Chaque facteur observable s'écrit, après approximation, $G_t\approx\text{cste}+\bm Z\cdot\bm\varepsilon_t$, où $\bm Z$ dépend des paramètres du modèle.
+\begin{definitionbox}
+La corrélation modèle et la formule de passage inverse s'écrivent
+\[
+\rho^{\mathrm{model}}_{1,2}=\frac{\langle\bm Z^1,\bm Z^2\rangle}{\lVert\bm Z^1\rVert\,\lVert\bm Z^2\rVert}\,\rho^{\mathrm{GSE}}_{1,2}
+\quad\Longrightarrow\quad
+\rho^{\mathrm{GSE}}_{1,2}=\frac{\lVert\bm Z^1\rVert\,\lVert\bm Z^2\rVert}{\langle\bm Z^1,\bm Z^2\rangle}\,\rho^{\mathrm{target}}_{1,2}.
+\]
+Les trois configurations se spécialisent en
+\[
+\text{V2F}\!\times\!\text{V2F}:\ \rho^{\mathrm{GSE}}=\frac{\sqrt{(Z_1^{R_d})^2+(Z_2^{R_d})^2}\,\sqrt{(Z_1^{R_f})^2+(Z_2^{R_f})^2}}{Z_1^{R_d}Z_1^{R_f}+Z_2^{R_d}Z_2^{R_f}}\,\rho^{\mathrm{target}};
+\]
+\[
+\text{V2F}\!\times\!\text{BS (ou CIR)}:\ \rho^{\mathrm{GSE}}=\frac{\sqrt{(Z_1^{R})^2+(Z_2^{R})^2}}{Z_1^{R}+Z_2^{R}}\,\rho^{\mathrm{target}};
+\qquad
+\text{BS}\!\times\!\text{BS (ou CIR)}:\ \rho^{\mathrm{GSE}}=\rho^{\mathrm{target}}.
+\]
+\end{definitionbox}
+Les chargements d'un facteur de taux, pour une maturité $\tau$, sont $Z_1^{R}=B_1(\tau)\sqrt{V_r}\,\rho_c+B_2(\tau)\sqrt{V_m}$ et $Z_2^{R}=B_1(\tau)\sqrt{V_r}\,\sqrt{1-\rho_c^2}$, avec $V_m,V_r,\rho_c=\mathbb C_{mr}/\sqrt{V_m V_r}$ donnés au \S\ref{sec:exactv2f}. Pour le crédit, l'approximation de \emph{freezing} ($s_t\approx s_0$) rend l'observable gaussien et ramène le calcul au cas Black-Scholes. La matrice $\rho^{\mathrm{GSE}}$ est enfin projetée sur le cône semi-défini positif le plus proche (Higham, 1988), condition de la décomposition de Cholesky.
+
+\subsection{Paramètres retenus (extrait)}
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\linewidth}{R c}
+\toprule
+\tablehead{Couple de facteurs} & \tablehead{Corrél.\ browniens 2026} \\
+\midrule
+\rowcolor{nxlightblue} Action Euro $\times$ Action Monde & $82{,}85\,\%$ \\
+Action Euro $\times$ Spread crédit & $-71{,}47\,\%$ \\
+\rowcolor{nxlightblue} Spread crédit $\times$ Dette privée & $90{,}83\,\%$ \\
+Inflation LT $\times$ Taux réel LT & $-22{,}65\,\%$ \\
+\rowcolor{nxlightblue} Private Equity $\times$ Infrastructure & $72{,}66\,\%$ \\
+\bottomrule
+\end{tabularx}
+\caption{Corrélations de browniens retenues (extrait).}
+\end{table}
+
+\clearpage
+% =====================================================================
+\section{Moteur de simulation Monte-Carlo}
+% =====================================================================
+Le moteur assemble l'ensemble des facteurs en une diffusion jointe corrélée, par tirages gaussiens corrélés injectés dans les schémas de chaque classe (exact V2F, Alfonsi pour le CIR, exact log-OU, Black-Scholes).
+
+\subsection{Génération des chocs et convergence}
+\begin{definitionbox}
+Les chocs corrélés sont obtenus par décomposition de Cholesky de la matrice des browniens~:
+\[
+\bm\varepsilon_t=\bm L\,\bm z_t,\qquad \bm z_t\sim\mathcal N(\bm 0,\bm I),\qquad \bm L\,\bm L^\top=\rho^{\mathrm{SDP}} .
+\]
+L'erreur d'estimation Monte-Carlo d'une sortie décroît en $1/\sqrt{N}$ (demi-intervalle à 95\,\%~: $1{,}96\,\sigma_f/\sqrt{N}$).
+\end{definitionbox}
+
+\subsection{Paramètres de simulation}
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.4}\setlength{\tabcolsep}{6pt}
+\begin{tabularx}{\linewidth}{R c R c}
+\toprule
+\tablehead{Paramètre} & \tablehead{Valeur} & \tablehead{Paramètre} & \tablehead{Valeur} \\
+\midrule
+\rowcolor{nxlightblue} Nombre de simulations & 5\,000 & Pas de temps $dt$ & $1/12$ \\
+Horizon de projection & $\sim$30~ans & Fenêtre de calibrage & 20~ans \\
+\rowcolor{nxlightblue} Schéma CIR & Alfonsi $E(0)$ & Réserve initiale & $\approx 18{,}63$~Md\texteuro \\
+\bottomrule
+\end{tabularx}
+\caption{Paramètres du moteur de simulation.}
+\end{table}
+
+\clearpage
+% =====================================================================
+\section{Registre de vérification}
+Le tableau~\ref{tab:registre} récapitule, pour chaque composante, l'état des trois contrôles de Phase~1. Le statut est renseigné à l'issue de la réplication indépendante (cf.\ Annexe~B).
+
+\begingroup\small\setlength{\tabcolsep}{5pt}\renewcommand{\arraystretch}{1.3}
+\begin{longtable}{>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{2.9cm}}
+\toprule
+\tablehead{Composante} & \tablehead{Exactitude analytique} & \tablehead{Conformité implém.} & \tablehead{Réplication param.} \\
+\midrule
+\endfirsthead
+\toprule
+\tablehead{Composante} & \tablehead{Exactitude analytique} & \tablehead{Conformité implém.} & \tablehead{Réplication param.} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\rowcolor{nxlightblue} Inflation (V2F) & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+Taux réels (V2F) & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+\rowcolor{nxlightblue} Courbe nominale / ZC & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+Crédit (CIR) & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+\rowcolor{nxlightblue} Dette privée (BK) & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+Prime de liquidité & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+\rowcolor{nxlightblue} Actions (RSLN-2) & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+Action non cotée (PE) & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+\rowcolor{nxlightblue} Immobilier & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+Infrastructure & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+\rowcolor{nxlightblue} Corrélations & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+Moteur de simulation & \ph{[OK / KO]} & \ph{[OK / KO]} & \ph{[écart]} \\
+\caption{Registre consolidé de vérification (Phase~1).}
+\label{tab:registre}
+\end{longtable}
+\endgroup
+
+% =====================================================================
+\section{Glossaire}
+\ph{[GSE, ALM, V2F, RSLN-2, CIR, BK (Black-Karasinski), BEIR, OAT~/~OATi, ZC, \emph{unsmoothing}, copule gaussienne, condition de Feller, schéma d'Alfonsi, SDP~/~Higham, \emph{freezing}, relation de Fisher.]}
+
+\section*{Références}
+\addcontentsline{toc}{section}{Références}
+\begin{itemize}
+  \item Ahlgrim, K.~C., D'Arcy, S.~P., \& Gorvett, R.~W. (2005). \textit{Modeling financial scenarios: A framework for the actuarial profession}. Proceedings of the Casualty Actuarial Society, 92(177), 177--238.
+  \item Alfonsi, A. (2005). \textit{On the discretization schemes for the CIR (and Bessel squared) processes}. Monte Carlo Methods and Applications, 11(4).
+  \item Hardy, M.~R. (2001). \textit{A Regime-Switching Model of Long-Term Stock Returns}. North American Actuarial Journal, 5(2), 41--53.
+  \item Higham, N.~J. (1988). \textit{Computing a nearest symmetric positive semidefinite matrix}. Linear Algebra and its Applications, 103, 103--118.
+  \item Hull, J.~C., \& White, A.~D. (1994). \textit{Numerical procedures for implementing term structure models II: Two-factor models}. The Journal of Derivatives, 2(2), 37--48.
+  \item Lizieri, C., Satchell, S., \& Wongwachara, W. (2012). \textit{Unsmoothing Real Estate Returns: A Regime-Switching Approach}. Real Estate Economics, 40(4), 775--807.
+\end{itemize}
+
+\section*{Mentions légales}
+\addcontentsline{toc}{section}{Mentions légales}
+\textcopyright{}~Nexialog Consulting, 2026. Tous droits réservés. Document confidentiel fourni dans le cadre exclusif de la mission visée en page de garde. Toute reproduction ou diffusion requiert l'autorisation écrite préalable de Nexialog Consulting.
+
+\end{document}
