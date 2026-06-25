@@ -2,6 +2,8 @@
 % NOTE DE RECHERCHE — Calibrage et simulation du GSE IRCANTEC
 % Représentation autorégressive agrégée à régime latent commun :
 % estimation par maximum de vraisemblance jointe et simulation cohérente.
+% Cadre GENERAL : aucune corrélation fixée a priori ; toute la dépendance
+% est estimée librement, par régime, sur les résidus standardisés.
 % Charte Nexialog v2 (mai 2026). Polices Montserrat + Source Sans Pro
 % avec repli automatique (Times + Helvetica) si non installées.
 % Compilation : pdflatex (x2). Document autonome (logo en repli texte).
@@ -189,7 +191,7 @@
 Cette note de recherche est un document \textbf{autonome} consacré à l'\emph{estimation} et à la \emph{simulation} du générateur de scénarios économiques (GSE) monde réel du régime IRCANTEC. Elle ne reprend ni le diagnostic critique, ni les volets \emph{courbe des taux}, \emph{pricing} zéro-coupon, prime de liquidité ou \emph{smoothing} : on s'y limite, pour chaque facteur de risque, au \emph{modèle de diffusion} et à sa \emph{discrétisation} (exacte ou approchée, au pas $\Dt$), puis on construit un \textbf{unique modèle autorégressif agrégé} à régime latent commun regroupant tous les facteurs.
 
 \vspace{2mm}
-L'objet central est la \textbf{méthodologie de calibrage par maximum de vraisemblance jointe} --- et non par appariement de moments ni par régression \emph{ad hoc} --- déclinée en une procédure séquentielle en trois étapes (marges, régime commun, corrélations), avec \emph{formes fermées explicites} partout où elles existent, puis la \textbf{technique de simulation} cohérente associée. Le dernier chapitre applique le cadre à un AR regroupant l'intégralité des facteurs du GSE et en donne toutes les \emph{expressions littérales finales}, directement implémentables. Document confidentiel, à usage méthodologique exclusif de l'IRCANTEC et de la Caisse des Dépôts.
+Le cadre est \textbf{général} : aucune corrélation n'est fixée \emph{a priori} (ni à zéro, ni à dire d'expert). Toute la dépendance --- entre facteurs, à l'intérieur d'un facteur vectoriel, et selon le régime --- est \emph{estimée librement} sur les résidus standardisés. L'objet central est la \textbf{méthodologie de calibrage par maximum de vraisemblance jointe} (et non par appariement de moments ni régression \emph{ad hoc}), déclinée en une procédure séquentielle en trois étapes --- marges, régime commun, corrélations par régime --- avec \emph{formes fermées explicites} partout où elles existent, puis la \textbf{technique de simulation} cohérente associée. Le dernier chapitre applique le cadre à un AR regroupant l'intégralité des facteurs et en donne toutes les \emph{expressions littérales finales}, directement implémentables. Document confidentiel, à usage méthodologique exclusif de l'IRCANTEC et de la Caisse des Dépôts.
 \end{minipage}
 \vfill
 \begin{center}{\sffamily\bfseries\large\color{nxnavy}THINK SMART~~\textcolor{nxred}{$\bullet$}~~ACT DIFFERENT}\end{center}
@@ -210,15 +212,17 @@ L'objet central est la \textbf{méthodologie de calibrage par maximum de vraisem
 \section{Objet et périmètre}
 % =====================================================================
 
-Le GSE du régime simule par Monte-Carlo, sur un horizon ALM long ($\sim 30$~ans), l'ensemble des facteurs de risque alimentant le modèle d'allocation stratégique. Chaque facteur est diffusé par une équation différentielle stochastique (EDS) propre, discrétisée puis simulée au pas mensuel. La présente note se concentre sur deux maillons : (i)~la \textbf{mise sous forme autorégressive unique} de tous ces facteurs, et (ii)~leur \textbf{calibrage par vraisemblance jointe} et leur \textbf{simulation cohérente}.
+Le GSE du régime simule par Monte-Carlo, sur un horizon ALM long ($\sim 30$~ans), l'ensemble des facteurs de risque alimentant le modèle d'allocation stratégique. Chaque facteur est diffusé par une équation différentielle stochastique (EDS) propre, discrétisée puis simulée au pas mensuel. La présente note se concentre sur deux maillons~: (i)~la \textbf{mise sous forme autorégressive unique} de tous ces facteurs, et (ii)~leur \textbf{calibrage par vraisemblance jointe} et leur \textbf{simulation cohérente}.
 
 \begin{insightbox}[Fil directeur]
-Toute EDS du GSE, une fois discrétisée, s'écrit comme une \emph{récurrence autorégressive vectorielle} dont les coefficients peuvent dépendre du temps $t$, du pas $\Dt$ et d'un \emph{processus de Markov d'état économique commun} $\Ecal_t$. On agrège tous les facteurs en un \emph{seul} modèle vectoriel à changement de régime (MS-VAR), on le calibre par maximum de vraisemblance de manière séquentielle (marges $\to$ régime $\to$ corrélations) et on le simule directement à partir de cette représentation. Estimation et simulation partagent ainsi \emph{une seule et même loi}.
+Toute EDS du GSE, une fois discrétisée, s'écrit comme une \emph{récurrence autorégressive vectorielle} dont les coefficients peuvent dépendre du temps $t$, du pas $\Dt$ et d'un \emph{processus de Markov d'état économique commun} $\Ecal_t$. On agrège tous les facteurs en un \emph{seul} modèle vectoriel à changement de régime (MS-VAR), on le calibre par maximum de vraisemblance de manière séquentielle (marges $\to$ régime $\to$ corrélations par régime) et on le simule directement à partir de cette représentation. Estimation et simulation partagent ainsi \emph{une seule et même loi}, et \emph{aucune corrélation n'est imposée}~: toute la dépendance est estimée.
 \end{insightbox}
 
 \noindent\textbf{Périmètre.} Conformément à l'objet de la note, on rappelle pour chaque facteur \emph{uniquement} le modèle de diffusion et sa discrétisation (en précisant si elle est exacte). Les éléments de \emph{pricing} de la courbe nominale, les corrections de covariance zéro-coupon, la prime de liquidité et la mécanique de \emph{déslissage} (\emph{unsmoothing}) ne sont pas traités~: on suppose ces pré-traitements déjà appliqués, et l'on travaille sur les séries de facteurs qui en résultent.
 
-\noindent\textbf{Plan.} La Section~\ref{sec:notations} fixe les notations. La Section~\ref{sec:facteurs} rappelle modèle et discrétisation de chaque facteur. La Section~\ref{sec:ar} établit la représentation AR universelle et la classification des facteurs ; la Section~\ref{sec:pit} introduit les résidus standardisés ; la Section~\ref{sec:msvar} assemble le \emph{modèle AR agrégé}. La Section~\ref{sec:calib} développe la méthodologie de calibrage par vraisemblance jointe avec ses formes fermées ; la Section~\ref{sec:simu} la simulation. La Section~\ref{sec:appli} déroule l'\emph{application} à un AR regroupant tous les facteurs et en donne toutes les expressions littérales finales.
+\noindent\textbf{Principe de parcimonie en hypothèses.} On ne retient que la structure \emph{de diffusion} de chaque facteur (dérive, retour à la moyenne, positivité, changement de régime). On n'impose \emph{aucune} contrainte sur les (co)variances de bruit ni sur les corrélations~: la matrice de dépendance est pleinement libre et estimée par régime. En particulier, la corrélation interne d'un facteur à deux composantes (Vasicek bi-factoriel) n'est \emph{pas} fixée à zéro.
+
+\noindent\textbf{Plan.} La Section~\ref{sec:notations} fixe les notations. La Section~\ref{sec:facteurs} rappelle modèle et discrétisation de chaque facteur. La Section~\ref{sec:ar} établit la représentation AR universelle et la classification des facteurs~; la Section~\ref{sec:pit} introduit les résidus standardisés~; la Section~\ref{sec:msvar} assemble le \emph{modèle AR agrégé}. La Section~\ref{sec:calib} développe la méthodologie de calibrage par vraisemblance jointe avec ses formes fermées~; la Section~\ref{sec:simu} la simulation. La Section~\ref{sec:appli} déroule l'\emph{application} à un AR regroupant tous les facteurs et en donne toutes les expressions littérales finales.
 
 % =====================================================================
 \section{Notations et conventions}
@@ -231,9 +235,9 @@ On fixe les conventions valables dans toute la note.
 \item \textbf{Pas et fenêtre.} $h=\Dt=1/12$ est le pas mensuel et $n\approx 240$ le nombre de points (fenêtre de 20~ans). Les dates sont $t,\,t+h,\dots$
 \item \textbf{Régime commun.} $\Ecal_t\in\{1,\dots,K\}$ est la chaîne de Markov d'\emph{état économique commun}, de matrice de transition $P=(p_{ab})_{a,b\le K}$ (avec $p_{ab}=\Prob(\Ecal_{t+h}=b\mid\Ecal_t=a)$) et de loi invariante $\pi=(\pi_a)$ vérifiant $\pi\transp P=\pi\transp$. La notation $\Ecal$ évite toute collision avec le pas $\Dt$.
 \item \textbf{Facteurs.} On indexe les facteurs par $i$. Le vecteur d'état du facteur $i$ est $Y^{(i)}_t\in\R^{d_i}$ ($d_i=2$ pour un Vasicek à deux facteurs, noté V2F~; $d_i=1$ sinon). Le vecteur d'état \emph{global} empilant tous les facteurs est $Y_t\in\R^{d}$, $d=\sum_i d_i$.
-\item \textbf{Innovations.} $\eps_{t+h}$ est le vecteur des innovations \emph{standardisées} (marginalement $\Ncal(0,1)$), de matrice de corrélation $\Omega(\Ecal_t)$ éventuellement dépendante du régime. On écrit $\eps_{t+h}=L(\Ecal_t)\,z_{t+h}$ avec $z_{t+h}\sim\Ncal(0,I)$ et $L(a)L(a)\transp=\Omega(a)$ (facteur de Cholesky).
-\item \textbf{Lois.} $\Phi$ et $\varphi$ sont la fonction de répartition et la densité de $\Ncal(0,1)$~; $f_i(\cdot\mid\cdot)$ est la densité de transition conditionnelle exacte du facteur $i$ et $F_i$ sa fonction de répartition~; $F_{\chi'^2}(\cdot\,;\nu,\lambda)$ est la fonction de répartition d'un $\chi^2$ décentré à $\nu$ degrés de liberté et paramètre de non-centralité $\lambda$.
-\item \textbf{Information et paramètres.} $\Xcal_t$ est l'information disponible en $t$ (filtration), $\Theta$ l'ensemble des paramètres, $\hat{\theta}_i$ l'estimateur des paramètres de marge du facteur $i$. La log-vraisemblance est notée $\ell$.
+\item \textbf{Innovations et dépendance.} $\eps_{t+h}\in\R^d$ est le vecteur des innovations \emph{standardisées} (marginalement $\Ncal(0,1)$), de matrice de corrélation \emph{pleine et libre} $\Omega(\Ecal_t)$, éventuellement dépendante du régime. On écrit $\eps_{t+h}=L(\Ecal_t)\,z_{t+h}$ avec $z_{t+h}\sim\Ncal(0,I_d)$ et $L(a)L(a)\transp=\Omega(a)$ (facteur de Cholesky).
+\item \textbf{Lois.} $\Phi$ et $\varphi$ sont la fonction de répartition et la densité de $\Ncal(0,1)$~; $\varphi_p(\cdot;m,V)$ la densité de $\Ncal(m,V)$ en dimension $p$~; $f_i(\cdot\mid\cdot)$ la densité de transition conditionnelle exacte du facteur $i$ et $F_i$ sa fonction de répartition~; $F_{\chi'^2}(\cdot\,;\nu,\lambda)$ la fonction de répartition d'un $\chi^2$ décentré à $\nu$ degrés de liberté et non-centralité $\lambda$.
+\item \textbf{Information et paramètres.} $\Xcal_t$ est l'information disponible en $t$, $\hat{\theta}_i$ l'estimateur des paramètres de marge du facteur $i$, $\ell$ la log-vraisemblance.
 \end{itemize}
 
 % =====================================================================
@@ -241,41 +245,39 @@ On fixe les conventions valables dans toute la note.
 \label{sec:facteurs}
 % =====================================================================
 
-On rappelle, facteur par facteur, l'EDS de diffusion et sa discrétisation au pas $\Dt$, en indiquant si elle est \textbf{exacte} (loi de transition simulée sans biais) ou \textbf{approchée}. Seuls modèle et discrétisation sont rappelés.
+On rappelle, facteur par facteur, l'EDS de diffusion et sa discrétisation au pas $\Dt$, en indiquant si elle est \textbf{exacte}. \emph{Aucune restriction n'est posée sur les corrélations}~; chaque facteur garde sa structure de bruit la plus générale.
 
 \subsection{Inflation --- Vasicek à deux facteurs (V2F)}
+\label{sec:v2f}
 \begin{definitionbox}
 \textbf{Modèle.} Un facteur court $q^{s}_t$ revient vers un facteur long stochastique $q^{l}_t$, lui-même en retour à la moyenne vers la cible long terme $\mu_l$~:
 \[
 \dd q^{s}_t=\kappa_1(q^{l}_t-q^{s}_t)\,\dd t+\sigma_1\,\dd W^1_t,\qquad
-\dd q^{l}_t=\kappa_2(\mu_l-q^{l}_t)\,\dd t+\sigma_2\,\dd W^2_t .
+\dd q^{l}_t=\kappa_2(\mu_l-q^{l}_t)\,\dd t+\sigma_2\,\dd W^2_t,
 \]
-\textbf{Discrétisation : exacte.} La loi conditionnelle de $(q^{s}_{t+\Dt},q^{l}_{t+\Dt})$ sachant $(q^{s}_t,q^{l}_t)$ est gaussienne bivariée~:
+de browniens de corrélation instantanée $\dd\langle W^1,W^2\rangle=\rho\,\dd t$ (\emph{libre}, non fixée). En posant $X_t=(q^s_t,q^l_t)\transp$, $\ A=\bigl(\begin{smallmatrix}\kappa_1&-\kappa_1\\ 0&\kappa_2\end{smallmatrix}\bigr)$ et $\Sigma_w=\bigl(\begin{smallmatrix}\sigma_1^2&\rho\sigma_1\sigma_2\\ \rho\sigma_1\sigma_2&\sigma_2^2\end{smallmatrix}\bigr)$, on a $\dd X_t=A(\mu_\infty-X_t)\,\dd t+\Sigma_w^{1/2}\dd W_t$, $\mu_\infty=(\mu_l,\mu_l)\transp$.
+
+\smallskip
+\textbf{Discrétisation : exacte.} La loi de $X_{t+\Dt}\mid X_t$ est gaussienne~:
 \[
-\begin{aligned}
-q^{l}_{t+\Dt}&=e^{-\kappa_2\Dt}q^{l}_t+\mu_l\big(1-e^{-\kappa_2\Dt}\big)+\sqrt{V_m}\;\eps^{l}_{t+\Dt},\\
-q^{s}_{t+\Dt}&=e^{-\kappa_1\Dt}q^{s}_t+\tfrac{\kappa_1}{\kappa_1-\kappa_2}\big(e^{-\kappa_2\Dt}-e^{-\kappa_1\Dt}\big)\big(q^{l}_t-\mu_l\big)+\mu_l\big(1-e^{-\kappa_1\Dt}\big)+\sqrt{V_r}\,\eps^{s}_{t+\Dt},
-\end{aligned}
+X_{t+\Dt}=\Phi\,X_t+(I-\Phi)\,\mu_\infty+\eta_{t+\Dt},\quad \eta_{t+\Dt}\sim\Ncal(0,\Sigma_{\mathrm{cond}}),
 \]
-de moments conditionnels (avec $\rho_c=C_{mr}/\sqrt{V_rV_m}$)
 \[
-\begin{aligned}
-V_m&=\tfrac{\sigma_2^2}{2\kappa_2}\big(1-e^{-2\kappa_2\Dt}\big),\qquad
-C_{mr}=\tfrac{\kappa_1}{\kappa_1-\kappa_2}\sigma_2^2\Big[\tfrac{1-e^{-2\kappa_2\Dt}}{2\kappa_2}-\tfrac{1-e^{-(\kappa_1+\kappa_2)\Dt}}{\kappa_1+\kappa_2}\Big],\\
-V_r&=\Big(\tfrac{\kappa_1}{\kappa_1-\kappa_2}\Big)^{2}\sigma_2^2\Big[\tfrac{1-e^{-2\kappa_2\Dt}}{2\kappa_2}-\tfrac{2(1-e^{-(\kappa_1+\kappa_2)\Dt})}{\kappa_1+\kappa_2}+\tfrac{1-e^{-2\kappa_1\Dt}}{2\kappa_1}\Big]+\tfrac{\sigma_1^2}{2\kappa_1}\big(1-e^{-2\kappa_1\Dt}\big).
-\end{aligned}
+\Phi=e^{-A\Dt}=\begin{pmatrix}e^{-\kappa_1\Dt}&\phi_{12}\\[2pt] 0&e^{-\kappa_2\Dt}\end{pmatrix},\quad
+\phi_{12}=\tfrac{\kappa_1}{\kappa_1-\kappa_2}\big(e^{-\kappa_2\Dt}-e^{-\kappa_1\Dt}\big),\quad
+\Sigma_{\mathrm{cond}}=\!\int_0^{\Dt}\! e^{-Au}\Sigma_w e^{-A\transp u}\dd u.
 \]
 \end{definitionbox}
-Le schéma étant exact, il est sans biais quel que soit $\Dt$. On notera que $\eps^{s},\eps^{l}$ sont ici standardisés et corrélés à $\rho_c$.
+\noindent La dérive $\Phi$ ne dépend que de $(\kappa_1,\kappa_2)$~; toute la dépendance de bruit est dans la matrice \emph{pleine} $\Sigma_{\mathrm{cond}}=\bigl(\begin{smallmatrix}V_r&C_{mr}\\ C_{mr}&V_m\end{smallmatrix}\bigr)$, de corrélation conditionnelle $\rho_c=C_{mr}/\sqrt{V_rV_m}$ (libre). De façon équivalente, $\Sigma_{\mathrm{cond}}=\Sigma_\infty-\Phi\,\Sigma_\infty\Phi\transp$ avec $\Sigma_\infty$ solution de $A\Sigma_\infty+\Sigma_\infty A\transp=\Sigma_w$ (équation de Lyapunov). En pratique, $\Sigma_{\mathrm{cond}}$ \emph{n'a pas à être développée}~: elle est estimée directement comme covariance des résidus (\S\ref{sec:closed}). Le schéma est sans biais quel que soit $\Dt$.
 
 \subsection{Taux réels --- Vasicek à deux facteurs (V2F)}
 \begin{definitionbox}
 \textbf{Modèle.} Structure identique, facteur court $r_t$ vers facteur long $l_t$ de cible $\mu$~:
 \[
 \dd r_t=\kappa_1(l_t-r_t)\,\dd t+\sigma_1\,\dd W^1_t,\qquad
-\dd l_t=\kappa_2(\mu-l_t)\,\dd t+\sigma_2\,\dd W^2_t .
+\dd l_t=\kappa_2(\mu-l_t)\,\dd t+\sigma_2\,\dd W^2_t,\qquad \dd\langle W^1,W^2\rangle=\rho\,\dd t .
 \]
-\textbf{Discrétisation : exacte}, par les mêmes formules que l'inflation (\S3.1), en remplaçant $(q^s,q^l,\mu_l)$ par $(r,l,\mu)$.
+\textbf{Discrétisation : exacte}, par les mêmes expressions qu'au \S\ref{sec:v2f} ($\Phi=e^{-A\Dt}$, $\Sigma_{\mathrm{cond}}$ pleine), en remplaçant $(q^s,q^l,\mu_l)$ par $(r,l,\mu)$.
 \end{definitionbox}
 
 \subsection{Crédit IG --- spread CIR}
@@ -318,7 +320,7 @@ x_{t+\Dt}=\big(\mu_{\Ecal_t}-\tfrac{\sigma_{\Ecal_t}^2}{2}\big)\Dt+\sigma_{\Ecal
 \]
 en posant la moyenne et la variance \emph{par pas} et \emph{par régime} $m_a=(\mu_a-\tfrac{\sigma_a^2}{2})\Dt$ et $v_a=\sigma_a^2\Dt$.
 \end{definitionbox}
-C'est le seul facteur dont les coefficients dépendent explicitement du régime ($\Phi=0$, $c=m_{\Ecal_t}$, $\Sigma=\sqrt{v_{\Ecal_t}}$).
+C'est le facteur dont les coefficients de marge dépendent explicitement du régime ($\Phi=0$, $c=m_{\Ecal_t}$, $\Sigma=\sqrt{v_{\Ecal_t}}$).
 
 \subsection{Actifs valorisés à pas espacé (PE, immobilier, infrastructure) --- Black--Scholes}
 \begin{definitionbox}
@@ -360,37 +362,38 @@ Le point de départ du cadre est l'observation que \emph{toute} discrétisation 
 \begin{definitionbox}
 \textbf{Forme AR universelle.} Pour chaque facteur $i$,
 \[
-\boxed{\;Y^{(i)}_{t+\Dt}=\Phi_i(t,\Dt,\Ecal_t)\,Y^{(i)}_t+c_i(t,\Dt,\Ecal_t)+\Sigma_i(t,\Dt,\Ecal_t)\,\eps^{(i)}_{t+\Dt}\;}
+\boxed{\;Y^{(i)}_{t+\Dt}=\Phi_i(t,\Dt,\Ecal_t)\,Y^{(i)}_t+c_i(t,\Dt,\Ecal_t)+D_i(t,\Dt,\Ecal_t)\,\eps^{(i)}_{t+\Dt}\;}
 \]
-où $\eps^{(i)}_{t+\Dt}$ est une innovation standardisée, $\Phi_i$ la matrice autorégressive, $c_i$ le terme déterministe et $\Sigma_i$ l'échelle conditionnelle (scalaire ou Cholesky d'une covariance conditionnelle).
+où $\eps^{(i)}_{t+\Dt}$ est l'innovation \emph{standardisée} (composantes marginalement $\Ncal(0,1)$), $\Phi_i$ la matrice autorégressive, $c_i$ le terme déterministe et $D_i$ l'échelle conditionnelle (diagonale des écarts-types conditionnels). \emph{Toute} corrélation --- entre composantes d'un même facteur et entre facteurs --- est reportée dans la matrice $\Omega(\Ecal_t)$ de \S\ref{sec:msvar}.
 \end{definitionbox}
 
-\noindent\textbf{Classification.} La dépendance des coefficients au régime partitionne les facteurs en deux groupes~:
+\noindent\textbf{Classification (par les marges).} La dépendance des coefficients de \emph{marge} au régime partitionne les facteurs~:
 \[
-\textbf{Groupe A (insensible au régime)}:\ \frac{\partial\{\Phi_i,c_i,\Sigma_i\}}{\partial\Ecal}=0\,;\qquad
-\textbf{Groupe B (sensible)}:\ \{\Phi_i,c_i,\Sigma_i\}=\{\Phi_i,c_i,\Sigma_i\}(\Ecal_t).
+\textbf{Groupe A (marges insensibles au régime)}:\ \tfrac{\partial\{\Phi_i,c_i,D_i\}}{\partial\Ecal}=0\,;\qquad
+\textbf{Groupe B (marges sensibles)}:\ \{\Phi_i,c_i,D_i\}=\{\Phi_i,c_i,D_i\}(\Ecal_t).
 \]
+Cette partition ne concerne que les \emph{marges}~: la \emph{dépendance} $\Omega(\Ecal_t)$ reste, elle, pleinement libre et dépendante du régime pour tous les facteurs (\S\ref{sec:msvar}).
 
 \begin{table}[H]
 \centering\small
 \renewcommand{\arraystretch}{1.4}
 \begin{tabularx}{\textwidth}{@{}l l X c@{}}
 \toprule
-\textbf{Facteur} & \textbf{Forme AR} & \textbf{Coefficients} & \textbf{Gr.} \\
+\textbf{Facteur} & \textbf{Forme AR} & \textbf{Coefficients (marge)} & \textbf{Gr.} \\
 \midrule
 V2F (infl., taux réels) & VAR(1) gaussien $2{\times}2$ &
-$\Phi=\bigl(\begin{smallmatrix}e^{-\kappa_1\Dt}&\phi_{12}\\[1pt] 0&e^{-\kappa_2\Dt}\end{smallmatrix}\bigr)$, $\ \Sigma=\chol(\Sigma_{\mathrm{cond}})$ & A \\
+$\Phi=\bigl(\begin{smallmatrix}e^{-\kappa_1\Dt}&\phi_{12}\\[1pt] 0&e^{-\kappa_2\Dt}\end{smallmatrix}\bigr)$, $\ D=\diag(\sqrt{V_r},\sqrt{V_m})$ & A \\
 Black--Karasinski (dette priv.) & AR(1) scalaire sur $y=\ln s$ &
-$\Phi=e^{-k\Dt}$, $c=\theta(1-e^{-k\Dt})$, $\Sigma=\sigma\sqrt{\tfrac{1-e^{-2k\Dt}}{2k}}$ & A \\
+$\Phi=e^{-k\Dt}$, $c=\theta(1-e^{-k\Dt})$, $D=\sigma\sqrt{\tfrac{1-e^{-2k\Dt}}{2k}}$ & A \\
 CIR (crédit IG) & AR « racine carrée » non linéaire &
 $\sqrt{\bar s_{t+\Dt}}\approx\big|a\sqrt{\bar s_t}+b\,\Dt W\big|$, $a=1-\tfrac{\kappa\Dt}{2}$, $b=\tfrac{\sigma}{2a}$ & A \\
 Hardy RSLN-2 (actions) & AR(0) moyenne/vol par régime &
-$\Phi=0$, $c(\Ecal)=m_\Ecal$, $\Sigma(\Ecal)=\sqrt{v_\Ecal}$ & B \\
+$\Phi=0$, $c(\Ecal)=m_\Ecal$, $D(\Ecal)=\sqrt{v_\Ecal}$ & B \\
 BS \emph{déslissé} (PE/immo/infra) & AR(0) gaussien &
-$\Phi=0$, $c=(\mu-\tfrac{\sigma^2}{2})\Dt$, $\Sigma=\sigma\sqrt{\Dt}$ & A$^{(\dagger)}$ \\
+$\Phi=0$, $c=(\mu-\tfrac{\sigma^2}{2})\Dt$, $D=\sigma\sqrt{\Dt}$ & A$^{(\dagger)}$ \\
 \bottomrule
 \end{tabularx}
-\caption{Mise sous forme AR de chaque facteur, avec $\phi_{12}=\tfrac{\kappa_1}{\kappa_1-\kappa_2}(e^{-\kappa_2\Dt}-e^{-\kappa_1\Dt})$. $^{(\dagger)}$~promouvable au Groupe~B si les données justifient un régime propre. Le CIR n'est pas affine en $s$~: récurrence non linéaire, mais bruit gaussien.}
+\caption{Mise sous forme AR de chaque facteur, avec $\phi_{12}=\tfrac{\kappa_1}{\kappa_1-\kappa_2}(e^{-\kappa_2\Dt}-e^{-\kappa_1\Dt})$ et $(V_r,V_m)$ les variances conditionnelles du V2F (diagonale de $\Sigma_{\mathrm{cond}}$). $^{(\dagger)}$~promouvable au Groupe~B si les données justifient un régime propre. Le CIR n'est pas affine en $s$~: récurrence non linéaire, mais bruit gaussien. La corrélation interne $\rho_c$ du V2F et toutes les corrélations croisées sont dans $\Omega(\Ecal_t)$.}
 \label{tab:formes}
 \end{table}
 
@@ -402,16 +405,16 @@ $\Phi=0$, $c=(\mu-\tfrac{\sigma^2}{2})\Dt$, $\Sigma=\sigma\sqrt{\Dt}$ & A$^{(\da
 Pour homogénéiser facteurs gaussiens et non gaussiens et isoler proprement la dépendance, on standardise chaque innovation par transformée intégrale de probabilité (PIT, ou transformée de Rosenblatt).
 
 \begin{definitionbox}
-\textbf{Résidu standardisé.} Pour le facteur $i$,
+\textbf{Résidu standardisé (composante par composante).} Pour chaque composante scalaire $j$ d'un facteur,
 \[
-\widehat\eps^{(i)}_{t+\Dt}=\Phi^{-1}\!\Big(F_i\big(Y^{(i)}_{t+\Dt}\mid Y^{(i)}_t,\Ecal_t;\hat\theta_i\big)\Big).
+\widehat\eps^{(j)}_{t+\Dt}=\Phi^{-1}\!\Big(F_j\big(Y^{(j)}_{t+\Dt}\mid Y_t,\Ecal_t;\hat\theta\big)\Big),
 \]
-Sous bonne spécification, $\widehat\eps^{(i)}\sim\Ncal(0,1)$ i.i.d.\ et \emph{stationnaire}.
+$F_j$ étant la fonction de répartition conditionnelle \emph{marginale} de la composante $j$. Sous bonne spécification, $\widehat\eps^{(j)}\sim\Ncal(0,1)$ i.i.d.\ et \emph{stationnaire}.
 \end{definitionbox}
 
-\noindent Pour un facteur \emph{gaussien} (V2F, BK, BS, et Hardy conditionnellement au régime), $\Phi^{-1}\!\circ F_i$ se réduit à la simple \emph{standardisation} de l'innovation~: $\widehat\eps^{(i)}=\Sigma_i^{-1}\big(Y^{(i)}_{t+\Dt}-\Phi_iY^{(i)}_t-c_i\big)$, sans inversion numérique. Pour le CIR, $F_i$ est la fonction de répartition du $\chi^2$ décentré (\S\ref{sec:appli}).
+\noindent Pour une composante \emph{gaussienne} (V2F, BK, BS, Hardy conditionnellement au régime), $\Phi^{-1}\!\circ F_j$ se réduit à la \emph{standardisation} par l'écart-type conditionnel~: $\widehat\eps^{(j)}_{t+\Dt}=(Y^{(j)}_{t+\Dt}-[\Phi Y_t]_j-c_j)/D_j$, sans inversion numérique. On standardise \emph{chaque} composante scalaire (y compris les deux composantes du V2F) par sa propre dispersion conditionnelle, \emph{sans blanchir} le bloc~: les corrélations conditionnelles --- dont la corrélation interne $\rho_c$ du V2F --- sont alors entièrement portées par $\Omega$. Pour le CIR, $F_j$ est la fonction de répartition du $\chi^2$ décentré (\S\ref{sec:appli}).
 
-La dépendance inter-facteurs est alors portée par une \textbf{copule gaussienne} sur ces scores~: $\widehat\eps_{t+\Dt}\sim\Ncal\big(0,\Omega(\Ecal_t)\big)$, $\Omega$ étant estimée \emph{sur les résidus} et non sur les niveaux. Trois bénéfices~: traitement \emph{uniforme} des marges (gaussiennes et $\chi^2$ décentrée), corrélations calculées sur un \emph{bruit blanc stationnaire}, et \emph{cohérence interne} entre la loi estimée et la loi simulée.
+La dépendance est alors une \textbf{copule gaussienne} sur ces scores~: $\widehat\eps_{t+\Dt}\sim\Ncal\big(0,\Omega(\Ecal_t)\big)$, $\Omega$ \emph{pleine, libre et dépendante du régime}, estimée \emph{sur les résidus} (et non sur les niveaux). Trois bénéfices~: traitement \emph{uniforme} des marges (gaussiennes et $\chi^2$ décentrée), corrélations sur un \emph{bruit blanc stationnaire}, et \emph{cohérence interne} entre la loi estimée et la loi simulée. Aucune entrée de $\Omega$ n'est contrainte.
 
 % =====================================================================
 \section{Modèle AR agrégé à régime latent commun (MS-VAR)}
@@ -426,14 +429,10 @@ On empile tous les facteurs en un \emph{unique} vecteur autorégressif à change
 \boxed{\;Y_{t+\Dt}=c(\Ecal_t)+\Phi(\Ecal_t)\,Y_t+D(\Ecal_t)\,\eps_{t+\Dt},\qquad
 \eps_{t+\Dt}\sim\Ncal\big(0,\Omega(\Ecal_t)\big),\quad \Ecal_t\sim\text{Markov}(P)\;}
 \]
-où $\Phi(a)$ et $c(a)$ sont \emph{bloc-diagonaux} / empilés par facteur (constants pour le Groupe~A, fonction de $a$ pour le Groupe~B), $D(a)=\diag(\dots)$ rassemble les échelles conditionnelles, et $\Omega(a)$ est la matrice de corrélation des résidus standardisés dans le régime $a$.
+où $\Phi(a)$, $c(a)$, $D(a)$ sont \emph{bloc-diagonaux} par facteur (constants en $a$ pour le Groupe~A, fonction de $a$ pour le Groupe~B), et $\Omega(a)$ est la matrice de corrélation --- \emph{pleine, libre et propre au régime $a$} --- des résidus standardisés.
 \end{definitionbox}
 
-\noindent La structure de $\Omega(a)$ sépare deux sources de dépendance~:
-\[
-\Omega(a)=\begin{pmatrix}\Omega^{AA} & \Omega^{AB}(a)\\[2pt] \Omega^{AB}(a)\transp & \Omega^{BB}(a)\end{pmatrix},
-\]
-le bloc $\Omega^{AA}$ (Groupe~A) étant \emph{indépendant} du régime, les blocs $\Omega^{AB}(a)$ (croisé) et $\Omega^{BB}(a)$ (Groupe~B) en dépendant. La chaîne $\Ecal_t$ capture le \emph{facteur latent de marché} (co-mouvement systémique des régimes)~; $\Omega(\Ecal_t)$ capture la dépendance \emph{intra}-régime. Le co-mouvement des actifs risqués en stress est ainsi porté \emph{intrinsèquement} par une chaîne unique, et non par un artifice de simulation.
+\noindent\textbf{Deux véhicules de dépendance, aucun imposé.} La chaîne $\Ecal_t$ capture le \emph{facteur latent de marché} (co-mouvement systémique des régimes)~; la matrice $\Omega(\Ecal_t)$ capture la dépendance \emph{intra-régime}, sans aucune contrainte~: ni zéro a priori (y compris entre les deux composantes d'un V2F), ni valeur à dire d'expert, ni indépendance d'un bloc au régime. Toutes les entrées de chaque $\Omega(a)$ sont estimées (\S\ref{sec:calib}). Le co-mouvement des actifs risqués en stress est ainsi porté \emph{intrinsèquement} par une chaîne unique et par une corrélation propre au régime, et non par un artifice de simulation.
 
 % =====================================================================
 \section{Méthodologie de calibrage par vraisemblance jointe}
@@ -448,10 +447,10 @@ Chaque facteur possède une densité de transition \emph{exacte} (Tableau~\ref{t
 \]
 
 \begin{insightbox}[La vraisemblance, et non la régression]
-Pour les facteurs \emph{gaussiens à discrétisation exacte}, la vraisemblance conditionnelle est gaussienne~: son maximum admet une \emph{forme fermée} qui coïncide algébriquement avec les moindres carrés. Il ne s'agit pourtant ni d'un appariement de moments, ni d'une régression posée \emph{ad hoc}~: c'est l'\textbf{EMV conditionnel exact}, efficient (borne de Cramér--Rao) et consistant même en forte persistance (le score est une différence de martingale). On préfère donc partout l'écriture par la vraisemblance~; les formules fermées en sont la \emph{solution}, pas le point de départ.
+Pour les facteurs \emph{gaussiens à discrétisation exacte}, la vraisemblance conditionnelle est gaussienne~: son maximum admet une \emph{forme fermée} qui coïncide algébriquement avec les moindres carrés. Il ne s'agit pourtant ni d'un appariement de moments, ni d'une régression posée \emph{ad hoc}~: c'est l'\textbf{EMV conditionnel exact}, efficient (borne de Cramér--Rao) et consistant même en forte persistance (le score est une différence de martingale). On préfère donc partout l'écriture par la vraisemblance~; les formules fermées en sont la \emph{solution}.
 \end{insightbox}
 
-\noindent L'estimation conjointe directe de toutes les marges, de la chaîne et de toutes les corrélations est numériquement fragile (grande dimension, multimodalité). On adopte une stratégie \textbf{séquentielle} de type IFM (\emph{Inference Functions for Margins})~: consistante, modulaire, et bien plus stable. La Figure~\ref{fig:cascade} en donne le schéma en trois étapes.
+\noindent L'estimation conjointe directe (toutes marges, chaîne, et toutes corrélations en même temps) est numériquement fragile (grande dimension, multimodalité). On adopte une stratégie \textbf{séquentielle} de type IFM (\emph{Inference Functions for Margins})~: consistante, modulaire et stable. La Figure~\ref{fig:cascade} en donne le schéma en trois étapes (marges $\to$ régime $\to$ corrélations par régime).
 
 \begin{figure}[H]
 \centering
@@ -461,28 +460,24 @@ Pour les facteurs \emph{gaussiens à discrétisation exacte}, la vraisemblance c
               fill=nxlightblue, text width=3.7cm, align=center, inner sep=6pt, minimum height=2.9cm},
   lab/.style={rectangle, rounded corners=2pt, fill=nxnavy, text=white, inner sep=4pt, font=\sffamily\footnotesize\bfseries},
   arr/.style={-{Latex[length=2.6mm,width=2.0mm]}, line width=1.1pt, draw=nxred}]
-\node[box] (a) {\textbf{\textcolor{nxnavy}{Étape 1 --- Groupe A}}\\[3pt]\footnotesize EMV exact (formes fermées)\\ marge par marge\\[2pt] $+\ \widehat\Omega^{AA}$ sur résidus PIT};
-\node[box, right=1.15cm of a] (b) {\textbf{\textcolor{nxnavy}{Étape 2 --- Groupe B}}\\[3pt]\footnotesize EM / Baum--Welch\\ régime \emph{commun} $\Ecal_t$\\[2pt] $\hat p_{ab}$,\ $\widehat\Omega^{BB}(a)$ par régime};
-\node[box, right=1.15cm of b] (c) {\textbf{\textcolor{nxnavy}{Étape 3 --- Couplage}}\\[3pt]\footnotesize $\widehat\Omega^{AB}(a)$ par régime\\ (résidus, params figés)\\[2pt] $+$ projection SDP (Higham)};
+\node[box] (a) {\textbf{\textcolor{nxnavy}{Étape 1 --- Groupe A}}\\[3pt]\footnotesize EMV exact (formes fermées)\\ marge par marge\\[2pt] $\Rightarrow$ résidus PIT $\widehat\eps^A$};
+\node[box, right=1.15cm of a] (b) {\textbf{\textcolor{nxnavy}{Étape 2 --- Groupe B}}\\[3pt]\footnotesize EM / Baum--Welch\\ régime \emph{commun} $\Ecal_t$\\[2pt] $\hat p_{ab}$, $\hat\xi_t(a)$, résidus $\widehat\eps^B$};
+\node[box, right=1.15cm of b] (c) {\textbf{\textcolor{nxnavy}{Étape 3 --- Dépendance}}\\[3pt]\footnotesize $\Omega(a)$ \emph{pleine} par régime\\ sur tous les résidus\\[2pt] $+$ projection SDP (Higham)};
 \node[lab, above=3mm of b] (top) {Chaîne d'état latent commun $\Ecal_t$ \ ($K^\star$ états)};
 \draw[arr] (a) -- (b);
 \draw[arr] (b) -- (c);
 \end{tikzpicture}
-\caption{Cascade d'estimation séquentielle (IFM). Chaque étape admet des mises à jour en \emph{forme fermée} (\S\ref{sec:closed})~; seule l'Étape~2 itère (EM à ascension monotone garantie).}
+\caption{Cascade d'estimation séquentielle (IFM). Chaque étape admet des mises à jour en \emph{forme fermée} (\S\ref{sec:closed})~; seule l'Étape~2 itère (EM à ascension monotone garantie). Toutes les corrélations sont estimées à l'Étape~3, par régime, sans contrainte.}
 \label{fig:cascade}
 \end{figure}
 
-\subsection{Étape 1 --- Groupe A : EMV exact des marges + corrélations sur résidus}
-Pour chaque facteur $i\in A$, on maximise la vraisemblance conditionnelle exacte (forme fermée, \S\ref{sec:closed}), on calcule les résidus PIT $\widehat\eps^{(i)}$, puis
-\[
-\widehat\Omega^{AA}=\widehat\Corr\big(\widehat\eps^{A}\big),\qquad \widehat\eps^{A}=(\widehat\eps^{(i)})_{i\in A}.
-\]
-La consistance des marges est garantie indépendamment de la dépendance croisée (propriété IFM), au prix d'une perte d'efficience \emph{modérée et quantifiable}.
+\subsection{Étape 1 --- Groupe A : EMV exact des marges, puis résidus}
+Pour chaque facteur $i\in A$, on maximise la vraisemblance conditionnelle exacte (forme fermée, \S\ref{sec:closed}) et on calcule les résidus PIT $\widehat\eps^{(i)}$. La consistance des marges est garantie indépendamment de la dépendance croisée (propriété IFM)~; aucune corrélation n'est estimée à ce stade --- elles le sont toutes à l'Étape~3.
 
 \subsection{Étape 2 --- Groupe B : EM / Baum--Welch à régime commun}
 Les facteurs du Groupe~B partageant le régime \emph{commun} $\Ecal_t$, ils s'estiment \emph{conjointement} par l'algorithme EM.
 
-\paragraph{Étape E (récurrences fermées).} \emph{Filtre de Hamilton} vers l'avant ($f_a(x_t)$~: densité $\Ncal(m_a,V_a)$ du vecteur des log-rendements du Groupe~B en régime $a$)~:
+\paragraph{Étape E (récurrences fermées).} \emph{Filtre de Hamilton} vers l'avant ($f_a(x_t)=\varphi_p(x_t;m_a,V_a)$, densité du vecteur des log-rendements du Groupe~B en régime $a$)~:
 \[
 \xi_{t\mid t-1}(a)=\sum_b \xi_{t-1\mid t-1}(b)\,p_{ba},\qquad
 \xi_{t\mid t}(a)=\frac{\xi_{t\mid t-1}(a)\,f_a(x_t)}{\sum_{a'}\xi_{t\mid t-1}(a')\,f_{a'}(x_t)},
@@ -500,24 +495,18 @@ donnant les probabilités lissées $\hat\xi_t(a)=\Prob(\Ecal_t=a\mid\Xcal_n)$ et
 \hat V_a=\frac{\sum_t \hat\xi_t(a)\,(x_t-\hat m_a)(x_t-\hat m_a)\transp}{\sum_t \hat\xi_t(a)},\qquad
 \hat p_{ab}=\frac{\sum_t \hat\xi_t(a,b)}{\sum_t \hat\xi_t(a)}.
 \]
-On en déduit $\widehat\Omega^{BB}(a)=\diag(\hat V_a)^{-1/2}\,\hat V_a\,\diag(\hat V_a)^{-1/2}$ (corrélation intra-régime du Groupe~B). L'EM garantit l'\emph{ascension monotone} de la vraisemblance~; on impose des planchers de variance pour écarter les maxima dégénérés.
+La covariance $\hat V_a$ est \emph{pleine}~: les corrélations intra-Groupe~B par régime sont estimées sans contrainte. L'EM garantit l'\emph{ascension monotone} de la vraisemblance~; on impose des planchers de variance pour écarter les maxima dégénérés.
 
-\subsection{Étape 3 --- corrélations inter-groupes par régime + projection SDP}
-On \emph{fige} les paramètres des Étapes~1--2 et les probabilités lissées. À marges fixées, la log-vraisemblance de la copule gaussienne est concave en la corrélation~: son maximum est la corrélation empirique (pondérée par les responsabilités de régime) des résidus standardisés.
+\subsection{Étape 3 --- matrice de dépendance pleine, par régime}
+\label{sec:etape3}
+On \emph{fige} les marges (Étapes~1--2) et les probabilités lissées $\hat\xi_t(a)$. Soit $\widehat\eps_t=(\widehat\eps^{A}_t,\widehat\eps^{B}_t)$ le vecteur \emph{complet} des résidus standardisés. À marges fixées, la log-vraisemblance de la copule gaussienne est maximale en la corrélation empirique \emph{pondérée par le régime}~: on estime, \emph{sans aucune contrainte}, la matrice pleine
 \begin{definitionbox}
 \[
-\widehat\Omega^{AB}(a)=\frac{\sum_t \hat\xi_t(a)\,\widehat\eps^{A}_t\,(\widehat\eps^{B}_t)\transp}{\sum_t \hat\xi_t(a)},
-\qquad
-\widehat\Omega^{BB}(a)=\frac{\sum_t \hat\xi_t(a)\,\widehat\eps^{B}_t\,(\widehat\eps^{B}_t)\transp}{\sum_t \hat\xi_t(a)},
-\qquad
-\widehat\Omega^{AA}=\widehat\Corr(\widehat\eps^{A}).
+\widehat\Omega(a)=\frac{\sum_t \hat\xi_t(a)\,\widehat\eps_t\,\widehat\eps_t\transp}{\sum_t \hat\xi_t(a)}\,,\qquad a=1,\dots,K^\star,
 \]
+puis projection sur le cône SDP le plus proche (Higham), \emph{régime par régime}~: $\widehat\Omega(a)\xrightarrow{\text{Higham}}\Omega^{\mathrm{SDP}}(a)$, condition de la décomposition de Cholesky.
 \end{definitionbox}
-On assemble $\Omega(a)$ par blocs, puis on la projette \emph{régime par régime} sur le cône semi-défini positif (SDP) le plus proche (Higham), condition de la décomposition de Cholesky~:
-\[
-\Omega(a)=\begin{pmatrix}\Omega^{AA} & \Omega^{AB}(a)\\[2pt] \Omega^{AB}(a)\transp & \Omega^{BB}(a)\end{pmatrix}
-\ \xrightarrow{\ \text{Higham}\ }\ \Omega^{\mathrm{SDP}}(a).
-\]
+\noindent Toutes les entrées (intra-V2F, intra-Groupe~B, croisées A--B, et leur variation selon $a$) sont ainsi \emph{estimées}, jamais imposées. Comme les résidus sont standardisés (marginalement et, pour le Groupe~B, conditionnellement au régime), $\widehat\Omega(a)$ est bien une matrice de corrélation (diagonale unité). Le bloc intra-Groupe~B coïncide avec la corrélation déduite de $\hat V_a$ (Étape~2).
 
 \subsection{Formes fermées des estimateurs}
 \label{sec:closed}
@@ -529,7 +518,7 @@ Pour $y_{t+\Dt}=\beta\,y_t+c+\xi_{t+\Dt}$, $\xi\sim\Ncal(0,v)$, l'EMV conditionn
 \[
 \hat\beta=\frac{\sum_t (y_t-\bar y_-)(y_{t+\Dt}-\bar y_+)}{\sum_t (y_t-\bar y_-)^2},\quad
 \hat c=\bar y_+-\hat\beta\,\bar y_-,\quad
-\hat v=\frac{1}{n-1}\sum_t \widehat\xi_{t+\Dt}^{\,2},
+\hat v=\frac{1}{n}\sum_t \widehat\xi_{t+\Dt}^{\,2},
 \]
 puis l'inversion analytique des paramètres structurels~:
 \[
@@ -540,23 +529,22 @@ puis l'inversion analytique des paramètres structurels~:
 $\bar y_-,\bar y_+$ étant les moyennes empiriques de $(y_t)$ et $(y_{t+\Dt})$, et $\widehat\xi_{t+\Dt}=y_{t+\Dt}-\hat\beta y_t-\hat c$ le résidu.
 \end{definitionbox}
 
-\paragraph{(A bis) V2F --- cascade de régressions $=$ EMV exact.}
-La structure triangulaire (le court revient vers le long) se traite en cascade. Le facteur \emph{long} est un OU autonome estimé par la brique (A), donnant $(\hat\kappa_2,\hat\mu,\hat\sigma_2)$. Le facteur \emph{court} se régresse alors sur l'écart court--long~:
+\paragraph{(A bis) V2F --- VAR(1) gaussien : MCO multivarié $=$ EMV conditionnel exact.}
+La discrétisation exacte (\S\ref{sec:v2f}) est un VAR(1) gaussien $Y_{t+\Dt}=c+\Phi Y_t+\eta_{t+\Dt}$, $Y=(q^s,q^l)$, $\eta\sim\Ncal(0,\Sigma_{\mathrm{cond}})$. \emph{Les deux équations partageant les mêmes régresseurs} $(1,q^s_t,q^l_t)$, le MCO multivarié \emph{est} l'EMV conditionnel exact (forme fermée), \emph{sans aucune hypothèse sur le bruit}~:
 \begin{definitionbox}
 \[
-\hat\beta_s=\frac{\sum_t (q^s_t-q^l_t)(q^s_{t+\Dt}-q^l_t)}{\sum_t (q^s_t-q^l_t)^2},\qquad
-\hat\kappa_1=-\frac{\ln\hat\beta_s}{\Dt},\qquad
-\hat\sigma_1=\sqrt{\;\hat v_s\,\frac{-2\ln\hat\beta_s}{\Dt\,(1-\hat\beta_s^{2})}\;},
+(\hat c,\widehat\Phi)=\argmin_{c,\Phi}\sum_t\big\|Y_{t+\Dt}-c-\Phi Y_t\big\|^2,\qquad
+\widehat\Sigma_{\mathrm{cond}}=\frac1n\sum_t\hat\eta_{t+\Dt}\hat\eta_{t+\Dt}\transp=\begin{pmatrix}\hat V_r&\hat C_{mr}\\ \hat C_{mr}&\hat V_m\end{pmatrix},
 \]
-et, si la corrélation des browniens internes $\rho\neq 0$, $\ \hat\rho=\widehat\Corr(\widehat\xi^{\,s},\widehat\xi^{\,l})$ sur les résidus des deux régressions.
+puis $\hat A=-\Dt^{-1}\log\widehat\Phi$ (logarithme matriciel) de valeurs propres $(\hat\kappa_1,\hat\kappa_2)$, $\hat\mu$ via $(\widehat\Phi,\hat c)$, et la corrélation conditionnelle \emph{estimée} $\hat\rho_c=\hat C_{mr}/\sqrt{\hat V_r\hat V_m}$. Les volatilités structurelles --- \emph{si requises} --- suivent de l'équation de Lyapunov~: $\widehat\Sigma_\infty$ résout $\widehat\Sigma_{\mathrm{cond}}=\widehat\Sigma_\infty-\widehat\Phi\,\widehat\Sigma_\infty\widehat\Phi\transp$, puis $\widehat\Sigma_w=\hat A\,\widehat\Sigma_\infty+\widehat\Sigma_\infty\hat A\transp$ donne $(\sigma_1^2,\sigma_2^2,\rho)$.
 \end{definitionbox}
-\emph{De façon équivalente}~: estimer le VAR(1) gaussien sans contrainte par MCO multivarié $\widehat\Phi$ (qui \emph{est} l'EMV), puis $\hat A=-\Dt^{-1}\log\widehat\Phi$ (logarithme matriciel) dont les valeurs propres donnent $(\kappa_1,\kappa_2)$, et la covariance résiduelle $\widehat\Sigma_{\mathrm{cond}}$ fournit, via l'équation de Lyapunov discrète $\widehat\Sigma_{\mathrm{cond}}=\Sigma_\infty-\widehat\Phi\,\Sigma_\infty\widehat\Phi\transp$, les volatilités structurelles $(\sigma_1,\sigma_2,\rho)$.
+\noindent Les quantités réduites $(\widehat\Phi,\hat c,\widehat\Sigma_{\mathrm{cond}})$ sont \emph{exactement} ce dont ont besoin les résidus PIT (\S\ref{sec:appli}) et la simulation~; aucune n'est contrainte (en particulier $\hat\rho_c$ est libre). Le facteur long étant autonome ($\Phi_{21}=0$ en population), on peut estimer $q^l$ seul puis $q^s$ sur $(1,q^s_t,q^l_t)$~: simplification \emph{consistante}.
 
 \paragraph{(B) Hardy RSLN --- pas d'EMV fermé global, mais itération EM entièrement explicite.}
-L'étape E (Hamilton + Kim) et l'étape M ci-dessus sont fermées~; pour un seul actif, $\hat\mu_a,\hat\sigma_a^2,\hat p_{ab}$ se réduisent aux moyennes/variances pondérées par $\hat\xi_t(a)$. Seule la boucle externe itère, avec ascension monotone.
+L'étape E (Hamilton + Kim) et l'étape M ci-dessus sont fermées~; pour un seul actif, $\hat m_a,\hat v_a,\hat p_{ab}$ se réduisent aux moyennes/variances pondérées par $\hat\xi_t(a)$. Seule la boucle externe itère, avec ascension monotone.
 
-\paragraph{(C) Corrélations par régime --- forme fermée.}
-Données par les expressions $\widehat\Omega^{AA},\widehat\Omega^{BB}(a),\widehat\Omega^{AB}(a)$ de l'Étape~3.
+\paragraph{(C) Dépendance par régime --- forme fermée.}
+La matrice pleine $\widehat\Omega(a)$ est donnée à l'Étape~3 (corrélation des résidus pondérée par $\hat\xi_t(a)$).
 
 \paragraph{(D) BS (PE/immo/infra) --- moyenne/variance empiriques.}
 Les log-rendements $x_t$ étant i.i.d.\ $\Ncal(m,v)$, l'EMV est
@@ -581,15 +569,15 @@ fournit le point de départ de la maximisation de $\sum_t\log f_{\mathrm{CIR}}$ 
 \toprule
 \textbf{Facteur / quantité} & \textbf{Forme fermée ?} & \textbf{Estimateur} \\
 \midrule
-V2F (infl., taux réels) & Oui ($=$ EMV exact) & Cascade MCO $+$ inversion analytique $(\kappa_i,\sigma_i,\mu,\rho)$ \\
+V2F (infl., taux réels) & Oui ($=$ EMV exact) & MCO multivarié VAR(1) $+$ log matriciel ($\kappa_i$) $+$ Lyapunov ($\sigma_i,\rho$) \\
 Black--Karasinski & Oui ($=$ EMV exact) & MCO scalaire $+$ inversion $(k,\theta,\sigma)$ \\
 BS (PE/immo/infra) & Oui & Moyenne/variance des log-rendements \\
 Hardy RSLN (actions) & Oui \emph{par itération} EM & Étape M pondérée fermée $+$ E-step récursif \\
 CIR (crédit IG) & Init.\ oui, EMV non & MCO d'Euler (init) $+$ EMV $\chi^2$ décentré numérique \\
-$\Omega^{AA},\ \Omega^{BB}(a),\ \Omega^{AB}(a)$ & Oui & Corrélation (pondérée) des résidus PIT \\
+$\Omega(a)$ (pleine, par régime) & Oui & Corrélation des résidus PIT pondérée par $\hat\xi_t(a)$ \\
 \bottomrule
 \end{tabularx}
-\caption{Disponibilité des formes fermées. Cinq familles sur six sont fermées (exactes ou par itération EM)~; seul l'EMV du CIR requiert une optimisation, initialisée en forme fermée.}
+\caption{Disponibilité des formes fermées. Cinq familles sur six sont fermées (exactes ou par itération EM)~; seul l'EMV du CIR requiert une optimisation, initialisée en forme fermée. La matrice de dépendance est, dans tous les cas, estimée (jamais fixée).}
 \label{tab:closed}
 \end{table}
 
@@ -612,11 +600,11 @@ La calibration achevée, la simulation utilise \emph{directement} la représenta
 \begin{enumerate}[leftmargin=1.4em]
 \item \textbf{Régime.} Initialiser $\Ecal_0\sim\pi$ (ou à l'état observé en $0$). À chaque pas, tirer $\Ecal_{t+\Dt}\mid\Ecal_t$ selon la ligne $P_{\Ecal_t,\cdot}$. Le co-mouvement des régimes est \emph{intrinsèque}.
 \item \textbf{Chocs corrélés par régime.} Tirer $z_{t+\Dt}\sim\Ncal(0,I_d)$ et poser $\eps_{t+\Dt}=L(\Ecal_t)\,z_{t+\Dt}$, où $L(a)L(a)\transp=\Omega^{\mathrm{SDP}}(a)$ (Cholesky du régime courant).
-\item \textbf{Propagation des facteurs gaussiens.} Pour chaque composante gaussienne $j$~:
+\item \textbf{Propagation des composantes gaussiennes.} Pour chaque composante gaussienne $j$~:
 \[
 Y^{(j)}_{t+\Dt}=c_j(\Ecal_t)+\big[\Phi(\Ecal_t)Y_t\big]_j+D_j(\Ecal_t)\,\eps^{(j)}_{t+\Dt}.
 \]
-\item \textbf{Facteur non gaussien (CIR).} Restituer la bonne marge par \emph{inverse-PIT} exact
+\item \textbf{Composante non gaussienne (CIR).} Restituer la bonne marge par \emph{inverse-PIT} exact
 \[
 s^{\mathrm{cr}}_{t+\Dt}=\frac{1}{2c_\chi}\,F^{-1}_{\chi'^2}\!\Big(\Phi\big(\eps^{(\mathrm{cr})}_{t+\Dt}\big)\,;\ \nu,\lambda\Big),\quad \nu=\tfrac{4\kappa\theta}{\sigma^2},\ \lambda=2c_\chi\,s^{\mathrm{cr}}_te^{-\kappa\Dt},\ c_\chi=\tfrac{2\kappa}{\sigma^2(1-e^{-\kappa\Dt})},
 \]
@@ -626,7 +614,7 @@ ou, plus rapidement, par le schéma d'Alfonsi $E(0)$ alimenté par $\Dt W_t=\sqr
 \end{algobox}
 
 \begin{mabox}[Propriétés du dispositif]
-\textbf{Cohérence estimation/simulation}~: une seule loi (copule gaussienne par régime). \textbf{Régimes systémiques}~: la chaîne commune reproduit l'entrée \emph{conjointe} en stress, donc la dépendance de queue. \textbf{Corrélations de stress bien définies}~: conditionnellement à $\Ecal_t=a$, sur plein support. \textbf{Parcimonie}~: $K^\star$ optimal contre l'explosion $2^k$. \textbf{Robustesse}~: EMV/EM conditionnels (consistants en forte persistance), formes fermées, corrélations sur résidus stationnaires.
+\textbf{Cohérence estimation/simulation}~: une seule loi (copule gaussienne par régime). \textbf{Aucune corrélation imposée}~: toute $\Omega(a)$ est estimée, y compris la corrélation interne du V2F. \textbf{Régimes systémiques}~: la chaîne commune reproduit l'entrée \emph{conjointe} en stress, donc la dépendance de queue. \textbf{Dépendance de stress bien définie}~: conditionnellement à $\Ecal_t=a$, sur plein support. \textbf{Parcimonie}~: $K^\star$ optimal contre l'explosion $2^k$. \textbf{Robustesse}~: EMV/EM conditionnels (consistants en forte persistance), formes fermées, corrélations sur résidus stationnaires.
 \end{mabox}
 
 % =====================================================================
@@ -634,16 +622,16 @@ ou, plus rapidement, par le schéma d'Alfonsi $E(0)$ alimenté par $\Dt W_t=\sqr
 \label{sec:appli}
 % =====================================================================
 
-On déroule le cadre sur l'\emph{intégralité} des facteurs du GSE et on donne toutes les expressions littérales finales, directement implémentables.
+On déroule le cadre sur l'\emph{intégralité} des facteurs du GSE et on donne toutes les expressions littérales finales, directement implémentables. Aucune corrélation n'est fixée.
 
 \subsection{Vecteur d'état global et régime commun}
 On ordonne le Groupe~A puis le Groupe~B. Le vecteur d'état global est de dimension $d=12$~:
 \[
 Y_t=\big(\underbrace{q^s_t,q^l_t}_{\text{infl.\ V2F}},\ \underbrace{r_t,l_t}_{\text{taux réels V2F}},\ \underbrace{s^{\mathrm{cr}}_t}_{\text{CIR}},\ \underbrace{y^{\mathrm{pd}}_t}_{\text{BK }\ln s},\ \underbrace{x^{\mathrm{pe}}_t,x^{\mathrm{re}}_t,x^{\mathrm{in}}_t}_{\text{BS, log-rdt}}\ \big|\ \underbrace{x^{\mathrm{eu}}_t,x^{\mathrm{wd}}_t,x^{\mathrm{em}}_t}_{\text{Hardy, log-rdt (Gr.\ B)}}\big)\transp .
 \]
-\textbf{Groupe~A} (indices 1--9, coefficients constants)~: inflation, taux réels, crédit, dette privée, PE, immobilier, infrastructure. \textbf{Groupe~B} (indices 10--12, coefficients par régime)~: actions Euro, Monde, Émergent, partageant la \emph{même} chaîne $\Ecal_t\in\{1,\dots,K^\star\}$. Paramètres par facteur~: V2F inflation $(\kappa^I_1,\kappa^I_2,\sigma^I_1,\sigma^I_2,\mu_l)$~; V2F taux réels $(\kappa^R_1,\kappa^R_2,\sigma^R_1,\sigma^R_2,\mu)$~; CIR $(\kappa^{c},\theta^{c},\sigma^{c})$~; BK $(k,\theta^{p},\sigma^{p})$~; BS $j\in\{\mathrm{pe,re,in}\}$ $(\mu_j,\sigma_j)$~; Hardy $a\in\{1,\dots,K^\star\}$ et $j\in\{\mathrm{eu,wd,em}\}$ $(m^j_a,v^j_a)$ et transitions $p_{ab}$.
+\textbf{Groupe~A} (indices 1--9, marges constantes)~: inflation, taux réels, crédit, dette privée, PE, immobilier, infrastructure. \textbf{Groupe~B} (indices 10--12, marges par régime)~: actions Euro, Monde, Émergent, partageant la \emph{même} chaîne $\Ecal_t\in\{1,\dots,K^\star\}$. Paramètres~: V2F inflation $(\kappa^I_1,\kappa^I_2,\sigma^I_1,\sigma^I_2,\rho^I,\mu_l)$~; V2F taux réels $(\kappa^R_1,\kappa^R_2,\sigma^R_1,\sigma^R_2,\rho^R,\mu)$~; CIR $(\kappa^{c},\theta^{c},\sigma^{c})$~; BK $(k,\theta^{p},\sigma^{p})$~; BS $j\in\{\mathrm{pe,re,in}\}$ $(\mu_j,\sigma_j)$~; Hardy $a$ et $j\in\{\mathrm{eu,wd,em}\}$ $(m^j_a,v^j_a)$ et transitions $p_{ab}$~; et la suite de matrices pleines $\{\Omega^{\mathrm{SDP}}(a)\}_{a\le K^\star}$, $12\times12$.
 
-\subsection{Blocs autorégressifs explicites}
+\subsection{Blocs autorégressifs explicites (marges)}
 
 \paragraph{Blocs V2F (inflation~; idem taux réels).}
 Avec $\phi^I_{12}=\tfrac{\kappa^I_1}{\kappa^I_1-\kappa^I_2}\big(e^{-\kappa^I_2\Dt}-e^{-\kappa^I_1\Dt}\big)$~:
@@ -653,7 +641,7 @@ Avec $\phi^I_{12}=\tfrac{\kappa^I_1}{\kappa^I_1-\kappa^I_2}\big(e^{-\kappa^I_2\D
 c^{I}=\begin{pmatrix}c^I_s\\ c^I_l\end{pmatrix}=(I-\Phi^{I})\begin{pmatrix}\mu_l\\ \mu_l\end{pmatrix}
 =\begin{pmatrix}\mu_l\big(1-e^{-\kappa^I_1\Dt}-\phi^I_{12}\big)\\[2pt] \mu_l\big(1-e^{-\kappa^I_2\Dt}\big)\end{pmatrix},
 \]
-de composantes $c^I_s$ (court) et $c^I_l$ (long)~; échelles conditionnelles (scalaires) $D_{q^s}=\sqrt{V^I_r}$, $D_{q^l}=\sqrt{V^I_m}$, et corrélation interne $\rho^I_c=C^I_{mr}/\sqrt{V^I_rV^I_m}$ portée par $\Omega$. Les $V^I_r,V^I_m,C^I_{mr}$ sont donnés au \S3.1. Le bloc taux réels est identique en remplaçant $I\to R$ et $\mu_l\to\mu$.
+échelles conditionnelles (scalaires) $D_{q^s}=\sqrt{V^I_r}$, $D_{q^l}=\sqrt{V^I_m}$, où $(V^I_r,V^I_m)$ est la diagonale de $\Sigma^I_{\mathrm{cond}}$. La corrélation interne $\rho^I_c$ \emph{n'est pas fixée}~: elle est une entrée de $\Omega(\Ecal_t)$ (estimée). Le bloc taux réels est identique en remplaçant $I\to R$ et $\mu_l\to\mu$.
 \end{definitionbox}
 
 \paragraph{Bloc CIR (crédit IG).} Composante non linéaire, propagée par sa carte propre (cf.\ \S\ref{sec:simu})~:
@@ -678,45 +666,40 @@ s^{\mathrm{cr}}_{t+\Dt}=\tfrac{1}{2c_\chi}\,F^{-1}_{\chi'^2}\!\big(\Phi(\eps^{(\
 \Phi_j=0,\qquad c_j(a)=m^j_a,\qquad D_j(a)=\sqrt{v^j_a}.
 \]
 
-\noindent Le modèle agrégé s'écrit donc, en regroupant tout,
-\[
-Y_{t+\Dt}=c(\Ecal_t)+\Phi(\Ecal_t)\,Y_t+D(\Ecal_t)\,\eps_{t+\Dt},\quad
-\eps_{t+\Dt}\sim\Ncal\big(0,\Omega^{\mathrm{SDP}}(\Ecal_t)\big),
-\]
-avec $\Phi(\Ecal_t)=\diag\big(\Phi^{I},\Phi^{R},[\text{CIR}],\Phi_{\mathrm{pd}},0,0,0,0,0,0\big)$ (bloc CIR traité hors linéaire), $c(\Ecal_t)$ empilé selon les blocs ci-dessus (seules les composantes Hardy dépendent de $\Ecal_t$), et $D(\Ecal_t)=\diag\big(\sqrt{V^I_r},\sqrt{V^I_m},\sqrt{V^R_r},\sqrt{V^R_m},[\text{CIR}],D_{\mathrm{pd}},\sigma_{\mathrm{pe}}\sqrt\Dt,\sigma_{\mathrm{re}}\sqrt\Dt,\sigma_{\mathrm{in}}\sqrt\Dt,\sqrt{v^{\mathrm{eu}}_{\Ecal_t}},\sqrt{v^{\mathrm{wd}}_{\Ecal_t}},\sqrt{v^{\mathrm{em}}_{\Ecal_t}}\big)$.
+\noindent Le modèle agrégé s'écrit donc $Y_{t+\Dt}=c(\Ecal_t)+\Phi(\Ecal_t)Y_t+D(\Ecal_t)\eps_{t+\Dt}$, $\eps_{t+\Dt}\sim\Ncal(0,\Omega^{\mathrm{SDP}}(\Ecal_t))$, avec $\Phi(\Ecal_t)=\diag(\Phi^{I},\Phi^{R},[\text{CIR}],\Phi_{\mathrm{pd}},0,0,0,0,0,0)$ (bloc CIR hors linéaire), $c(\Ecal_t)$ empilé selon les blocs (seules les composantes Hardy dépendent de $\Ecal_t$), et $D(\Ecal_t)=\diag(\sqrt{V^I_r},\sqrt{V^I_m},\sqrt{V^R_r},\sqrt{V^R_m},[\text{CIR}],D_{\mathrm{pd}},\sigma_{\mathrm{pe}}\sqrt\Dt,\sigma_{\mathrm{re}}\sqrt\Dt,\sigma_{\mathrm{in}}\sqrt\Dt,\sqrt{v^{\mathrm{eu}}_{\Ecal_t}},\sqrt{v^{\mathrm{wd}}_{\Ecal_t}},\sqrt{v^{\mathrm{em}}_{\Ecal_t}})$. Toute la dépendance est dans $\Omega^{\mathrm{SDP}}(\Ecal_t)$.
 
 \subsection{Recette d'estimation complète (toutes les expressions littérales)}
 
 \begin{algobox}[Étape 1 --- Groupe A (marges, EMV exact)]
-\textbf{(a) V2F inflation.} Sur $(q^l_t)$ \emph{(facteur long, OU autonome)}, brique (A)~: $\hat\beta=\frac{\sum_t(q^l_t-\bar q^l_-)(q^l_{t+\Dt}-\bar q^l_+)}{\sum_t(q^l_t-\bar q^l_-)^2}$, $\hat c=\bar q^l_+-\hat\beta\bar q^l_-$, $\hat v=\frac1{n-1}\sum_t\hat\xi^{l\,2}_{t+\Dt}$, puis $\hat\kappa^I_2=-\frac{\ln\hat\beta}{\Dt}$, $\hat\mu_l=\frac{\hat c}{1-\hat\beta}$, $\hat\sigma^I_2=\sqrt{\hat v\frac{-2\ln\hat\beta}{\Dt(1-\hat\beta^2)}}$. \emph{(Facteur court)}~: $\hat\beta_s=\frac{\sum_t(q^s_t-q^l_t)(q^s_{t+\Dt}-q^l_t)}{\sum_t(q^s_t-q^l_t)^2}$, $\hat\kappa^I_1=-\frac{\ln\hat\beta_s}{\Dt}$, $\hat\sigma^I_1=\sqrt{\hat v_s\frac{-2\ln\hat\beta_s}{\Dt(1-\hat\beta_s^2)}}$.\\[2pt]
-\textbf{(b) V2F taux réels.} Idem (a) sur $(l_t)$ puis $(r_t)$, donnant $(\hat\kappa^R_2,\hat\mu,\hat\sigma^R_2,\hat\kappa^R_1,\hat\sigma^R_1)$.\\[2pt]
+\textbf{(a) V2F inflation.} \emph{Facteur long} ($q^l$, OU autonome), brique (A)~: $\hat\beta=\frac{\sum_t(q^l_t-\bar q^l_-)(q^l_{t+\Dt}-\bar q^l_+)}{\sum_t(q^l_t-\bar q^l_-)^2}$, $\hat\kappa^I_2=-\frac{\ln\hat\beta}{\Dt}$, $\hat\mu_l=\frac{\bar q^l_+-\hat\beta\bar q^l_-}{1-\hat\beta}$, résidus $\hat\xi^l$, $\hat V^I_m=\frac1n\sum_t\hat\xi^{l\,2}_{t+\Dt}$. \emph{Facteur court}~: MCO de $q^s_{t+\Dt}$ sur $(1,q^s_t,q^l_t)$ $\Rightarrow(\hat\Phi^I_{11},\hat\phi^I_{12},\hat c^I_s)$ et résidus $\hat\xi^s$, d'où $\hat\kappa^I_1=-\frac{\ln\hat\Phi^I_{11}}{\Dt}$, $\hat V^I_r=\frac1n\sum_t\hat\xi^{s\,2}_{t+\Dt}$ (les $\sigma^I_i,\rho^I$ par Lyapunov, (A bis), si requis).\\[2pt]
+\textbf{(b) V2F taux réels.} Idem (a) sur $(l_t)$ puis $(r_t)$, donnant $(\hat\kappa^R_2,\hat\mu,\hat\kappa^R_1,\hat\Phi^R_{12},\hat V^R_m,\hat V^R_r)$.\\[2pt]
 \textbf{(c) BK dette privée.} Brique (A) sur $(y^{\mathrm{pd}}_t)$~: $(\hat k,\hat\theta^{p},\hat\sigma^{p})$.\\[2pt]
 \textbf{(d) BS PE/immo/infra.} $\hat m_j=\frac1n\sum_t x^j_t$, $\hat v_j=\frac1n\sum_t(x^j_t-\hat m_j)^2$, $\hat\sigma_j=\sqrt{\hat v_j/\Dt}$, $\hat\mu_j=\hat m_j/\Dt+\frac12\hat\sigma_j^2$.\\[2pt]
 \textbf{(e) CIR crédit.} Init.\ Euler fermée ($\hat\kappa^{c}=-\hat c_2/\Dt$, $\hat\theta^{c}=-\hat c_1/\hat c_2$, $(\hat\sigma^{c})^2=\widehat\Var(\eta)/\Dt$) puis EMV $\chi^2$ décentré numérique.\\[2pt]
-\textbf{(f) Résidus PIT \& $\widehat\Omega^{AA}$.} Calculer $\widehat\eps^{(i)}$ pour $i\in A$ (\S8.4), puis $\widehat\Omega^{AA}=\widehat\Corr(\widehat\eps^{A})$.
+\textbf{(f) Résidus PIT.} Calculer $\widehat\eps^{(i)}$ pour tout $i\in A$ (\S\ref{sec:residus})~; aucune corrélation à ce stade.
 \end{algobox}
 
 \begin{algobox}[Étape 2 --- Groupe B (régime commun, EM)]
 Sur $x_t=(x^{\mathrm{eu}}_t,x^{\mathrm{wd}}_t,x^{\mathrm{em}}_t)\transp$ et pour $K=1,2,\dots$~:
 \begin{enumerate}[leftmargin=1.4em,nosep]
 \item \textbf{E-step}~: Hamilton (avant) $+$ Kim (arrière) $\Rightarrow \hat\xi_t(a),\hat\xi_t(a,b)$, avec $f_a(x_t)=\varphi_3(x_t;m_a,V_a)$.
-\item \textbf{M-step}~: $\hat m_a=\frac{\sum_t\hat\xi_t(a)x_t}{\sum_t\hat\xi_t(a)}$, $\hat V_a=\frac{\sum_t\hat\xi_t(a)(x_t-\hat m_a)(x_t-\hat m_a)\transp}{\sum_t\hat\xi_t(a)}$, $\hat p_{ab}=\frac{\sum_t\hat\xi_t(a,b)}{\sum_t\hat\xi_t(a)}$.
+\item \textbf{M-step}~: $\hat m_a=\frac{\sum_t\hat\xi_t(a)x_t}{\sum_t\hat\xi_t(a)}$, $\hat V_a=\frac{\sum_t\hat\xi_t(a)(x_t-\hat m_a)(x_t-\hat m_a)\transp}{\sum_t\hat\xi_t(a)}$ (\emph{pleine}), $\hat p_{ab}=\frac{\sum_t\hat\xi_t(a,b)}{\sum_t\hat\xi_t(a)}$.
 \item \textbf{Itérer} jusqu'à convergence (planchers de variance), relever $\ell^\star(K)$.
 \end{enumerate}
-Retenir $K^\star=\argmin_K\mathrm{BIC}(K)$. En sortie~: $\hat P=(\hat p_{ab})$, $\hat\pi$, $\hat m_a,\hat V_a$, $\widehat\Omega^{BB}(a)=\diag(\hat V_a)^{-1/2}\hat V_a\diag(\hat V_a)^{-1/2}$, et $m^j_a=(\hat m_a)_j$, $v^j_a=(\hat V_a)_{jj}$.
+Retenir $K^\star=\argmin_K\mathrm{BIC}(K)$. En sortie~: $\hat P,\hat\pi$, $\hat m_a,\hat V_a$, et $m^j_a=(\hat m_a)_j$, $v^j_a=(\hat V_a)_{jj}$.
 \end{algobox}
 
-\begin{algobox}[Étape 3 --- couplage inter-groupes par régime]
-Paramètres et $\hat\xi_t(a)$ figés. Pour chaque régime $a$~:
+\begin{algobox}[Étape 3 --- matrice de dépendance pleine, par régime]
+Marges et $\hat\xi_t(a)$ figées. Soit $\widehat\eps_t\in\R^{12}$ le vecteur complet des résidus standardisés (\S\ref{sec:residus}). Pour chaque régime $a=1,\dots,K^\star$~:
 \[
-\widehat\Omega^{AB}(a)=\frac{\sum_t\hat\xi_t(a)\,\widehat\eps^{A}_t(\widehat\eps^{B}_t)\transp}{\sum_t\hat\xi_t(a)},\qquad
-\Omega(a)=\begin{pmatrix}\widehat\Omega^{AA}&\widehat\Omega^{AB}(a)\\ \widehat\Omega^{AB}(a)\transp&\widehat\Omega^{BB}(a)\end{pmatrix}
-\xrightarrow{\text{Higham}}\Omega^{\mathrm{SDP}}(a),
+\widehat\Omega(a)=\frac{\sum_t\hat\xi_t(a)\,\widehat\eps_t\,\widehat\eps_t\transp}{\sum_t\hat\xi_t(a)}
+\ \xrightarrow{\ \text{Higham}\ }\ \Omega^{\mathrm{SDP}}(a),\qquad L(a)=\chol(\Omega^{\mathrm{SDP}}(a)).
 \]
-puis $L(a)=\chol(\Omega^{\mathrm{SDP}}(a))$ pour la simulation.
+Toutes les $12\times12$ entrées (intra-V2F, croisées, inter-groupes) sont estimées, par régime, sans contrainte.
 \end{algobox}
 
-\subsection{Résidus standardisés explicites (pour $\widehat\Omega$)}
+\subsection{Résidus standardisés explicites}
+\label{sec:residus}
 \begin{definitionbox}
 \[
 \begin{aligned}
@@ -725,10 +708,11 @@ puis $L(a)=\chol(\Omega^{\mathrm{SDP}}(a))$ pour la simulation.
 \text{BK}&: &\widehat\eps^{(\mathrm{pd})}_{t+\Dt}&=\tfrac{y^{\mathrm{pd}}_{t+\Dt}-e^{-k\Dt}y^{\mathrm{pd}}_t-\theta^{p}(1-e^{-k\Dt})}{\sigma^{p}\sqrt{(1-e^{-2k\Dt})/2k}};\\[2pt]
 \text{BS }j&: &\widehat\eps^{(j)}_{t+\Dt}&=\tfrac{x^j_{t+\Dt}-(\mu_j-\sigma_j^2/2)\Dt}{\sigma_j\sqrt{\Dt}};\\[2pt]
 \text{CIR}&: &\widehat\eps^{(\mathrm{cr})}_{t+\Dt}&=\Phi^{-1}\!\Big(F_{\chi'^2}\big(2c_\chi\,s^{\mathrm{cr}}_{t+\Dt}\,;\,\nu,\lambda\big)\Big),\quad \nu=\tfrac{4\kappa^{c}\theta^{c}}{(\sigma^{c})^2},\ \lambda=2c_\chi\,s^{\mathrm{cr}}_te^{-\kappa^{c}\Dt};\\[2pt]
-\text{Hardy }j&: &\widehat\eps^{(j)}_{t+\Dt}&=\tfrac{x^j_{t+\Dt}-m^j_{\Ecal_t}}{\sqrt{v^j_{\Ecal_t}}}\ \ (\text{pondéré par }\hat\xi_t(a)\text{ pour }\Omega^{BB},\Omega^{AB}).
+\text{Hardy }j&: &\widehat\eps^{(j)}_{t+\Dt}&=\tfrac{x^j_{t+\Dt}-m^j_{\Ecal_t}}{\sqrt{v^j_{\Ecal_t}}}\ \ (\text{pondéré par }\hat\xi_t(a)\text{ dans }\widehat\Omega(a)).
 \end{aligned}
 \]
 \end{definitionbox}
+Chaque composante est marginalement $\Ncal(0,1)$~; \emph{toute} corrélation entre elles (y compris $q^s\!-\!q^l$) est laissée à $\Omega(\Ecal_t)$.
 
 \subsection{Algorithme de simulation complet}
 \begin{algobox}[Simulation jointe ($N$ trajectoires, $t=0,\dots,T$)]
@@ -737,7 +721,7 @@ puis $L(a)=\chol(\Omega^{\mathrm{SDP}}(a))$ pour la simulation.
 \item $z_{t+\Dt}\sim\Ncal(0,I_{12})$, $\ \eps_{t+\Dt}=L(\Ecal_t)\,z_{t+\Dt}$.
 \item \textbf{V2F} (infl., taux réels)~:
 $q^l_{t+\Dt}=c^I_l+e^{-\kappa^I_2\Dt}q^l_t+\sqrt{V^I_m}\,\eps^{(q^l)}$,\\
-$q^s_{t+\Dt}=c^I_s+e^{-\kappa^I_1\Dt}q^s_t+\phi^I_{12}q^l_t+\sqrt{V^I_r}\,\eps^{(q^s)}$ (idem $r,l$).
+$q^s_{t+\Dt}=c^I_s+e^{-\kappa^I_1\Dt}q^s_t+\phi^I_{12}q^l_t+\sqrt{V^I_r}\,\eps^{(q^s)}$ (idem $r,l$~; $\rho^I_c$ porté par $\eps=Lz$).
 \item \textbf{BK}~: $y^{\mathrm{pd}}_{t+\Dt}=\theta^{p}(1-e^{-k\Dt})+e^{-k\Dt}y^{\mathrm{pd}}_t+D_{\mathrm{pd}}\,\eps^{(\mathrm{pd})}$~; $s^{\mathrm{pd}}_{t+\Dt}=e^{y^{\mathrm{pd}}_{t+\Dt}}$.
 \item \textbf{BS} $j$~: $x^j_{t+\Dt}=(\mu_j-\tfrac{\sigma_j^2}{2})\Dt+\sigma_j\sqrt\Dt\,\eps^{(j)}$~; $S^j_{t+\Dt}=S^j_te^{x^j_{t+\Dt}}$.
 \item \textbf{Hardy} $j$~: $x^j_{t+\Dt}=m^j_{\Ecal_t}+\sqrt{v^j_{\Ecal_t}}\,\eps^{(j)}$~; $S^j_{t+\Dt}=S^j_te^{x^j_{t+\Dt}}$.
@@ -755,24 +739,24 @@ La Table~\ref{tab:appli} récapitule, pour le cadre d'application, la dimension,
 \toprule
 \textbf{Facteur} & \textbf{$d_i$} & \textbf{Gr.} & \textbf{Estimateur / simulation} \\
 \midrule
-\rowcolor{nxlightblue} Inflation V2F & 2 & A & Cascade MCO (=EMV) / récurrence gaussienne exacte \\
-Taux réels V2F & 2 & A & Cascade MCO (=EMV) / récurrence gaussienne exacte \\
+\rowcolor{nxlightblue} Inflation V2F & 2 & A & MCO multivarié VAR(1) (=EMV exact) / récurrence gaussienne exacte \\
+Taux réels V2F & 2 & A & MCO multivarié VAR(1) (=EMV exact) / récurrence gaussienne exacte \\
 \rowcolor{nxlightblue} Crédit CIR & 1 & A & Euler (init) $+$ EMV $\chi^2$ décentré / inverse-PIT ou Alfonsi \\
 Dette privée BK & 1 & A & MCO scalaire (=EMV) / récurrence log-OU exacte \\
 \rowcolor{nxlightblue} PE / Immo / Infra & 3 & A & Moyenne/variance / log-rendement BS \\
 Actions Euro/Monde/Émerg. & 3 & B & EM (Hamilton+Kim) / BS par régime \\
 \midrule
-\rowcolor{nxoffwhite} \textbf{Total / dépendance} & \textbf{12} & --- & $\Omega^{\mathrm{SDP}}(a)$ par régime sur résidus PIT~; $\Ecal_t$ commune \\
+\rowcolor{nxoffwhite} \textbf{Dépendance} & --- & --- & $\Omega^{\mathrm{SDP}}(a)$ \emph{pleine} par régime, sur résidus PIT~; $\Ecal_t$ commune~; rien fixé \\
 \bottomrule
 \end{tabularx}
-\caption{Cadre d'application agrégé~: 12 états, régime latent commun $\Ecal_t$, calibrage par vraisemblance jointe séquentielle, simulation par carte de chaque facteur.}
+\caption{Cadre d'application agrégé~: 12 états, régime latent commun $\Ecal_t$, calibrage par vraisemblance jointe séquentielle, dépendance pleinement estimée par régime, simulation par carte de chaque facteur.}
 \label{tab:appli}
 \end{table}
 
 % =====================================================================
 \section{Conclusion}
 % =====================================================================
-Cette note construit, pour le GSE du régime, un cadre unifié d'\emph{estimation} et de \emph{simulation}~: chaque facteur, ramené à sa discrétisation, s'écrit comme une récurrence autorégressive dont les coefficients peuvent dépendre d'un \emph{régime latent commun}~; l'ensemble s'agrège en un \emph{unique} MS-VAR calibré par \emph{maximum de vraisemblance jointe} en trois étapes (marges en formes fermées, régime commun par EM, corrélations par régime sur résidus standardisés), et se simule directement à partir de cette représentation. Cinq des six familles d'estimateurs admettent une forme fermée (exacte ou par itération EM)~; la dépendance, portée par une copule gaussienne par régime cohérente avec la simulation, et par une chaîne d'état unique de cardinalité $K^\star$ parcimonieuse, est estimée sur un bruit blanc stationnaire. Le chapitre d'application en donne toutes les expressions littérales, directement implémentables. Tout calibrage embarque une erreur d'estimation~; le choix final des méthodes et paramètres relève de l'IRCANTEC.
+Cette note construit, pour le GSE du régime, un cadre unifié d'\emph{estimation} et de \emph{simulation}~: chaque facteur, ramené à sa discrétisation, s'écrit comme une récurrence autorégressive dont les coefficients peuvent dépendre d'un \emph{régime latent commun}~; l'ensemble s'agrège en un \emph{unique} MS-VAR calibré par \emph{maximum de vraisemblance jointe} en trois étapes (marges en formes fermées, régime commun par EM, \emph{matrice de dépendance pleine par régime} sur résidus standardisés), et se simule directement à partir de cette représentation. Le cadre est \emph{général}~: aucune corrélation n'est fixée --- ni à zéro, ni à dire d'expert, ni indépendante du régime --- y compris la corrélation interne des facteurs vectoriels~; toute la dépendance est estimée. Cinq des six familles d'estimateurs admettent une forme fermée (exacte ou par itération EM)~; la dépendance, portée par une copule gaussienne par régime cohérente avec la simulation et par une chaîne d'état unique de cardinalité $K^\star$ parcimonieuse, est estimée sur un bruit blanc stationnaire. Le chapitre d'application en donne toutes les expressions littérales, directement implémentables. Tout calibrage embarque une erreur d'estimation~; le choix final des méthodes et paramètres relève de l'IRCANTEC.
 
 % --------- RÉFÉRENCES -------------------------------------------------
 \newpage
@@ -788,15 +772,15 @@ Cette note construit, pour le GSE du régime, un cadre unifié d'\emph{estimatio
 \item Hamilton, J.\,D. (1989). A new approach to the economic analysis of nonstationary time series and the business cycle. \emph{Econometrica}, 57(2), 357--384.
 \item Hardy, M.\,R. (2001). A regime-switching model of long-term stock returns. \emph{North American Actuarial Journal}, 5(2), 41--53.
 \item Higham, N.\,J. (2002). Computing the nearest correlation matrix --- a problem from finance. \emph{IMA Journal of Numerical Analysis}, 22(3), 329--343.
-\item Hull, J.\,C., \& White, A.\,D. (1994). Numerical procedures for implementing term structure models II: two-factor models. \emph{The Journal of Derivatives}, 2(2), 37--48.
 \item Joe, H., \& Xu, J.\,J. (1996). \emph{The estimation method of inference functions for margins for multivariate models}. Technical Report 166, University of British Columbia.
 \item Kim, C.-J. (1994). Dynamic linear models with Markov-switching. \emph{Journal of Econometrics}, 60(1--2), 1--22.
+\item Kim, C.-J., \& Nelson, C.\,R. (1999). \emph{State-Space Models with Regime Switching}. MIT Press.
 \item Krolzig, H.-M. (1997). \emph{Markov-Switching Vector Autoregressions}. Springer.
 \end{list}
 }
 
 \vspace{6mm}
 \noindent{\footnotesize\color{nxgray}\rule{\textwidth}{0.3pt}\\[3pt]
-Note de recherche méthodologique sur le calibrage et la simulation du GSE. Document confidentiel. Les expressions et procédures décrivent un cadre d'estimation et de simulation~; tout calibrage embarque une erreur d'estimation, et le choix final des méthodes et paramètres relève de l'IRCANTEC.}
+Note de recherche méthodologique sur le calibrage et la simulation du GSE. Document confidentiel. Les expressions et procédures décrivent un cadre d'estimation et de simulation à dépendance pleinement estimée~; tout calibrage embarque une erreur d'estimation, et le choix final des méthodes et paramètres relève de l'IRCANTEC.}
 
 \end{document}
