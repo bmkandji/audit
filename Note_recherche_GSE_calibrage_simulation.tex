@@ -266,7 +266,7 @@ V_r&=\Big(\tfrac{\kappa_1}{\kappa_1-\kappa_2}\Big)^{2}\sigma_2^2\Big[\tfrac{1-e^
 \end{aligned}
 \]
 \end{definitionbox}
-Le schéma étant exact, il est sans biais quel que soit $\Dt$. On notera que $\eps^{s},\eps^{l}$ sont ici standardisés et corrélés à $\rho_c$.
+Le schéma étant exact, il est sans biais quel que soit $\Dt$. On notera que $\eps^{s},\eps^{l}$ sont ici standardisés et corrélés à $\rho_c$. Ces moments supposent le bruit interne décorrélé ($W^1\perp W^2$, conforme au GSE)~: la corrélation conditionnelle $\rho_c\neq0$ provient alors du seul $W^2$ \emph{transmis} au facteur court (si $\Corr(W^1,W^2)=\rho\neq0$, un terme supplémentaire $\propto\rho\,\sigma_1\sigma_2$ s'ajoute à $C_{mr}$ et $V_r$).
 
 \subsection{Taux réels --- Vasicek à deux facteurs (V2F)}
 \begin{definitionbox}
@@ -379,7 +379,7 @@ où $\eps^{(i)}_{t+\Dt}$ est une innovation standardisée, $\Phi_i$ la matrice a
 \textbf{Facteur} & \textbf{Forme AR} & \textbf{Coefficients} & \textbf{Gr.} \\
 \midrule
 V2F (infl., taux réels) & VAR(1) gaussien $2{\times}2$ &
-$\Phi=\bigl(\begin{smallmatrix}e^{-\kappa_1\Dt}&\phi_{12}\\[1pt] 0&e^{-\kappa_2\Dt}\end{smallmatrix}\bigr)$, $\ \Sigma=\chol(\Sigma_{\mathrm{cond}})$ & A \\
+$\Phi=\bigl(\begin{smallmatrix}e^{-\kappa_1\Dt}&\phi_{12}\\[1pt] 0&e^{-\kappa_2\Dt}\end{smallmatrix}\bigr)$, $\ \Sigma=\diag(\sqrt{V_r},\sqrt{V_m})$, $\rho_c$ dans $\Omega$ & A \\
 Black--Karasinski (dette priv.) & AR(1) scalaire sur $y=\ln s$ &
 $\Phi=e^{-k\Dt}$, $c=\theta(1-e^{-k\Dt})$, $\Sigma=\sigma\sqrt{\tfrac{1-e^{-2k\Dt}}{2k}}$ & A \\
 CIR (crédit IG) & AR « racine carrée » non linéaire &
@@ -409,7 +409,7 @@ Pour homogénéiser facteurs gaussiens et non gaussiens et isoler proprement la 
 Sous bonne spécification, $\widehat\eps^{(i)}\sim\Ncal(0,1)$ i.i.d.\ et \emph{stationnaire}.
 \end{definitionbox}
 
-\noindent Pour un facteur \emph{gaussien} (V2F, BK, BS, et Hardy conditionnellement au régime), $\Phi^{-1}\!\circ F_i$ se réduit à la simple \emph{standardisation} de l'innovation~: $\widehat\eps^{(i)}=\Sigma_i^{-1}\big(Y^{(i)}_{t+\Dt}-\Phi_iY^{(i)}_t-c_i\big)$, sans inversion numérique. Pour le CIR, $F_i$ est la fonction de répartition du $\chi^2$ décentré (\S\ref{sec:appli}).
+\noindent Pour un facteur \emph{gaussien} (V2F, BK, BS, et Hardy conditionnellement au régime), $\Phi^{-1}\!\circ F_i$ se réduit à la \emph{standardisation composante par composante} par l'écart-type conditionnel~: $\widehat\eps^{(j)}_{t+\Dt}=(Y^{(j)}_{t+\Dt}-[\Phi Y_t]_j-c_j)/D_j$, sans inversion numérique. On standardise \emph{chaque} composante scalaire (y compris les deux composantes du V2F) par sa propre dispersion conditionnelle, sans \emph{blanchir} le bloc~: les corrélations conditionnelles --- dont la corrélation interne $\rho_c$ du V2F --- sont alors portées par la matrice $\Omega$, ce qui maintient une \emph{unique} matrice de copule par régime et une seule décomposition de Cholesky en simulation. Pour le CIR, $F_i$ est la fonction de répartition du $\chi^2$ décentré (\S\ref{sec:appli}).
 
 La dépendance inter-facteurs est alors portée par une \textbf{copule gaussienne} sur ces scores~: $\widehat\eps_{t+\Dt}\sim\Ncal\big(0,\Omega(\Ecal_t)\big)$, $\Omega$ étant estimée \emph{sur les résidus} et non sur les niveaux. Trois bénéfices~: traitement \emph{uniforme} des marges (gaussiennes et $\chi^2$ décentrée), corrélations calculées sur un \emph{bruit blanc stationnaire}, et \emph{cohérence interne} entre la loi estimée et la loi simulée.
 
@@ -540,17 +540,23 @@ puis l'inversion analytique des paramètres structurels~:
 $\bar y_-,\bar y_+$ étant les moyennes empiriques de $(y_t)$ et $(y_{t+\Dt})$, et $\widehat\xi_{t+\Dt}=y_{t+\Dt}-\hat\beta y_t-\hat c$ le résidu.
 \end{definitionbox}
 
-\paragraph{(A bis) V2F --- cascade de régressions $=$ EMV exact.}
-La structure triangulaire (le court revient vers le long) se traite en cascade. Le facteur \emph{long} est un OU autonome estimé par la brique (A), donnant $(\hat\kappa_2,\hat\mu,\hat\sigma_2)$. Le facteur \emph{court} se régresse alors sur l'écart court--long~:
+\paragraph{(A bis) V2F --- VAR(1) gaussien : MCO multivarié $=$ EMV conditionnel exact.}
+La discrétisation exacte (\S3.1) est un VAR(1) gaussien $Y_{t+\Dt}=c+\Phi Y_t+\eta_{t+\Dt}$, $\eta\sim\Ncal(0,\Sigma_{\mathrm{cond}})$. Les deux équations partageant les \emph{mêmes} régresseurs $(1,q^s_t,q^l_t)$, le \textbf{MCO multivarié est l'EMV conditionnel exact} (forme fermée), avec $\hat A=-\Dt^{-1}\log\widehat\Phi$ (valeurs propres $\kappa_1,\kappa_2$) et $\widehat\Sigma_{\mathrm{cond}}$ (covariance résiduelle) $=(\hat V_r,\hat V_m,\hat C_{mr})$. Le facteur long étant autonome ($\Phi_{21}=0$ en population), on peut, de façon \emph{consistante}, dérouler la cascade équation par équation~:
 \begin{definitionbox}
+\textbf{(i) Facteur long} (OU autonome)~: brique (A) sur $(q^l_t)$ $\Rightarrow$ $\hat\Phi_{22}=e^{-\hat\kappa_2\Dt}$, $\hat\mu$, résidus $\widehat\xi^{\,l}$, $\hat V_m=\tfrac1n\sum_t(\widehat\xi^{\,l}_{t+\Dt})^2$, $\ \hat\sigma_2^2=\hat V_m\,\dfrac{2\hat\kappa_2}{1-e^{-2\hat\kappa_2\Dt}}$.
+
+\smallskip
+\textbf{(ii) Facteur court}~: MCO (avec constante) de $q^s_{t+\Dt}$ sur \emph{les deux} régresseurs $(q^s_t,q^l_t)$ --- et \emph{non} sur le seul écart $q^s_t-q^l_t$~:
 \[
-\hat\beta_s=\frac{\sum_t (q^s_t-q^l_t)(q^s_{t+\Dt}-q^l_t)}{\sum_t (q^s_t-q^l_t)^2},\qquad
-\hat\kappa_1=-\frac{\ln\hat\beta_s}{\Dt},\qquad
-\hat\sigma_1=\sqrt{\;\hat v_s\,\frac{-2\ln\hat\beta_s}{\Dt\,(1-\hat\beta_s^{2})}\;},
+q^s_{t+\Dt}=\hat\Phi_{11}q^s_t+\hat\Phi_{12}q^l_t+\hat c_s+\widehat\xi^{\,s}_{t+\Dt},\qquad \hat\kappa_1=-\tfrac{\ln\hat\Phi_{11}}{\Dt},
 \]
-et, si la corrélation des browniens internes $\rho\neq 0$, $\ \hat\rho=\widehat\Corr(\widehat\xi^{\,s},\widehat\xi^{\,l})$ sur les résidus des deux régressions.
+$\hat V_r=\tfrac1n\sum_t(\widehat\xi^{\,s}_{t+\Dt})^2$, $\ \hat C_{mr}=\tfrac1n\sum_t \widehat\xi^{\,s}_{t+\Dt}\widehat\xi^{\,l}_{t+\Dt}$, $\ \hat\rho_c=\hat C_{mr}/\sqrt{\hat V_r\hat V_m}$, et
+\[
+\hat\sigma_1^2=\Big(\hat V_r-\big(\tfrac{\hat\kappa_1}{\hat\kappa_1-\hat\kappa_2}\big)^2\hat\sigma_2^2\,\mathcal B\Big)\frac{2\hat\kappa_1}{1-e^{-2\hat\kappa_1\Dt}},\ \
+\mathcal B=\tfrac{1-e^{-2\hat\kappa_2\Dt}}{2\hat\kappa_2}-\tfrac{2(1-e^{-(\hat\kappa_1+\hat\kappa_2)\Dt})}{\hat\kappa_1+\hat\kappa_2}+\tfrac{1-e^{-2\hat\kappa_1\Dt}}{2\hat\kappa_1}.
+\]
 \end{definitionbox}
-\emph{De façon équivalente}~: estimer le VAR(1) gaussien sans contrainte par MCO multivarié $\widehat\Phi$ (qui \emph{est} l'EMV), puis $\hat A=-\Dt^{-1}\log\widehat\Phi$ (logarithme matriciel) dont les valeurs propres donnent $(\kappa_1,\kappa_2)$, et la covariance résiduelle $\widehat\Sigma_{\mathrm{cond}}$ fournit, via l'équation de Lyapunov discrète $\widehat\Sigma_{\mathrm{cond}}=\Sigma_\infty-\widehat\Phi\,\Sigma_\infty\widehat\Phi\transp$, les volatilités structurelles $(\sigma_1,\sigma_2,\rho)$.
+\noindent Les moments réduits $(\hat\Phi_{11},\hat\Phi_{12},\hat c_s,\hat V_r,\hat V_m,\hat C_{mr})$ sont \emph{exactement} ce dont ont besoin les résidus PIT (\S\ref{sec:appli}) et la simulation~; la formule de $\sigma_1$ retranche du résidu court la variance \emph{transmise} par le long (terme $\propto\sigma_2$, d'ordre $O(\Dt^2)$ relatif --- négligeable au pas mensuel). \emph{Mise en garde}~: régresser $q^s$ sur le seul écart $q^s_t-q^l_t$ force $\Phi_{12}=1-\Phi_{11}$ (au lieu de $\phi_{12}$) et n'est exact que si $\kappa_2\ll\kappa_1$ --- très bonne approximation au pas mensuel (écart $\sim1\%$ sur $\Phi_{12}$), mais la régression bivariée sur $(1,q^s_t,q^l_t)$ la lève.
 
 \paragraph{(B) Hardy RSLN --- pas d'EMV fermé global, mais itération EM entièrement explicite.}
 L'étape E (Hamilton + Kim) et l'étape M ci-dessus sont fermées~; pour un seul actif, $\hat\mu_a,\hat\sigma_a^2,\hat p_{ab}$ se réduisent aux moyennes/variances pondérées par $\hat\xi_t(a)$. Seule la boucle externe itère, avec ascension monotone.
@@ -581,7 +587,7 @@ fournit le point de départ de la maximisation de $\sum_t\log f_{\mathrm{CIR}}$ 
 \toprule
 \textbf{Facteur / quantité} & \textbf{Forme fermée ?} & \textbf{Estimateur} \\
 \midrule
-V2F (infl., taux réels) & Oui ($=$ EMV exact) & Cascade MCO $+$ inversion analytique $(\kappa_i,\sigma_i,\mu,\rho)$ \\
+V2F (infl., taux réels) & Oui ($=$ EMV exact) & MCO bivarié VAR(1) ($q^s$ sur $q^s_t,q^l_t$) $+$ inversion $(\kappa_i,\sigma_i,\mu,\rho_c)$ \\
 Black--Karasinski & Oui ($=$ EMV exact) & MCO scalaire $+$ inversion $(k,\theta,\sigma)$ \\
 BS (PE/immo/infra) & Oui & Moyenne/variance des log-rendements \\
 Hardy RSLN (actions) & Oui \emph{par itération} EM & Étape M pondérée fermée $+$ E-step récursif \\
@@ -688,8 +694,8 @@ avec $\Phi(\Ecal_t)=\diag\big(\Phi^{I},\Phi^{R},[\text{CIR}],\Phi_{\mathrm{pd}},
 \subsection{Recette d'estimation complète (toutes les expressions littérales)}
 
 \begin{algobox}[Étape 1 --- Groupe A (marges, EMV exact)]
-\textbf{(a) V2F inflation.} Sur $(q^l_t)$ \emph{(facteur long, OU autonome)}, brique (A)~: $\hat\beta=\frac{\sum_t(q^l_t-\bar q^l_-)(q^l_{t+\Dt}-\bar q^l_+)}{\sum_t(q^l_t-\bar q^l_-)^2}$, $\hat c=\bar q^l_+-\hat\beta\bar q^l_-$, $\hat v=\frac1{n-1}\sum_t\hat\xi^{l\,2}_{t+\Dt}$, puis $\hat\kappa^I_2=-\frac{\ln\hat\beta}{\Dt}$, $\hat\mu_l=\frac{\hat c}{1-\hat\beta}$, $\hat\sigma^I_2=\sqrt{\hat v\frac{-2\ln\hat\beta}{\Dt(1-\hat\beta^2)}}$. \emph{(Facteur court)}~: $\hat\beta_s=\frac{\sum_t(q^s_t-q^l_t)(q^s_{t+\Dt}-q^l_t)}{\sum_t(q^s_t-q^l_t)^2}$, $\hat\kappa^I_1=-\frac{\ln\hat\beta_s}{\Dt}$, $\hat\sigma^I_1=\sqrt{\hat v_s\frac{-2\ln\hat\beta_s}{\Dt(1-\hat\beta_s^2)}}$.\\[2pt]
-\textbf{(b) V2F taux réels.} Idem (a) sur $(l_t)$ puis $(r_t)$, donnant $(\hat\kappa^R_2,\hat\mu,\hat\sigma^R_2,\hat\kappa^R_1,\hat\sigma^R_1)$.\\[2pt]
+\textbf{(a) V2F inflation.} \emph{Facteur long} ($q^l$, OU autonome), brique (A)~: $\hat\beta=\frac{\sum_t(q^l_t-\bar q^l_-)(q^l_{t+\Dt}-\bar q^l_+)}{\sum_t(q^l_t-\bar q^l_-)^2}$, $\hat\kappa^I_2=-\frac{\ln\hat\beta}{\Dt}$, $\hat\mu_l=\frac{\bar q^l_+-\hat\beta\bar q^l_-}{1-\hat\beta}$, $\hat V^I_m=\frac1n\sum_t\hat\xi^{l\,2}_{t+\Dt}$. \emph{Facteur court}~: MCO de $q^s_{t+\Dt}$ sur $(1,q^s_t,q^l_t)$ $\Rightarrow(\hat\Phi^I_{11},\hat\phi^I_{12},\hat c^I_s)$ et résidus $\hat\xi^s$, d'où $\hat\kappa^I_1=-\frac{\ln\hat\Phi^I_{11}}{\Dt}$, $\hat V^I_r=\frac1n\sum_t\hat\xi^{s\,2}_{t+\Dt}$, $\hat C^I_{mr}=\frac1n\sum_t\hat\xi^s_{t+\Dt}\hat\xi^l_{t+\Dt}$, $\hat\rho^I_c=\hat C^I_{mr}/\sqrt{\hat V^I_r\hat V^I_m}$ (et $\hat\sigma^I_1,\hat\sigma^I_2$ par (A bis) si besoin).\\[2pt]
+\textbf{(b) V2F taux réels.} Idem (a) sur $(l_t)$ puis $(r_t)$, donnant $(\hat\kappa^R_2,\hat\mu,\hat\kappa^R_1,\hat\Phi^R_{12},\hat V^R_m,\hat V^R_r,\hat C^R_{mr},\hat\rho^R_c)$.\\[2pt]
 \textbf{(c) BK dette privée.} Brique (A) sur $(y^{\mathrm{pd}}_t)$~: $(\hat k,\hat\theta^{p},\hat\sigma^{p})$.\\[2pt]
 \textbf{(d) BS PE/immo/infra.} $\hat m_j=\frac1n\sum_t x^j_t$, $\hat v_j=\frac1n\sum_t(x^j_t-\hat m_j)^2$, $\hat\sigma_j=\sqrt{\hat v_j/\Dt}$, $\hat\mu_j=\hat m_j/\Dt+\frac12\hat\sigma_j^2$.\\[2pt]
 \textbf{(e) CIR crédit.} Init.\ Euler fermée ($\hat\kappa^{c}=-\hat c_2/\Dt$, $\hat\theta^{c}=-\hat c_1/\hat c_2$, $(\hat\sigma^{c})^2=\widehat\Var(\eta)/\Dt$) puis EMV $\chi^2$ décentré numérique.\\[2pt]
@@ -755,8 +761,8 @@ La Table~\ref{tab:appli} récapitule, pour le cadre d'application, la dimension,
 \toprule
 \textbf{Facteur} & \textbf{$d_i$} & \textbf{Gr.} & \textbf{Estimateur / simulation} \\
 \midrule
-\rowcolor{nxlightblue} Inflation V2F & 2 & A & Cascade MCO (=EMV) / récurrence gaussienne exacte \\
-Taux réels V2F & 2 & A & Cascade MCO (=EMV) / récurrence gaussienne exacte \\
+\rowcolor{nxlightblue} Inflation V2F & 2 & A & MCO bivarié VAR(1) (=EMV exact) / récurrence gaussienne exacte \\
+Taux réels V2F & 2 & A & MCO bivarié VAR(1) (=EMV exact) / récurrence gaussienne exacte \\
 \rowcolor{nxlightblue} Crédit CIR & 1 & A & Euler (init) $+$ EMV $\chi^2$ décentré / inverse-PIT ou Alfonsi \\
 Dette privée BK & 1 & A & MCO scalaire (=EMV) / récurrence log-OU exacte \\
 \rowcolor{nxlightblue} PE / Immo / Infra & 3 & A & Moyenne/variance / log-rendement BS \\
