@@ -1,0 +1,22 @@
+# Sorties d'exécution
+outputs/
+*.npy
+
+# Artefacts LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+
+# Données (fournies sur la branche main ; non dupliquées ici)
+Historical_Data_Model_Calibration.xlsx
+Parametres_models.xlsx
