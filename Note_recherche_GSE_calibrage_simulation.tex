@@ -36,7 +36,6 @@
 \usepackage{float}
 \usepackage{caption}
 \usepackage{tabularx}
-\usepackage{pdflscape}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds}
 \usepackage{needspace}
@@ -955,29 +954,29 @@ Monde & & -8.97 & 19.54 & 17.35 & 9.18\\
 \[ P=\begin{pmatrix}0.8554 & 0.1446\\0.0593 & 0.9407\end{pmatrix},\qquad \pi=(0.2909,\ 0.7091)\transp. \]
 Matrice de transition mensuelle \emph{unique} et loi invariante du régime commun (probabilité stationnaire de stress $\pi_1=29.1\,\%$).
 \end{definitionbox}
-\subsection{Validation : chaînes séparées par actif vs référence}
-\begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{@{}l X r r r r r r@{}}
+\subsection{Régimes : moyennes et volatilités vs référence}
+\begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{5pt}
+\begin{tabularx}{\textwidth}{@{}l X r r r r@{}}
 \toprule
-& & \multicolumn{2}{c}{\textbf{Rég.\ 1 (stress)}} & \multicolumn{2}{c}{\textbf{Rég.\ 2 (normal)}} & \multicolumn{2}{c}{\textbf{Transitions}}\\
-\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
-\textbf{Actif} & \textbf{Source} & $\mu_1$ & $\sigma_1$ & $\mu_2$ & $\sigma_2$ & $p_{1\to2}$ & $p_{2\to1}$\\
+& & \multicolumn{2}{c}{\textbf{Régime 1 (stress)}} & \multicolumn{2}{c}{\textbf{Régime 2 (normal)}}\\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}
+\textbf{Actif} & \textbf{Source} & $\mu_1$ & $\sigma_1$ & $\mu_2$ & $\sigma_2$\\
 \midrule
-Euro & Calib. & -13.13 & 21.72 & 13.79 & 9.49 & 14.84 & 5.34\\
- & Réf. & -13.17 & 21.76 & 13.61 & 9.52 & 14.83 & 5.27\\
+Euro & Calib.\ (commun) & -13.00 & 20.95 & 14.74 & 9.34\\
+ & Réf.\ (par actif) & -13.17 & 21.76 & 13.61 & 9.52\\
 \addlinespace
-Monde & Calib. & -12.01 & 19.81 & 17.96 & 9.04 & 14.70 & 5.65\\
- & Réf. & -12.18 & 19.83 & 18.01 & 9.08 & 14.73 & 5.64\\
+Monde & Calib.\ (commun) & -8.97 & 19.54 & 17.35 & 9.18\\
+ & Réf.\ (par actif) & -12.18 & 19.83 & 18.01 & 9.08\\
 \addlinespace
-Émergent & Calib. & -7.78 & 33.14 & 9.56 & 14.49 & 13.25 & 3.51\\
- & Réf. & -13.61 & 27.05 & 13.13 & 11.06 & 15.31 & 4.80\\
+Émergent & Calib.\ (commun) & -9.19 & 30.70 & 11.48 & 14.08\\
+ & Réf.\ (par actif) & -13.61 & 27.05 & 13.13 & 11.06\\
 \addlinespace
 \bottomrule\end{tabularx}
-\caption{Chaînes 2-états \emph{séparées} (compatibilité avec la référence, une chaîne par actif). Euro/Monde concordent à $<1{,}5\,\%$~; l'émergent atteint une vraisemblance \emph{supérieure} à la référence.}\label{tab:res-rsln-sep}
+\caption{Caractérisation des régimes sous la chaîne \emph{commune} (calibrée), comparée à la référence (qui calibre une chaîne distincte par actif). \textbf{La matrice de transition est unique} (cf.\ tableau~\ref{tab:res-common})~: il n'y a pas de probabilités de transition différentes par actif. Euro concorde de près~; Monde/émergent s'écartent car le régime est désormais \emph{partagé} (entrée en stress simultanée).}\label{tab:res-rsln-sep}
 \end{table}
 \subsection{Corrélations des résidus par régime}
-\begin{landscape}
-\begin{table}[H]\centering\scriptsize\renewcommand{\arraystretch}{1.1}\setlength{\tabcolsep}{2.6pt}
+\begin{table}[H]\centering\renewcommand{\arraystretch}{1.1}\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}lrrrrrrrrrrrr@{}}
 \toprule
  & Inf.C & Inf.L & TxR.C & TxR.L & Créd & DetP & PE & Immo & Infra & Act.EU & Act.Mo & Act.EM\\
@@ -994,10 +993,9 @@ Infra & 0.28 & 0.19 & -0.26 & -0.36 & -0.51 & -0.56 & 0.71 & 0.09 & \textbf{1} &
 Act.EU & -0.03 & 0.13 & 0.04 & -0.01 & -0.50 & -0.60 & 0.69 & -0.02 & 0.48 & \textbf{1} & 0.91 & 0.79\\
 Act.Mo & -0.01 & 0.13 & -0.04 & -0.13 & -0.21 & -0.27 & 0.70 & 0.02 & 0.52 & 0.58 & \textbf{1} & 0.66\\
 Act.EM & -0.07 & -0.02 & 0.07 & 0.10 & -0.50 & -0.54 & 0.43 & 0.05 & 0.18 & 0.51 & 0.23 & \textbf{1}\\
-\bottomrule\end{tabular}
-\caption{Corrélations des résidus standardisés (masque \texttt{groupB}). \emph{Triangle sup.} = régime de stress~; \emph{triangle inf.} = régime normal. Hors actions, communes aux régimes~; SDP (Higham).}\label{tab:res-corr}
+\bottomrule\end{tabular}}
+\caption{Corrélations des résidus standardisés (masque \texttt{groupB}). \emph{Triangle sup.} = régime de stress~; \emph{triangle inf.} = régime normal. Hors actions, communes aux régimes~; SDP (Higham). (Étiquettes~: Inf=inflation, TxR=taux réel, Créd=crédit, DetP=dette privée, Act.=actions.)}\label{tab:res-corr}
 \end{table}
-\end{landscape}
 \subsection{Simulation : statistiques de contrôle}
 \begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{6pt}
 \begin{tabular}{@{}l l r l r@{}}
@@ -1023,7 +1021,7 @@ Action\_emergent & log-vol\%/an & 20.630 & E[terminal] & 5.7907\\
 \subsection{Lecture et concordance avec la référence}
 \label{sec:resultats-discussion}
 \begin{insightbox}[Concordances et écarts attendus]
-\textbf{Concordances exactes} (méthodologie identique)~: crédit CIR ($\kappa,\sigma,\theta$), dette privée $\kappa$, PE/infra $\mu$, moyenne LT des taux réels, $\mu$ inflation (fixé)~; en mode chaînes séparées, régimes actions Euro/Monde à moins de $1{,}5\,\%$. \textbf{Régime commun}~: une seule matrice de transition pilote les trois actions ($\pi_1\approx29\,\%$)~; $K^\star=2$ par BIC. \textbf{Écarts attendus}~: (i)~$\kappa,\sigma$ des V2F (référence = cibles distributionnelles, mal conditionnées~; l'outil applique l'EMV)~; (ii)~$\sigma$ dette privée (référence = dispersion stationnaire~; $\kappa,\mu$ concordent)~; (iii)~émergent (vraisemblance plus élevée ici)~; (iv)~immobilier (indice de \emph{prix} vs rendement total avec loyers).
+\textbf{Concordances exactes} (méthodologie identique)~: crédit CIR ($\kappa,\sigma,\theta$), dette privée $\kappa$, PE/infra $\mu$, moyenne LT des taux réels, $\mu$ inflation (fixé). \textbf{Régime latent commun}~: \emph{une seule} matrice de transition pilote les trois actions (entrée en stress simultanée, $\pi_1\approx29\,\%$)~; le nombre d'états $K^\star=2$ est choisi par BIC (tableau~\ref{tab:res-kselect}). \textbf{Écarts attendus}~: (i)~$\kappa,\sigma$ des V2F (référence = cibles distributionnelles, mal conditionnées~; l'outil applique l'EMV)~; (ii)~$\sigma$ dette privée (référence = dispersion stationnaire~; $\kappa,\mu$ concordent)~; (iii)~émergent (vraisemblance plus élevée ici)~; (iv)~immobilier (indice de \emph{prix} vs rendement total avec loyers).
 \end{insightbox}
 % <<< GSE-AUTO-RESULTS END <<<
 

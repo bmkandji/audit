@@ -122,9 +122,8 @@ factors:
     k_select: true               # sélection automatique de K* (BIC)
     k_max: 5                     # cardinalités testées : K = 1..k_max
     n_states: 2                  # repli si k_select: false
-    compare_separate: true       # ajuste aussi des chaînes séparées (validation
-                                 # vs Parametres_models.xlsx, qui utilise des
-                                 # chaînes par actif)
+    compare_separate: false      # chaîne COMMUNE uniquement (pas de chaînes par
+                                 # actif : une seule matrice de transition)
     em_restarts: 20              # multi-démarrage (robustesse)
     var_floor: 1.0e-6
     regime_sensitive_params: true

@@ -235,26 +235,27 @@ def build_section(cal, ref, cfg, sim):
       r"(probabilité stationnaire de stress $\pi_1=" + _f(pi[0]*100, 1) + r"\,\%$).")
     a(r"\end{definitionbox}")
 
-    # ---------- R.7 chaînes séparées (validation) ----------
-    a(r"\subsection{Validation : chaînes séparées par actif vs référence}")
-    a(r"\begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{4pt}")
-    a(r"\begin{tabularx}{\textwidth}{@{}l X r r r r r r@{}}")
+    # ---------- R.7 régimes : moyennes/volatilités vs référence (sans transitions) ----------
+    a(r"\subsection{Régimes : moyennes et volatilités vs référence}")
+    a(r"\begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{5pt}")
+    a(r"\begin{tabularx}{\textwidth}{@{}l X r r r r@{}}")
     a(r"\toprule")
-    a(r"& & \multicolumn{2}{c}{\textbf{Rég.\ 1 (stress)}} & \multicolumn{2}{c}{\textbf{Rég.\ 2 (normal)}} & \multicolumn{2}{c}{\textbf{Transitions}}\\")
-    a(r"\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}")
-    a(r"\textbf{Actif} & \textbf{Source} & $\mu_1$ & $\sigma_1$ & $\mu_2$ & $\sigma_2$ & $p_{1\to2}$ & $p_{2\to1}$\\")
+    a(r"& & \multicolumn{2}{c}{\textbf{Régime 1 (stress)}} & \multicolumn{2}{c}{\textbf{Régime 2 (normal)}}\\")
+    a(r"\cmidrule(lr){3-4}\cmidrule(lr){5-6}")
+    a(r"\textbf{Actif} & \textbf{Source} & $\mu_1$ & $\sigma_1$ & $\mu_2$ & $\sigma_2$\\")
     a(r"\midrule")
     for sheet, lbl in [("Action_EUR", "Euro"), ("Action_Monde", "Monde"), ("Action_emergent", "Émergent")]:
-        sp = cal.regime.params_separate[sheet]
-        r1, r2 = sp["regimes"]
+        regs = J["regimes_by_equity"][sheet]
         k = f"equities:{sheet}"
-        a(f"{lbl} & Calib. & {_f(r1['mu'])} & {_f(r1['sigma'])} & {_f(r2['mu'])} & {_f(r2['sigma'])} & {_f(sp['p_1to2']*100)} & {_f(sp['p_2to1']*100)}\\\\")
-        a(f" & Réf. & {_f(ref[(k,'R1.mu')])} & {_f(ref[(k,'R1.sigma')])} & {_f(ref[(k,'R2.mu')])} & {_f(ref[(k,'R2.sigma')])} & {_f(ref[(k,'p_1to2')]*100)} & {_f(ref[(k,'p_2to1')]*100)}\\\\")
+        a(f"{lbl} & Calib.\\ (commun) & {_f(regs[0]['mu'])} & {_f(regs[0]['sigma'])} & {_f(regs[1]['mu'])} & {_f(regs[1]['sigma'])}\\\\")
+        a(f" & Réf.\\ (par actif) & {_f(ref[(k,'R1.mu')])} & {_f(ref[(k,'R1.sigma')])} & {_f(ref[(k,'R2.mu')])} & {_f(ref[(k,'R2.sigma')])}\\\\")
         a(r"\addlinespace")
     a(r"\bottomrule\end{tabularx}")
-    a(r"\caption{Chaînes 2-états \emph{séparées} (compatibilité avec la référence, une chaîne par "
-      r"actif). Euro/Monde concordent à $<1{,}5\,\%$~; l'émergent atteint une vraisemblance "
-      r"\emph{supérieure} à la référence.}\label{tab:res-rsln-sep}")
+    a(r"\caption{Caractérisation des régimes sous la chaîne \emph{commune} (calibrée), comparée "
+      r"à la référence (qui calibre une chaîne distincte par actif). \textbf{La matrice de "
+      r"transition est unique} (cf.\ tableau~\ref{tab:res-common})~: il n'y a pas de probabilités "
+      r"de transition différentes par actif. Euro concorde de près~; Monde/émergent s'écartent "
+      r"car le régime est désormais \emph{partagé} (entrée en stress simultanée).}\label{tab:res-rsln-sep}")
     a(r"\end{table}")
 
     # ---------- R.8 corrélations ----------
@@ -265,8 +266,8 @@ def build_section(cal, ref, cfg, sim):
     M = np.where(np.triu(np.ones((d, d)), 1) > 0, O1, O2)
     np.fill_diagonal(M, 1.0)
     a(r"\subsection{Corrélations des résidus par régime}")
-    a(r"\begin{landscape}")
-    a(r"\begin{table}[H]\centering\scriptsize\renewcommand{\arraystretch}{1.1}\setlength{\tabcolsep}{2.6pt}")
+    a(r"\begin{table}[H]\centering\renewcommand{\arraystretch}{1.1}\setlength{\tabcolsep}{3pt}")
+    a(r"\resizebox{\textwidth}{!}{%")
     a(r"\begin{tabular}{@{}l" + "r" * d + r"@{}}")
     a(r"\toprule")
     a(" & " + " & ".join(LAB[c] for c in comps) + r"\\")
@@ -274,12 +275,12 @@ def build_section(cal, ref, cfg, sim):
     for i in range(d):
         cells = [r"\textbf{1}" if i == j else f"{M[i,j]:.2f}" for j in range(d)]
         a(LAB[comps[i]] + " & " + " & ".join(cells) + r"\\")
-    a(r"\bottomrule\end{tabular}")
+    a(r"\bottomrule\end{tabular}}")
     a(r"\caption{Corrélations des résidus standardisés (masque \texttt{groupB}). \emph{Triangle "
       r"sup.} = régime de stress~; \emph{triangle inf.} = régime normal. Hors actions, communes "
-      r"aux régimes~; SDP (Higham).}\label{tab:res-corr}")
+      r"aux régimes~; SDP (Higham). (Étiquettes~: Inf=inflation, TxR=taux réel, "
+      r"Créd=crédit, DetP=dette privée, Act.=actions.)}\label{tab:res-corr}")
     a(r"\end{table}")
-    a(r"\end{landscape}")
 
     # ---------- R.9 simulation ----------
     a(r"\subsection{Simulation : statistiques de contrôle}")
@@ -304,10 +305,10 @@ def build_section(cal, ref, cfg, sim):
     a(r"\label{sec:resultats-discussion}")
     a(r"\begin{insightbox}[Concordances et écarts attendus]")
     a(r"\textbf{Concordances exactes} (méthodologie identique)~: crédit CIR ($\kappa,\sigma,\theta$), "
-      r"dette privée $\kappa$, PE/infra $\mu$, moyenne LT des taux réels, $\mu$ inflation (fixé)~; "
-      r"en mode chaînes séparées, régimes actions Euro/Monde à moins de $1{,}5\,\%$. "
-      r"\textbf{Régime commun}~: une seule matrice de transition pilote les trois actions "
-      r"($\pi_1\approx" + _f(pi[0]*100, 0) + r"\,\%$)~; $K^\star=" + str(K) + r"$ par BIC. "
+      r"dette privée $\kappa$, PE/infra $\mu$, moyenne LT des taux réels, $\mu$ inflation (fixé). "
+      r"\textbf{Régime latent commun}~: \emph{une seule} matrice de transition pilote les trois "
+      r"actions (entrée en stress simultanée, $\pi_1\approx" + _f(pi[0]*100, 0) + r"\,\%$)~; le "
+      r"nombre d'états $K^\star=" + str(K) + r"$ est choisi par BIC (tableau~\ref{tab:res-kselect}). "
       r"\textbf{Écarts attendus}~: (i)~$\kappa,\sigma$ des V2F (référence = cibles "
       r"distributionnelles, mal conditionnées~; l'outil applique l'EMV)~; (ii)~$\sigma$ dette "
       r"privée (référence = dispersion stationnaire~; $\kappa,\mu$ concordent)~; (iii)~émergent "
