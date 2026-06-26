@@ -28,24 +28,21 @@ _REF_CELLS = {
     ("infra", "sigma"): (22, 3),
     ("immobilier", "mu"): (23, 3),
     ("immobilier", "sigma"): (24, 3),
+    # Actions : seules les caractéristiques de régime (moyenne/vol) sont
+    # comparées. La chaîne étant COMMUNE, il n'y a pas de matrice de
+    # transition par actif à comparer (réf. = chaînes séparées).
     ("equities:Action_EUR", "R1.mu"): (16, 3),
     ("equities:Action_EUR", "R1.sigma"): (17, 3),
     ("equities:Action_EUR", "R2.mu"): (18, 3),
     ("equities:Action_EUR", "R2.sigma"): (19, 3),
-    ("equities:Action_EUR", "p_1to2"): (33, 3),
-    ("equities:Action_EUR", "p_2to1"): (35, 3),
     ("equities:Action_Monde", "R1.mu"): (41, 3),
     ("equities:Action_Monde", "R1.sigma"): (42, 3),
     ("equities:Action_Monde", "R2.mu"): (43, 3),
     ("equities:Action_Monde", "R2.sigma"): (44, 3),
-    ("equities:Action_Monde", "p_1to2"): (33, 4),
-    ("equities:Action_Monde", "p_2to1"): (35, 4),
     ("equities:Action_emergent", "R1.mu"): (50, 3),
     ("equities:Action_emergent", "R1.sigma"): (51, 3),
     ("equities:Action_emergent", "R2.mu"): (52, 3),
     ("equities:Action_emergent", "R2.sigma"): (53, 3),
-    ("equities:Action_emergent", "p_1to2"): (33, 5),
-    ("equities:Action_emergent", "p_2to1"): (35, 5),
 }
 
 
@@ -63,12 +60,12 @@ def load_reference(path: str, sheet: str = "Parametres") -> dict:
 def _calibrated_value(cal, factor, param):
     if factor.startswith("equities:"):
         sheet = factor.split(":", 1)[1]
-        sep = cal.regime.params_separate[sheet]
+        regs = cal.regime.joint["regimes_by_equity"][sheet]   # régime COMMUN
         if param.startswith("R1."):
-            return sep["regimes"][0][param[3:]]
+            return regs[0][param[3:]]
         if param.startswith("R2."):
-            return sep["regimes"][1][param[3:]]
-        return sep[param]
+            return regs[1][param[3:]]
+        return np.nan
     fr = cal.margins.get(factor)
     if fr is None:
         return np.nan

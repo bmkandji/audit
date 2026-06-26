@@ -116,6 +116,26 @@ def _em_gaussian_hmm(X, K=2, restarts=12, max_iter=500, tol=1e-8,
 
 
 # --------------------------------------------------------------------------- #
+def select_k(returns_df, k_max=4, restarts=12, var_floor=1e-6):
+    """Analyse du choix du nombre d'états latents (régime commun, joint).
+
+    Ajuste le HMM gaussien multivarié pour K=1..k_max et renvoie, par K, la
+    log-vraisemblance optimale, le nombre de paramètres libres, AIC et BIC,
+    ainsi que K* = argmin BIC.
+    """
+    X = returns_df.dropna().values
+    n, D = X.shape
+    rows = []
+    for K in range(1, k_max + 1):
+        fit = _em_gaussian_hmm(X, K=K, restarts=restarts, var_floor=var_floor, seed=100 + K)
+        p = K * D + K * D * (D + 1) // 2 + K * (K - 1) + (K - 1)
+        ll = fit["ll"]
+        rows.append(dict(K=K, loglik=ll, p=p,
+                         AIC=-2 * ll + 2 * p, BIC=-2 * ll + p * np.log(n)))
+    kstar = min(rows, key=lambda r: r["BIC"])["K"]
+    return dict(n=n, D=D, table=rows, k_star=kstar)
+
+
 @dataclass
 class RegimeFitResult:
     name: str
@@ -133,40 +153,73 @@ def _annualize_regime(m_month, s_month):
     return mu, sig
 
 
+def _invariant(P):
+    """Loi invariante pi (vecteur propre gauche de P pour la valeur propre 1)."""
+    w, V = np.linalg.eig(P.T)
+    k = int(np.argmin(np.abs(w - 1.0)))
+    pi = np.real(V[:, k])
+    pi = pi / pi.sum()
+    return np.clip(pi, 0, None) / np.clip(pi, 0, None).sum()
+
+
 def fit_rsln2(pre: Preprocessed, spec: dict, dt: float) -> RegimeFitResult:
-    K = int(pre.meta.get("n_states", 2))
-    restarts = int(pre.meta.get("em_restarts", 12))
+    restarts = int(pre.meta.get("em_restarts", 20))
     vf = float(pre.meta.get("var_floor", 1e-6))
+    common = bool(pre.meta.get("common_regime", True))
+    do_kselect = bool(pre.meta.get("k_select", True))
+    k_max = int(pre.meta.get("k_max", 5))
     names = list(pre.data.keys())
-
-    # ---- chaînes séparées (référence) ----
-    sep = {}
-    for j, nm in enumerate(names):
-        x = pre.data[nm].values.reshape(-1, 1)
-        fit = _em_gaussian_hmm(x, K=K, restarts=restarts, var_floor=vf, seed=j)
-        regimes = []
-        for k in range(K):
-            mu, sig = _annualize_regime(float(fit["means"][k, 0]),
-                                        float(np.sqrt(fit["covs"][k, 0, 0])))
-            regimes.append(dict(mu=mu, sigma=sig,
-                                m_month=float(fit["means"][k, 0]),
-                                s_month=float(np.sqrt(fit["covs"][k, 0, 0]))))
-        P = fit["P"]
-        sep[nm] = dict(regimes=regimes,
-                       P=P.tolist(),
-                       p_1to2=float(P[0, 1]), p_1to1=float(P[0, 0]),
-                       p_2to1=float(P[1, 0]), p_2to2=float(P[1, 1]),
-                       loglik=fit["ll"])
-
-    # ---- régime commun (joint, émissions multivariées) ----
     df = pd.concat([pre.data[nm].rename(nm) for nm in names], axis=1).dropna()
     Xj = df.values
+    n, D = Xj.shape
+
+    # ---- choix du nombre d'états K* (régime commun) ----
+    ks = None
+    if common and do_kselect:
+        ks = select_k(df, k_max=k_max, restarts=restarts, var_floor=vf)
+        K = ks["k_star"]
+    else:
+        K = int(pre.meta.get("n_states", 2))
+
+    # ---- régime latent COMMUN (joint, émissions multivariées, K états) ----
     jfit = _em_gaussian_hmm(Xj, K=K, restarts=restarts, var_floor=vf, seed=999)
+    P = jfit["P"]
+    pi = _invariant(P)
     xi = pd.DataFrame(jfit["gamma"], index=df.index,
                       columns=[f"reg{k+1}" for k in range(K)])
-    joint = dict(P=jfit["P"], pi=jfit["pi"], xi=xi,
-                 means=jfit["means"], covs=jfit["covs"],
-                 returns=df, loglik=jfit["ll"],
-                 m_month=jfit["means"], s_month=np.sqrt(np.diagonal(jfit["covs"], axis1=1, axis2=2)))
-    comps = list(names)
-    return RegimeFitResult(pre.name, "RSLN2", sep, joint, names, comps)
+    s_month = np.sqrt(np.diagonal(jfit["covs"], axis1=1, axis2=2))   # (K,D)
+    # paramètres annualisés par actif et par régime, sous le régime COMMUN
+    reg_by_eq = {}
+    for j, nm in enumerate(names):
+        regs = []
+        for k in range(K):
+            mu, sig = _annualize_regime(float(jfit["means"][k, j]), float(s_month[k, j]))
+            regs.append(dict(mu=mu, sigma=sig,
+                             m_month=float(jfit["means"][k, j]),
+                             s_month=float(s_month[k, j])))
+        reg_by_eq[nm] = regs
+    joint = dict(P=P, pi=pi, xi=xi, means=jfit["means"], covs=jfit["covs"],
+                 returns=df, loglik=jfit["ll"], K=K, m_month=jfit["means"],
+                 s_month=s_month, regimes_by_equity=reg_by_eq, kselect=ks)
+
+    # ---- chaînes SÉPARÉES (uniquement pour comparaison à la référence) ----
+    sep = {}
+    if bool(pre.meta.get("compare_separate", True)):
+        Ksep = 2
+        for j, nm in enumerate(names):
+            x = pre.data[nm].values.reshape(-1, 1)
+            fit = _em_gaussian_hmm(x, K=Ksep, restarts=restarts, var_floor=vf, seed=j)
+            regimes = []
+            for k in range(Ksep):
+                mu, sig = _annualize_regime(float(fit["means"][k, 0]),
+                                            float(np.sqrt(fit["covs"][k, 0, 0])))
+                regimes.append(dict(mu=mu, sigma=sig,
+                                    m_month=float(fit["means"][k, 0]),
+                                    s_month=float(np.sqrt(fit["covs"][k, 0, 0]))))
+            Ps = fit["P"]
+            sep[nm] = dict(regimes=regimes, P=Ps.tolist(),
+                           p_1to2=float(Ps[0, 1]), p_1to1=float(Ps[0, 0]),
+                           p_2to1=float(Ps[1, 0]), p_2to2=float(Ps[1, 1]),
+                           loglik=fit["ll"])
+
+    return RegimeFitResult(pre.name, "RSLN2", sep, joint, names, list(names))

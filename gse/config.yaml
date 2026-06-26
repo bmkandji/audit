@@ -116,11 +116,15 @@ factors:
     sheets: ["Action_EUR", "Action_Monde", "Action_emergent"]
     preprocessing:
       transform: log_return_100
-    n_states: 2
-    common_regime: false         # false = une chaîne par actif (réf.
-                                 #         Parametres_models.xlsx)
-                                 # true  = régime latent COMMUN (note)
-    em_restarts: 12              # multi-démarrage (robustesse)
+    # Tous les facteurs dépendant du régime latent sont calibrés ENSEMBLE,
+    # avec UNE SEULE chaîne de Markov (même matrice de transition).
+    common_regime: true          # régime latent COMMUN (cadre de la note)
+    k_select: true               # sélection automatique de K* (BIC)
+    k_max: 5                     # cardinalités testées : K = 1..k_max
+    n_states: 2                  # repli si k_select: false
+    compare_separate: false      # chaîne COMMUNE uniquement (pas de chaînes par
+                                 # actif : une seule matrice de transition)
+    em_restarts: 20              # multi-démarrage (robustesse)
     var_floor: 1.0e-6
     regime_sensitive_params: true
 
