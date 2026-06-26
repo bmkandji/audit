@@ -1,0 +1,149 @@
+# =====================================================================
+# GSE IRCANTEC — Configuration du calibrage et de la simulation
+# ---------------------------------------------------------------------
+# Source unique de vérité : pour CHAQUE facteur, on précise
+#   - le modèle de diffusion (model),
+#   - la (les) feuille(s) Excel source (sheets),
+#   - le bloc de PRÉTRAITEMENT (preprocessing) appliqué avant calibrage,
+#   - les paramètres FIXÉS au calibrage (fix),
+#   - la sensibilité des marges au régime (regime_sensitive_params).
+# La sensibilité des CORRÉLATIONS au régime est gérée globalement
+# (correlations.regime_sensitivity), conformément à la note de recherche.
+# =====================================================================
+
+data:
+  path: "Historical_Data_Model_Calibration.xlsx"
+  dt: 0.08333333333333333          # 1/12, pas mensuel
+  # Fenêtre de calibrage commune (20 ans, fin 2025). Les séries plus
+  # courtes (immobilier) utilisent toutes les données disponibles >= start.
+  window: {start: "2005-12-01", end: null}
+
+# ---------------------------------------------------------------------
+# Méthodes de calibrage (sélectionnables) :
+#   V2F   : "mle"  (régression VAR(1) = EMV exact, recommandé par la note)
+#           "distributional" (cibles distributionnelles, méthode Phase 1)
+#   CIR   : "mle"  (chi^2 décentré ; init. Euler en forme fermée)
+#   BK    : "mle"  (OU/MCO exact sur la série de log-spread)
+#   BS    : moments (moyenne brute, vol après déslissage)
+#   RSLN2 : "em"   (Baum-Welch / Hamilton-Kim, multi-démarrage)
+# ---------------------------------------------------------------------
+
+factors:
+
+  # ===================== GROUPE A (marges insensibles au régime) =======
+  inflation:
+    model: V2F
+    method: mle
+    sheets: {short: "Inflation_2Y", long: "Inflation_10Y"}
+    preprocessing:
+      transform: none            # séries déjà en taux (%)
+    fix: {mu: 1.75}              # moyenne LT épinglée à la cible COR
+    regime_sensitive_params: false
+
+  real_rate:
+    model: V2F
+    method: mle
+    sheets: {short: "Real_Rate_2Y", long: "Real_Rate_10Y"}
+    preprocessing:
+      transform: none
+    fix: {}                      # moyenne LT estimée (régression)
+    regime_sensitive_params: false
+
+  credit:
+    model: CIR
+    method: mle
+    sheet: "Credit"
+    preprocessing:
+      transform: none            # spread positif (%), utilisé tel quel
+    fix: {}
+    regime_sensitive_params: false
+
+  dette_privee:
+    model: BK
+    method: mle
+    sheet: "Dette_Privee"
+    preprocessing:
+      # La série fournie est DÉJÀ 100*log(spread) (valeurs négatives) :
+      # le modèle BK = OU s'applique directement. Pour une série de
+      # spread brut, mettre transform: log100 (= 100*ln) au préalable.
+      transform: none
+    fix: {}
+    regime_sensitive_params: false
+
+  pe:                            # Action non cotée (LPX50TR)
+    model: BS
+    method: moments
+    sheet: "Action_noncotee"
+    preprocessing:
+      transform: log_return_100  # indice -> 100*log-rendement
+      unsmooth: true             # déslissage AR(1)
+      mean_source: raw           # moyenne sur rendements bruts
+      vol_source: unsmoothed     # vol sur rendements déslissés
+    fix: {}
+    regime_sensitive_params: false
+
+  immobilier:
+    model: BS
+    method: moments
+    sheet: "Immobilier"
+    preprocessing:
+      transform: log_return_100
+      unsmooth: true
+      mean_source: raw
+      vol_source: unsmoothed
+      income_yield: 0.0          # rendement locatif annuel (%) à ajouter
+                                 # (Phase 1 : hypothèse de réinvestissement
+                                 # des loyers ; l'indice fourni est un prix).
+    fix: {}
+    regime_sensitive_params: false
+
+  infra:
+    model: BS
+    method: moments
+    sheet: "Infra"
+    preprocessing:
+      transform: log_return_100
+      unsmooth: true
+      mean_source: raw
+      vol_source: unsmoothed
+    fix: {}
+    regime_sensitive_params: false
+
+  # ===================== GROUPE B (marges sensibles au régime) =========
+  equities:
+    model: RSLN2
+    method: em
+    sheets: ["Action_EUR", "Action_Monde", "Action_emergent"]
+    preprocessing:
+      transform: log_return_100
+    n_states: 2
+    common_regime: false         # false = une chaîne par actif (réf.
+                                 #         Parametres_models.xlsx)
+                                 # true  = régime latent COMMUN (note)
+    em_restarts: 12              # multi-démarrage (robustesse)
+    var_floor: 1.0e-6
+    regime_sensitive_params: true
+
+# ---------------------------------------------------------------------
+# Dépendance (copule gaussienne sur résidus standardisés)
+# regime_sensitivity :
+#   "full"  : Omega(a) pleinement propre au régime
+#   "none"  : une seule Omega commune (insensible au régime)
+#   "groupB": seules les corrélations impliquant le Groupe B varient
+#             selon le régime ; le reste est insensible (réf. : matrice
+#             avec entrées "...fort vol" pour les actions seulement)
+# ---------------------------------------------------------------------
+correlations:
+  regime_sensitivity: groupB
+  higham_tol: 1.0e-8
+  higham_max_iter: 200
+
+simulation:
+  n_paths: 5000
+  horizon_years: 30
+  seed: 20260626
+  cir_scheme: alfonsi            # "alfonsi" (rapide, positif) ou "inverse_pit" (exact, plus lent)
+
+reference:
+  path: "Parametres_models.xlsx"
+  sheet: "Parametres"
