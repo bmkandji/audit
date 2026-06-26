@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 from gse.calibrate import calibrate, load_config
-from gse.compare import comparison_table, load_reference, pit_diagnostics
+from gse.compare import comparison_table, load_reference, pit_diagnostics, v2f_method_comparison
 from gse.preprocessing import preprocess_factor
 from gse.simulate import simulate, summarize
 
@@ -130,9 +130,42 @@ def build_section(cal, ref, cfg, sim):
     a(f"Demi-vie court & an & {_f(hl(inf['kappa_short']),2)} & -- & -- & {_f(hl(rea['kappa_short']),2)} & -- & --\\\\")
     a(f"Demi-vie long & an & {_f(hl(inf['kappa_long']),2)} & -- & -- & {_f(hl(rea['kappa_long']),2)} & -- & --\\\\")
     a(r"\bottomrule\end{tabularx}")
-    a(r"\caption{V2F (EMV exact~; $\mu$ inflation fixé à la cible COR). Demi-vie $=\ln 2/\kappa$. "
-      r"Écarts $\kappa,\sigma$ : référence par cibles distributionnelles "
-      r"(cf.\ \S\ref{sec:resultats-discussion}).}\label{tab:res-v2f}")
+    a(r"\caption{V2F sous la méthode configurée (EMV pur par défaut~; $\mu$ "
+      r"inflation fixé à la cible COR). Demi-vie $=\ln 2/\kappa$. Comparaison des "
+      r"méthodologies au tableau~\ref{tab:res-v2f-meth}.}\label{tab:res-v2f}")
+    a(r"\end{table}")
+
+    # ---------- R.2b Comparaison des méthodologies V2F ----------
+    a(r"\subsection{V2F : comparaison des trois méthodologies de calibrage}")
+    a(r"\begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{6pt}")
+    a(r"\begin{tabularx}{\textwidth}{@{}l X r r r r@{}}")
+    a(r"\toprule")
+    a(r"\textbf{Facteur} & \textbf{Paramètre} & \textbf{MLE pur} & \textbf{MCO} & \textbf{Distrib.} & \textbf{Réf.}\\")
+    a(r"\midrule")
+    vc = v2f_method_comparison(cfg, cfg.get("reference", {}).get("path", "Parametres_models.xlsx"))
+    disp = [("kappa_short", r"$\kappa_1$ (court, \%/an)", 100, 2),
+            ("kappa_long", r"$\kappa_2$ (long, \%/an)", 100, 2),
+            ("sigma_short", r"$\sigma_1$ (court, \%)", 1, 3),
+            ("sigma_long", r"$\sigma_2$ (long, \%)", 1, 3),
+            ("mu", r"$\mu$ (moy.\ LT, \%)", 1, 3)]
+    for fac, flbl in [("inflation", "Inflation"), ("real_rate", "Taux réels")]:
+        sub = vc[vc["facteur"] == fac].set_index("param")
+        first = True
+        for key, plbl, sc, nd in disp:
+            if key not in sub.index:
+                continue
+            rw = sub.loc[key]
+            a(f"{flbl if first else ''} & {plbl} & {_f(rw['mle']*sc,nd)} & {_f(rw['ols']*sc,nd)} "
+              f"& {_f(rw['distributional']*sc,nd)} & {_f(rw['reference']*sc,nd)}\\\\")
+            first = False
+        a(r"\addlinespace")
+    a(r"\bottomrule\end{tabularx}")
+    a(r"\caption{Paramètres V2F sous les trois méthodologies, en regard de la "
+      r"référence. \textbf{MLE pur}~: vraisemblance gaussienne jointe (court \& "
+      r"long ensemble). \textbf{MCO}~: cascade en forme réduite. \textbf{Distrib.}~: "
+      r"cibles distributionnelles (Phase 1), ridge faible levant la crête "
+      r"$\sigma^2/\kappa$. L'EMV restitue des $\sigma$ plus faibles~; la méthode "
+      r"distributionnelle, plus proche de la référence.}\label{tab:res-v2f-meth}")
     a(r"\end{table}")
 
     # ---------- R.3 CIR / BK / BS ----------
@@ -391,6 +424,15 @@ def main():
         print(f"\n|écart| médian = {ok['ecart_pct'].abs().median():.1f}%")
     except Exception as e:
         print("Comparaison indisponible :", e)
+
+    # V2F : paramètres des trois méthodologies (mle/ols/distributional) vs réf.
+    try:
+        v2fm = v2f_method_comparison(cfg, ref_path)
+        v2fm.to_csv(os.path.join(args.out, "comparaison_methodes_v2f.csv"), index=False)
+        print("\nV2F — paramètres par méthodologie (mle/ols/distributional) vs réf. :")
+        print(v2fm.to_string(index=False))
+    except Exception as e:
+        print("Comparaison des méthodes V2F indisponible :", e)
 
     for lbl, Om in cal.dependence["regimes"].items():
         Om.to_csv(os.path.join(args.out, f"correlation_{lbl}.csv"))

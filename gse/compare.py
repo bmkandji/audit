@@ -95,6 +95,38 @@ def comparison_table(cal, ref_path: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def v2f_method_comparison(cfg: dict, ref_path: str) -> pd.DataFrame:
+    """Paramètres V2F sous les TROIS méthodologies (mle / ols / distributional)
+    en regard de la référence, pour chaque facteur V2F de la config."""
+    from .preprocessing import preprocess_factor
+    from .margins import fit_v2f
+    dt = float(cfg["data"]["dt"])
+    ref = load_reference(ref_path)
+    methods = ["mle", "ols", "distributional"]
+    keys = ["kappa_short", "kappa_long", "sigma_short", "sigma_long", "mu", "rho_c"]
+    rows = []
+    for fac, spec in cfg["factors"].items():
+        if spec.get("model") != "V2F":
+            continue
+        pre = preprocess_factor(fac, spec, cfg["data"])
+        fits = {}
+        for mth in methods:
+            s = dict(spec); s["method"] = mth
+            try:
+                fits[mth] = fit_v2f(pre, s, dt).params
+            except Exception:
+                fits[mth] = {}
+        for p in keys:
+            row = dict(facteur=fac, param=p)
+            for mth in methods:
+                v = fits[mth].get(p, np.nan)
+                row[mth] = round(float(v), 4) if v == v else np.nan
+            rv = ref.get((fac, p), np.nan)
+            row["reference"] = round(float(rv), 4) if rv == rv else np.nan
+            rows.append(row)
+    return pd.DataFrame(rows)
+
+
 def pit_diagnostics(cal, alpha: float = 0.05) -> pd.DataFrame:
     """Adéquation des résidus PIT : moyenne, écart-type, KS (normalité), queue.
 

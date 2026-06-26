@@ -19,13 +19,19 @@ data:
   window: {start: "2005-12-01", end: null}
 
 # ---------------------------------------------------------------------
-# Méthodes de calibrage (sélectionnables) :
-#   V2F   : "mle"  (régression VAR(1) = EMV exact, recommandé par la note)
-#           "distributional" (cibles distributionnelles, méthode Phase 1)
-#   CIR   : "mle"  (chi^2 décentré ; init. Euler en forme fermée)
-#   BK    : "mle"  (OU/MCO exact sur la série de log-spread)
-#   BS    : moments (moyenne brute, vol après déslissage)
-#   RSLN2 : "em"   (Baum-Welch / Hamilton-Kim, multi-démarrage)
+# Méthodes de calibrage des marges (champ `method`, sélectionnable) :
+#   V2F   : "mle"            EMV joint PUR (court & long ENSEMBLE ; loi
+#                            gaussienne exacte, sans passage par MCO) — défaut.
+#           "ols"            MCO en cascade (forme réduite).
+#           "distributional" cibles distributionnelles (Phase 1, V2F seulement ;
+#                            ridge faible pour lever la crête sigma^2/kappa).
+#   CIR   : "mle"            chi^2 décentré (init Euler) — défaut.
+#           "ols"            régression d'Euler seule (sans raffinement EMV).
+#   BK    : "mle" = "ols"    OU exact (EMV = MCO en forme fermée).
+#   BS    : "moments"        moyenne brute, vol après déslissage.
+#   RSLN2 : "em"             Baum-Welch / Hamilton-Kim, multi-démarrage.
+# Les applications numériques sortent les paramètres V2F des TROIS méthodes
+# (mle/ols/distributional) en regard de la référence (cf. run_calibration).
 # ---------------------------------------------------------------------
 
 factors:
