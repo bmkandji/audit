@@ -843,11 +843,12 @@ puis projeter~: $\Omega^{\mathrm{SDP}}(a)=\textsc{NearestCorr}(\widehat\Omega(a)
 \item \textbf{Reproductibilité}~: graine fixée~; $v_a\ge\underline v$~; régimes ordonnés~; consigner $(\mathcal F,S,K^\star)$ avec les sorties.
 \end{itemize}
 
+% >>> GSE-AUTO-RESULTS BEGIN (généré par run_calibration.py — ne pas éditer à la main) >>>
 % ====================================================================
 \section{Résultats numériques (sortie du module de calibrage)}
 \label{sec:resultats}
 % ====================================================================
-Tous les résultats ci-dessous sont \emph{produits par l'outil} (package \texttt{gse}) sur \texttt{Historical\_Data\_\allowbreak Model\_\allowbreak Calibration.xlsx}. Conformément au cadre de la note, \textbf{les facteurs dépendant du régime latent (actions) sont calibrés ensemble, sous une \emph{unique} chaîne de Markov} (une seule matrice de transition)~; le nombre d'états $K^\star$ est choisi par critère d'information. La colonne \emph{Réf.} reprend \texttt{Parametres\_models.xlsx} (2026).
+Tous les résultats ci-dessous sont \emph{produits par l'outil} (package \texttt{gse}, via \texttt{run\_calibration.py}) sur \texttt{Historical\_Data\_\allowbreak Model\_\allowbreak Calibration.xlsx}, et insérés automatiquement ici. Conformément au cadre de la note, \textbf{les facteurs dépendant du régime latent (actions) sont calibrés ensemble, sous une \emph{unique} chaîne de Markov} (une seule matrice de transition)~; le nombre d'états $K^\star$ est choisi par critère d'information. La colonne \emph{Réf.} reprend \texttt{Parametres\_models.xlsx} (2026).
 \subsection{Données, fenêtre de calibrage et prétraitements}
 \begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{5pt}
 \begin{tabularx}{\textwidth}{@{}l l X r l@{}}
@@ -863,7 +864,7 @@ immobilier & BS & \footnotesize Immobilier & 210 & \footnotesize $100\ln$-rdt~; 
 infra & BS & \footnotesize Infra & 240 & \footnotesize $100\ln$-rdt~; déslissage AR(1)\\
 equities & RSLN2 & \footnotesize Action\_EUR, Action\_Monde, Action\_emergent & 240 & \footnotesize $100\ln$-rdt~; régime commun\\
 \bottomrule\end{tabularx}
-\caption{Périmètre et prétraitements par facteur. Fenêtre commune déc.~2005--déc.~2025 ($n$ = nombre d'observations modélisées~; l'immobilier démarre en juin~2008).}\label{tab:res-data}
+\caption{Périmètre et prétraitements par facteur. Fenêtre commune déc.~2005--déc.~2025 ($n$ = observations modélisées~; immobilier à partir de juin~2008).}\label{tab:res-data}
 \end{table}
 \subsection{Facteurs de taux --- Vasicek à deux facteurs}
 \begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.25}\setlength{\tabcolsep}{5pt}
@@ -883,7 +884,7 @@ $\rho_c$ (corr.\ int.) & -- & 0.805 & -- & -- & 0.544 & -- & --\\
 Demi-vie court & an & 1.49 & -- & -- & 1.10 & -- & --\\
 Demi-vie long & an & 2.30 & -- & -- & 3.64 & -- & --\\
 \bottomrule\end{tabularx}
-\caption{V2F (EMV exact~; $\mu$ inflation fixé à la cible COR). Demi-vie $=\ln 2/\kappa$. Écarts $\kappa,\sigma$ : la référence emploie les cibles distributionnelles (cf.\ \S\ref{sec:resultats-discussion}).}\label{tab:res-v2f}
+\caption{V2F (EMV exact~; $\mu$ inflation fixé à la cible COR). Demi-vie $=\ln 2/\kappa$. Écarts $\kappa,\sigma$ : référence par cibles distributionnelles (cf.\ \S\ref{sec:resultats-discussion}).}\label{tab:res-v2f}
 \end{table}
 \subsection{Crédit, dette privée et actifs réels}
 \begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{5pt}
@@ -920,7 +921,7 @@ PE (LPX50) & BS & 0.2403 & 23.15 & 29.64 & 1.639\\
 Immobilier & BS & -0.0699 & 4.12 & 3.85 & 0.873\\
 Infrastructure & BS & -0.0078 & 13.47 & 13.38 & 0.987\\
 \bottomrule\end{tabularx}
-\caption{Déslissage AR(1) : $r^\ast_t=(r_t-b\,r_{t-1})/(1-b)$. La volatilité retenue est la volatilité \emph{déslissée} (annualisée, \%)~; le facteur d'inflation de variance vaut $(1+b)/(1-b)$. PE montre la sur-correction attendue ($b>0$)~; immobilier et infra sont peu autocorrélés ici.}\label{tab:res-unsmooth}
+\caption{Déslissage AR(1) : $r^\ast_t=(r_t-b\,r_{t-1})/(1-b)$~; volatilité retenue = \emph{déslissée} (annualisée, \%)~; facteur d'inflation de variance $(1+b)/(1-b)$. PE montre la sur-correction attendue ($b>0$).}\label{tab:res-unsmooth}
 \end{table}
 \subsection{Choix du nombre d'états latents $K^\star$ (régime commun)}
 \begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{8pt}
@@ -934,7 +935,7 @@ $K$ & $\ell^\star(K)$ & $p_K$ & AIC & BIC & \\
 4 & -1828.7 & 51 & 3759.3 & 3936.8 & \\
 5 & -1810.5 & 69 & 3759.0 & 3999.2 & \\
 \bottomrule\end{tabular}
-\caption{Modèle à régime commun (émissions gaussiennes $D=3$ actions, $n=240$). Le BIC sélectionne $K^\star=2$ ; l'AIC, moins parcimonieux, continue de décroître. Un seul régime commun à $K^\star$ états remplace $2^3$ états joints de chaînes séparées.}\label{tab:res-kselect}
+\caption{Régime commun (émissions gaussiennes $D=3$ actions, $n=240$). Le BIC sélectionne $K^\star=2$ ; l'AIC, moins parcimonieux, décroît encore. Un régime commun à $K^\star$ états remplace $2^3$ états joints de chaînes séparées.}\label{tab:res-kselect}
 \end{table}
 \subsection{Régime latent commun : transition unique et paramètres par actif}
 \begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.25}\setlength{\tabcolsep}{6pt}
@@ -948,7 +949,7 @@ Euro & & -13.00 & 20.95 & 14.74 & 9.34\\
 Monde & & -8.97 & 19.54 & 17.35 & 9.18\\
 Émergent & & -9.19 & 30.70 & 11.48 & 14.08\\
 \bottomrule\end{tabularx}
-\caption{Actions sous le régime latent \emph{commun} ($K^\star=2$, EM joint). $\mu,\sigma$ annualisés en \%. Le régime~1 (forte volatilité) frappe \emph{simultanément} les trois actifs --- dépendance de queue systémique.}\label{tab:res-common}
+\caption{Actions sous le régime latent \emph{commun} ($K^\star=2$, EM joint). $\mu,\sigma$ annualisés en \%. Le régime~1 (forte volatilité) frappe \emph{simultanément} les trois actifs.}\label{tab:res-common}
 \end{table}
 \begin{definitionbox}
 \[ P=\begin{pmatrix}0.8554 & 0.1446\\0.0593 & 0.9407\end{pmatrix},\qquad \pi=(0.2909,\ 0.7091)\transp. \]
@@ -972,7 +973,7 @@ Monde & Calib. & -12.01 & 19.81 & 17.96 & 9.04 & 14.70 & 5.65\\
  & Réf. & -13.61 & 27.05 & 13.13 & 11.06 & 15.31 & 4.80\\
 \addlinespace
 \bottomrule\end{tabularx}
-\caption{Chaînes 2-états \emph{séparées} (mode de compatibilité avec la référence, qui calibre une chaîne par actif). Euro/Monde concordent à $<1{,}5\,\%$~; l'émergent atteint une vraisemblance \emph{supérieure} à la référence.}\label{tab:res-rsln-sep}
+\caption{Chaînes 2-états \emph{séparées} (compatibilité avec la référence, une chaîne par actif). Euro/Monde concordent à $<1{,}5\,\%$~; l'émergent atteint une vraisemblance \emph{supérieure} à la référence.}\label{tab:res-rsln-sep}
 \end{table}
 \subsection{Corrélations des résidus par régime}
 \begin{landscape}
@@ -994,7 +995,7 @@ Act.EU & -0.03 & 0.13 & 0.04 & -0.01 & -0.50 & -0.60 & 0.69 & -0.02 & 0.48 & \te
 Act.Mo & -0.01 & 0.13 & -0.04 & -0.13 & -0.21 & -0.27 & 0.70 & 0.02 & 0.52 & 0.58 & \textbf{1} & 0.66\\
 Act.EM & -0.07 & -0.02 & 0.07 & 0.10 & -0.50 & -0.54 & 0.43 & 0.05 & 0.18 & 0.51 & 0.23 & \textbf{1}\\
 \bottomrule\end{tabular}
-\caption{Corrélations des résidus standardisés (masque \texttt{groupB}). \emph{Triangle sup.} = régime de stress~; \emph{triangle inf.} = régime normal. Hors actions, les corrélations sont communes aux régimes~; SDP (Higham).}\label{tab:res-corr}
+\caption{Corrélations des résidus standardisés (masque \texttt{groupB}). \emph{Triangle sup.} = régime de stress~; \emph{triangle inf.} = régime normal. Hors actions, communes aux régimes~; SDP (Higham).}\label{tab:res-corr}
 \end{table}
 \end{landscape}
 \subsection{Simulation : statistiques de contrôle}
@@ -1003,27 +1004,28 @@ Act.EM & -0.07 & -0.02 & 0.07 & 0.10 & -0.50 & -0.54 & 0.43 & 0.05 & 0.18 & 0.51
 \toprule
 \textbf{Sortie} & \textbf{Mesure} & \textbf{Val.} & \textbf{} & \textbf{E[terminal]}\\
 \midrule
-inflation.short & vol(diff)/an & 0.887 & E[terminal] & 1.5026\\
-inflation.long & vol(diff)/an & 0.437 & E[terminal] & 1.7441\\
-real\_rate.short & vol(diff)/an & 0.949 & E[terminal] & -0.2777\\
-real\_rate.long & vol(diff)/an & 0.738 & E[terminal] & 0.3745\\
-credit & log-vol\%/an & 48.350 & E[terminal] & 1.4407\\
-dette\_privee.y & vol(diff)/an & 40.870 & E[terminal] & -315.7991\\
-dette\_privee.spread & log-vol\%/an & 40.870 & E[terminal] & 0.0467\\
-pe & log-vol\%/an & 29.660 & E[terminal] & 31.7564\\
-immobilier & log-vol\%/an & 3.850 & E[terminal] & 0.9284\\
-infra & log-vol\%/an & 13.390 & E[terminal] & 9.2621\\
-Action\_EUR & log-vol\%/an & 14.260 & E[terminal] & 8.8074\\
-Action\_Monde & log-vol\%/an & 13.530 & E[terminal] & 21.9239\\
-Action\_emergent & log-vol\%/an & 20.570 & E[terminal] & 5.6795\\
+inflation.short & vol(diff)/an & 0.887 & E[terminal] & 1.5214\\
+inflation.long & vol(diff)/an & 0.436 & E[terminal] & 1.7393\\
+real\_rate.short & vol(diff)/an & 0.948 & E[terminal] & -0.2749\\
+real\_rate.long & vol(diff)/an & 0.738 & E[terminal] & 0.4042\\
+credit & log-vol\%/an & 48.480 & E[terminal] & 1.4333\\
+dette\_privee.y & vol(diff)/an & 40.850 & E[terminal] & -315.8468\\
+dette\_privee.spread & log-vol\%/an & 40.850 & E[terminal] & 0.0468\\
+pe & log-vol\%/an & 29.670 & E[terminal] & 31.9870\\
+immobilier & log-vol\%/an & 3.850 & E[terminal] & 0.9268\\
+infra & log-vol\%/an & 13.380 & E[terminal] & 9.2323\\
+Action\_EUR & log-vol\%/an & 14.310 & E[terminal] & 8.7744\\
+Action\_Monde & log-vol\%/an & 13.590 & E[terminal] & 21.3677\\
+Action\_emergent & log-vol\%/an & 20.630 & E[terminal] & 5.7907\\
 \bottomrule\end{tabular}
-\caption{Contrôle de cohérence sur 2000 trajectoires $\times$ 360 pas (horizon 30~ans). Occupation simulée du régime de stress~: 28.9\,\% (cf.\ $\pi_1$). Les volatilités simulées reproduisent les paramètres calibrés.}\label{tab:res-sim}
+\caption{Contrôle sur 5000 trajectoires $\times$ 360 pas (30~ans). Occupation simulée du régime de stress~: 29.1\,\% (cf.\ $\pi_1$). Les volatilités simulées reproduisent les paramètres calibrés.}\label{tab:res-sim}
 \end{table}
 \subsection{Lecture et concordance avec la référence}
 \label{sec:resultats-discussion}
 \begin{insightbox}[Concordances et écarts attendus]
-\textbf{Concordances exactes} (méthodologie identique)~: crédit CIR ($\kappa,\sigma,\theta$), dette privée $\kappa$, PE/infra $\mu$, moyenne LT des taux réels, $\mu$ inflation (fixé)~; en mode chaînes séparées, régimes actions Euro/Monde à moins de $1{,}5\,\%$. \textbf{Régime commun}~: une seule matrice de transition pilote les trois actions (entrée conjointe en stress, $\pi_1\approx29\,\%$)~; $K^\star=2$ états par BIC. \textbf{Écarts attendus et documentés}~: (i)~$\kappa,\sigma$ des V2F (référence = cibles distributionnelles, mal conditionnées~; l'outil applique l'EMV)~; (ii)~$\sigma$ dette privée (référence = dispersion stationnaire~; $\kappa,\mu$ concordent)~; (iii)~émergent (vraisemblance plus élevée ici)~; (iv)~immobilier (indice de \emph{prix} fourni vs rendement total avec loyers).
+\textbf{Concordances exactes} (méthodologie identique)~: crédit CIR ($\kappa,\sigma,\theta$), dette privée $\kappa$, PE/infra $\mu$, moyenne LT des taux réels, $\mu$ inflation (fixé)~; en mode chaînes séparées, régimes actions Euro/Monde à moins de $1{,}5\,\%$. \textbf{Régime commun}~: une seule matrice de transition pilote les trois actions ($\pi_1\approx29\,\%$)~; $K^\star=2$ par BIC. \textbf{Écarts attendus}~: (i)~$\kappa,\sigma$ des V2F (référence = cibles distributionnelles, mal conditionnées~; l'outil applique l'EMV)~; (ii)~$\sigma$ dette privée (référence = dispersion stationnaire~; $\kappa,\mu$ concordent)~; (iii)~émergent (vraisemblance plus élevée ici)~; (iv)~immobilier (indice de \emph{prix} vs rendement total avec loyers).
 \end{insightbox}
+% <<< GSE-AUTO-RESULTS END <<<
 
 % =====================================================================
 \section{Conclusion}

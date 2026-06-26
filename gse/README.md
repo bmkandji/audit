@@ -22,12 +22,20 @@ Les deux classeurs de données sont attendus à la racine du dépôt
 
 ```bash
 python run_calibration.py                 # calibrage + comparaison + simulation
-python run_calibration.py --no-sim        # calibrage + comparaison seuls
+python run_calibration.py --no-note       # sans modifier la note LaTeX
 python run_calibration.py --paths 5000 --horizon 30
 ```
 
 Sorties (`outputs/`) : `parametres_calibres.json`,
 `comparaison_parametres.csv`, `correlation_reg{1,2}.csv`, `regime_paths.npy`.
+
+**Insertion automatique dans la note.** `run_calibration.py` génère la section
+« Résultats numériques » (tableaux de paramètres, choix de $K^\star$,
+déslissage, régime commun, corrélations, simulation) et l'**insère
+directement** dans `Note_recherche_GSE_calibrage_simulation.tex`, entre les
+balises `% >>> GSE-AUTO-RESULTS BEGIN ... >>>` et `% <<< GSE-AUTO-RESULTS END
+<<<` (créées automatiquement à la première exécution). Utiliser `--no-note`
+pour désactiver.
 
 ## 3. Architecture (modulaire)
 
