@@ -8,12 +8,28 @@ simulation. Conforme à la note : EMV conditionnel exact, formes fermées.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import logging
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 from scipy.stats import norm, ncx2
 
 from .preprocessing import Preprocessed
+
+log = logging.getLogger("gse")
+
+
+def _check_ar1(beta_raw: float, label: str) -> None:
+    """Avertit si le coefficient AR(1) sort de (0,1) avant écrêtage.
+
+    Hors de cet intervalle, le retour à la moyenne kappa = -ln(beta)/dt n'est
+    pas défini (série non persistante ou anti-persistante) : l'écrêtage produit
+    alors un kappa arbitraire. On le signale au lieu de le masquer.
+    """
+    if not (0.0 < beta_raw < 1.0):
+        log.warning("%s : coefficient AR(1) hors (0,1) (beta=%.4f) ; écrêté pour "
+                    "la stabilité — retour à la moyenne peu fiable sur cette série.",
+                    label, beta_raw)
 
 
 @dataclass
@@ -42,6 +58,7 @@ def fit_ou_scalar(y: np.ndarray, dt: float, fix_mean=None):
         beta = float(np.sum((y0 - mean) * (y1 - mean)) / np.sum((y0 - mean) ** 2))
         c = mean * (1.0 - beta)
         resid = (y1 - mean) - beta * (y0 - mean)
+    _check_ar1(beta, "OU/BK")
     beta = float(np.clip(beta, 1e-8, 1 - 1e-10))   # stabilité (kappa>0)
     k = -np.log(beta) / dt
     v = float(np.var(resid, ddof=0))
@@ -70,6 +87,7 @@ def fit_v2f(pre: Preprocessed, spec: dict, dt: float) -> FitResult:
     coef, *_ = np.linalg.lstsq(X, qs1, rcond=None)
     c_s, phi11, phi12 = coef
     res_s = qs1 - X @ coef
+    _check_ar1(phi11, f"{pre.name} (V2F court)")
     phi11 = float(np.clip(phi11, 1e-8, 1 - 1e-10))
     k1 = -np.log(phi11) / dt
     Vr = float(np.var(res_s, ddof=0))

@@ -31,6 +31,10 @@ data:
 factors:
 
   # ===================== GROUPE A (marges insensibles au régime) =======
+  # Un facteur BS (pe/immobilier/infra) peut être PROMU au Groupe B en mettant
+  # regime_sensitive_params: true : ses moyenne/volatilité deviennent propres
+  # au régime commun (mêmes K* états, même chaîne) et ses corrélations varient
+  # par régime. Nécessite un facteur RSLN2 (chaîne commune) déclaré.
   inflation:
     model: V2F
     method: mle
@@ -141,12 +145,19 @@ correlations:
   regime_sensitivity: groupB
   higham_tol: 1.0e-8
   higham_max_iter: 200
+  # Rétrécissement de Omega(a) par régime vers la cible poolée. "auto" :
+  # intensité = dimension / taille d'échantillon effective (régimes peu
+  # peuplés -> plus de rétrécissement), évite la quasi-singularité du régime
+  # de stress. "none" = corrélation empirique brute ; valeur fixe possible.
+  shrinkage: auto
 
 simulation:
   n_paths: 5000
   horizon_years: 30
   seed: 20260626
-  cir_scheme: alfonsi            # "alfonsi" (rapide, positif) ou "inverse_pit" (exact, plus lent)
+  cir_scheme: inverse_pit        # "inverse_pit" (exact, défaut) ou "alfonsi" (rapide ; bascule auto sur inverse_pit si sa condition de positivité est violée)
+  copula: gaussian               # "gaussian" (défaut) ou "student" (dépendance de queue ; marges restituées N(0,1))
+  copula_df: 8                   # degrés de liberté de la copule de Student (si copula: student)
 
 reference:
   path: "Parametres_models.xlsx"
