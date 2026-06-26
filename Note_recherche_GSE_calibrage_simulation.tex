@@ -450,7 +450,7 @@ Chaque facteur possède une densité de transition \emph{exacte} (Tableau~\ref{t
 \]
 
 \begin{insightbox}[La vraisemblance, et non la régression]
-Pour les facteurs \emph{gaussiens à discrétisation exacte}, la vraisemblance conditionnelle est gaussienne~: son maximum admet une \emph{forme fermée} qui coïncide algébriquement avec les moindres carrés. Il ne s'agit pourtant ni d'un appariement de moments, ni d'une régression posée \emph{ad hoc}~: c'est l'\textbf{EMV conditionnel exact}, efficient (borne de Cramér--Rao) et consistant même en forte persistance (le score est une différence de martingale). On préfère donc partout l'écriture par la vraisemblance~; les formules fermées en sont la \emph{solution}.
+Pour les facteurs \emph{gaussiens à discrétisation exacte}, la vraisemblance conditionnelle est gaussienne~: son maximum admet une \emph{forme fermée} qui coïncide algébriquement avec les moindres carrés. Il ne s'agit pourtant ni d'un appariement de moments, ni d'une régression posée \emph{ad hoc}~: c'est l'\textbf{EMV conditionnel exact}, efficient (borne de Cramér--Rao) et consistant même en forte persistance (le score est une différence de martingale). On préfère donc partout l'écriture par la vraisemblance~; les formules fermées en sont la \emph{solution}. Pour le V2F (\S(A~bis)), l'EMV est mené \emph{jointement} sur les paramètres structurels (méthode \texttt{mle}, défaut)~; le MCO en cascade (\texttt{ols}) en est une variante, coïncidant avec l'EMV pour la \emph{forme réduite} du bruit.
 \end{insightbox}
 
 \noindent L'estimation conjointe directe (toutes marges, chaîne, et toutes corrélations en même temps) est numériquement fragile (grande dimension, multimodalité). On adopte une stratégie \textbf{séquentielle} de type IFM (\emph{Inference Functions for Margins})~: consistante, modulaire et stable. La Figure~\ref{fig:cascade} en donne le schéma en trois étapes (marges $\to$ régime $\to$ corrélations par régime).
@@ -540,7 +540,35 @@ La discrétisation exacte (\S\ref{sec:v2f}) est un VAR(1) gaussien $Y_{t+\Dt}=c(
 \]
 $\mu$ étant fixé (cible COR) ou estimé~; la corrélation conditionnelle $\hat\rho_c=\hat C_{mr}/\sqrt{\hat V_r\hat V_m}$ est lue sur $\Sigma_{\mathrm{cond}}(\hat\theta)$ et reste \emph{libre} (portée par $\Omega$).
 \end{definitionbox}
-\noindent\textbf{Trois méthodes sélectionnables} (champ \texttt{method}, identiques à l'implémentation), reportées en regard de la référence au chapitre des résultats~: \emph{(i)}~\texttt{mle} --- l'EMV joint ci-dessus (\textbf{défaut}, efficient)~; \emph{(ii)}~\texttt{ols} --- MCO en cascade sur la forme réduite $(\widehat\Phi,\hat c,\widehat\Sigma_{\mathrm{cond}})$ (coïncide avec l'EMV pour le \emph{bruit}~; $\sigma$ structurels par inversion OU \emph{par facteur} approchée)~; \emph{(iii)}~\texttt{distributional} --- cibles distributionnelles (Phase~1, V2F uniquement~; objectif mal conditionné le long de la crête $\sigma^2/\kappa$, levé par un ridge faible). L'EMV restitue des $\sigma$ plus faibles que la méthode distributionnelle (plus proche, elle, de la référence).
+\noindent\textbf{Trois méthodes sont implémentées et sélectionnables} (champ \texttt{method})~: l'EMV joint ci-dessus (\texttt{mle}, \textbf{défaut}, efficient), le MCO en cascade (\texttt{ols}, paragraphe~(A~ter)) et les cibles distributionnelles (\texttt{distributional}, paragraphe~(A~quater)). Les trois sont reportées côte à côte avec la référence au chapitre des résultats (tableau~\ref{tab:res-v2f-meth}).
+
+\paragraph{(A ter) V2F --- MCO en cascade (forme réduite, variante \texttt{ols}).}
+Les deux équations partageant les régresseurs $(1,q^s_t,q^l_t)$, le MCO multivarié estime la forme réduite~: il \emph{coïncide} avec l'EMV pour le \emph{bruit}, sans hypothèse sur $\eta$. Le facteur long $q^l$ étant autonome ($\Phi_{21}=0$ en population), on l'estime seul (OU scalaire, brique~(A)) puis $q^s$ par régression sur $(1,q^s_t,q^l_t)$~:
+\[
+(\hat c,\widehat\Phi)=\argmin_{c,\Phi}\sum_t\big\|Y_{t+\Dt}-c-\Phi Y_t\big\|^2,\qquad
+\widehat\Sigma_{\mathrm{cond}}=\tfrac1n\textstyle\sum_t\hat\eta_{t+\Dt}\hat\eta_{t+\Dt}\transp,
+\]
+puis $\hat\kappa_i=-\Dt^{-1}\ln\widehat\Phi_{ii}$ et $\hat\rho_c=\hat C_{mr}/\sqrt{\hat V_r\hat V_m}$. Les volatilités structurelles $(\sigma_1,\sigma_2)$, \emph{si reportées}, suivent d'une inversion OU \emph{par facteur} (long~: OU scalaire~; court~: net de la variance transmise par le long, approximation $\rho\!\approx\!0$). Estimateur historique, rapide et en forme fermée, mais en cascade et avec inversion approchée des $\sigma$ --- d'où sa présentation comme \emph{variante} de l'EMV joint.
+
+\paragraph{(A quater) V2F --- cibles distributionnelles (variante \texttt{distributional}, Phase~1).}
+On n'estime que $(\kappa_1,\kappa_2,\sigma_1,\sigma_2)$ ($\mu$ fixé ou par régression~; browniens \emph{indépendants}, $\Sigma_w=\diag(\sigma_1^2,\sigma_2^2)$) pour répliquer la \emph{distribution} des taux observés aux maturités $\tau_1,\tau_2$. Sous l'hypothèse des espérances, le taux de maturité $\tau$ est affine en les facteurs~:
+\[
+R(t,t+\tau)=\mu_l+\tfrac1\tau\big[B_1(\tau)(q^s_t-\mu_l)+B_2(\tau)(q^l_t-\mu_l)\big],
+\]
+\[
+B_1(\tau)=\!\int_0^\tau\! e^{-\kappa_1 s}\dd s=\tfrac{1-e^{-\kappa_1\tau}}{\kappa_1},\qquad
+B_2(\tau)=\!\int_0^\tau\!\phi_{12}(s)\dd s=\tfrac{\kappa_1}{\kappa_1-\kappa_2}\Big(\tfrac{1-e^{-\kappa_2\tau}}{\kappa_2}-\tfrac{1-e^{-\kappa_1\tau}}{\kappa_1}\Big),
+\]
+$B_2$ étant l'\emph{intégrale} du coefficient de transmission $\phi_{12}$ (\S\ref{sec:v2f}), et $B_{ik}=B_k(\tau_i)/\tau_i$ la matrice de chargement. Avec la covariance stationnaire des facteurs $\Sigma^X_\infty$ ($A\Sigma^X_\infty+\Sigma^X_\infty A\transp=\Sigma_w$), celle des incréments $\Sigma^{\Delta X}_\infty=2\Sigma^X_\infty-\Phi\Sigma^X_\infty-\Sigma^X_\infty\Phi\transp$, et leurs images sur les taux $\Sigma^Y_\infty=B\Sigma^X_\infty B\transp$, $\Sigma^{\Delta Y}_\infty=B\Sigma^{\Delta X}_\infty B\transp$, les trois \emph{cibles modèles} --- volatilité des variations $\sigma^{\mathrm{mod}}_{\Delta Y}(\tau_i)=\sqrt{(\Sigma^{\Delta Y}_\infty)_{ii}/\Dt}$, corrélation inter-maturités $\rho^{\mathrm{mod}}_{\Delta Y}$, écart-type des niveaux $\sigma^{\mathrm{mod}}_Y(\tau_i)=\sqrt{(\Sigma^Y_\infty)_{ii}}$ --- s'ajustent aux historiques~:
+\begin{definitionbox}
+\[
+(\hat\kappa,\hat\sigma)=\argmin_{\kappa,\sigma>0}\
+\frac{\lambda_v}{m}\sum_i\!\Big(\tfrac{\sigma^{\mathrm{mod}}_{\Delta Y}(\tau_i)}{\sigma^{\mathrm{hist}}_{\Delta Y}(\tau_i)}-1\Big)^2
++\frac{2\lambda_c}{m(m-1)}\sum_{i<j}\!\big(\rho^{\mathrm{mod}}_{\Delta Y}-\rho^{\mathrm{hist}}_{\Delta Y}\big)^2
++\frac{\lambda_s}{m}\sum_i\!\Big(\tfrac{\sigma^{\mathrm{mod}}_{Y}(\tau_i)}{\sigma^{\mathrm{hist}}_{Y}(\tau_i)}-1\Big)^2 .
+\]
+\end{definitionbox}
+\noindent L'écart-type historique des niveaux est corrigé du biais d'autocorrélation~: $\sigma^{\mathrm{hist}}_Y=\sqrt{\widehat\Omega^2}$, $\widehat\Omega^2=\frac1n\sum_k(Y_{t_k}-\bar Y)^2\big/\big(1-\frac1{n^2}\sum_{l}(n-|l|)\rho^Y_\infty(l\Dt)/\rho^Y_\infty(0)\big)$, l'autocorrélation $\rho^Y_\infty$ étant celle \emph{du modèle} ($\Gamma_Y(l)=B\,\Phi^{l}\Sigma^X_\infty B\transp$, bornée). \textbf{Mauvais conditionnement.} Le chargement du facteur court $B_1(\tau)/\tau\sim 1/(\kappa_1\tau)\to0$ quand $\kappa_1$ croît~: le facteur court \emph{se découple}, l'objectif présente une crête $\sigma^2/\kappa$ (objectif \emph{mal posé}). On la lève par une \emph{régularisation ridge faible} vers l'échelle des $\kappa$ du MCO. C'est la méthode de la référence~; elle restitue des $\sigma$ plus élevés que l'EMV. Pour les résidus PIT et la simulation, les facteurs sont identifiés aux taux observés (comme \texttt{mle}/\texttt{ols})~: l'estimation distributionnelle ne fournit que les paramètres de marge.
 
 \paragraph{(B) Hardy RSLN --- pas d'EMV fermé global, mais itération EM entièrement explicite.}
 L'étape E (Hamilton + Kim) et l'étape M ci-dessus sont fermées~; pour un seul actif, $\hat m_a,\hat v_a,\hat p_{ab}$ se réduisent aux moyennes/variances pondérées par $\hat\xi_t(a)$. Seule la boucle externe itère, avec ascension monotone.
@@ -674,7 +702,7 @@ s^{\mathrm{cr}}_{t+\Dt}=\tfrac{1}{2c_\chi}\,F^{-1}_{\chi'^2}\!\big(\Phi(\eps^{(\
 \subsection{Recette d'estimation complète (toutes les expressions littérales)}
 
 \begin{algobox}[Étape 1 --- Groupe A (marges, EMV exact)]
-\textbf{(a) V2F inflation.} \emph{Facteur long} ($q^l$, OU autonome), brique (A)~: $\hat\beta=\frac{\sum_t(q^l_t-\bar q^l_-)(q^l_{t+\Dt}-\bar q^l_+)}{\sum_t(q^l_t-\bar q^l_-)^2}$, $\hat\kappa^I_2=-\frac{\ln\hat\beta}{\Dt}$, $\hat\mu_l=\frac{\bar q^l_+-\hat\beta\bar q^l_-}{1-\hat\beta}$, résidus $\hat\xi^l$, $\hat V^I_m=\frac1n\sum_t\hat\xi^{l\,2}_{t+\Dt}$. \emph{Facteur court}~: MCO de $q^s_{t+\Dt}$ sur $(1,q^s_t,q^l_t)$ $\Rightarrow(\hat\Phi^I_{11},\hat\phi^I_{12},\hat c^I_s)$ et résidus $\hat\xi^s$, d'où $\hat\kappa^I_1=-\frac{\ln\hat\Phi^I_{11}}{\Dt}$, $\hat V^I_r=\frac1n\sum_t\hat\xi^{s\,2}_{t+\Dt}$ (les $\sigma^I_i$ par inversion OU par facteur, (A bis), si requis~; $\hat\rho^I_c$ lue sur $\widehat\Sigma^I_{\mathrm{cond}}$).\\[2pt]
+\textbf{(a) V2F inflation.} \emph{Défaut~: EMV joint sur $(\kappa_1,\kappa_2,\sigma_1,\sigma_2,\rho,\mu)$ (\S(A~bis))~; ci-dessous la variante \texttt{ols} en cascade, et (A~quater) la variante distributionnelle.} \emph{Facteur long} ($q^l$, OU autonome), brique (A)~: $\hat\beta=\frac{\sum_t(q^l_t-\bar q^l_-)(q^l_{t+\Dt}-\bar q^l_+)}{\sum_t(q^l_t-\bar q^l_-)^2}$, $\hat\kappa^I_2=-\frac{\ln\hat\beta}{\Dt}$, $\hat\mu_l=\frac{\bar q^l_+-\hat\beta\bar q^l_-}{1-\hat\beta}$, résidus $\hat\xi^l$, $\hat V^I_m=\frac1n\sum_t\hat\xi^{l\,2}_{t+\Dt}$. \emph{Facteur court}~: MCO de $q^s_{t+\Dt}$ sur $(1,q^s_t,q^l_t)$ $\Rightarrow(\hat\Phi^I_{11},\hat\phi^I_{12},\hat c^I_s)$ et résidus $\hat\xi^s$, d'où $\hat\kappa^I_1=-\frac{\ln\hat\Phi^I_{11}}{\Dt}$, $\hat V^I_r=\frac1n\sum_t\hat\xi^{s\,2}_{t+\Dt}$ (les $\sigma^I_i$ par inversion OU par facteur, (A bis), si requis~; $\hat\rho^I_c$ lue sur $\widehat\Sigma^I_{\mathrm{cond}}$).\\[2pt]
 \textbf{(b) V2F taux réels.} Idem (a) sur $(l_t)$ puis $(r_t)$, donnant $(\hat\kappa^R_2,\hat\mu,\hat\kappa^R_1,\hat\Phi^R_{12},\hat V^R_m,\hat V^R_r)$.\\[2pt]
 \textbf{(c) BK dette privée.} Brique (A) sur $(y^{\mathrm{pd}}_t)$~: $(\hat k,\hat\theta^{p},\hat\sigma^{p})$.\\[2pt]
 \textbf{(d) BS PE/immo/infra.} $\hat m_j=\frac1n\sum_t x^j_t$, $\hat v_j=\frac1n\sum_t(x^j_t-\hat m_j)^2$, $\hat\sigma_j=\sqrt{\hat v_j/\Dt}$, $\hat\mu_j=\hat m_j/\Dt$ (dérive log-rendement, monde réel).\\[2pt]
@@ -805,6 +833,7 @@ Puis $\hat k=-\ln\hat\beta/\Dt$, résidus $\widehat\xi_{t+\Dt}=y_{t+\Dt}-\hat\be
 \end{definitionbox}
 
 \paragraph{\textsc{FitV2F}$(q^s,q^l;\mathcal F)$.}
+Par défaut (\texttt{mle}), maximisation \emph{jointe} de la vraisemblance gaussienne sur $(\kappa_1,\kappa_2,\sigma_1,\sigma_2,\rho,\mu)$ (\S(A~bis), bornée, $\kappa_1>\kappa_2$). Variantes \texttt{ols} (forme réduite ci-dessous) et \texttt{distributional} (A~quater)~:
 \begin{definitionbox}
 \begin{itemize}[nosep]
 \item \emph{Moyenne libre}~: MCO multivarié \emph{avec constante} de $X_{t+\Dt}=(q^s_{t+\Dt},q^l_{t+\Dt})$ sur $(1,q^s_t,q^l_t)$ $\Rightarrow\widehat\Phi,\hat c,\widehat\Sigma_{\mathrm{cond}}$ (covariance résiduelle).
