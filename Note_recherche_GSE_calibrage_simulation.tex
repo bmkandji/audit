@@ -414,14 +414,25 @@ Pour chaque $i\in A$, on estime $\hat\theta_i$ par la méthode retenue (ci-desso
 
 \subsection{Étape 2 --- régime commun (EM / Baum--Welch)}
 Les facteurs du Groupe~B partagent le régime \emph{commun} $\Ecal_t$~; ils s'estiment \emph{conjointement} par EM.
-\paragraph{Étape E.} \emph{Filtre de Hamilton} (avant, $f_a(x_t)=\varphi_p(x_t;m_a,V_a)$) puis \emph{lisseur de Kim} (arrière), donnant les probabilités lissées $\hat\xi_t(a)=\Prob(\Ecal_t=a\mid\Xcal_n)$ et de transition $\hat\xi_t(a,b)$.
+\paragraph{Étape E (récurrences fermées).} Densité d'émission $f_a(x_t)=\varphi_p(x_t;m_a,V_a)$. \emph{Filtre de Hamilton} (avant), initialisé par $\hat\pi$~:
+\[
+\xi_{t\mid t-1}(a)=\sum_b\xi_{t-1\mid t-1}(b)\,p_{ba},\qquad
+\xi_{t\mid t}(a)=\frac{\xi_{t\mid t-1}(a)\,f_a(x_t)}{\sum_{a'}\xi_{t\mid t-1}(a')\,f_{a'}(x_t)},
+\]
+de log-vraisemblance $\ell=\sum_t\log\!\big(\sum_a\xi_{t\mid t-1}(a)\,f_a(x_t)\big)$. \emph{Lisseur de Kim} (arrière)~:
+\[
+\hat\xi_t(a)=\sum_b\hat\xi_{t+1}(b)\,\frac{\xi_{t\mid t}(a)\,p_{ab}}{\xi_{t+1\mid t}(b)},\qquad
+\hat\xi_t(a,b)=\hat\xi_{t+1}(b)\,\frac{\xi_{t\mid t}(a)\,p_{ab}}{\xi_{t+1\mid t}(b)},
+\]
+donnant $\hat\xi_t(a)=\Prob(\Ecal_t=a\mid\Xcal_n)$ et les transitions lissées $\hat\xi_t(a,b)$.
 \paragraph{Étape M (forme fermée).}
 \[
 \hat m_a=\tfrac{\sum_t\hat\xi_t(a)x_t}{\sum_t\hat\xi_t(a)},\quad
 \hat V_a=\tfrac{\sum_t\hat\xi_t(a)(x_t-\hat m_a)(x_t-\hat m_a)\transp}{\sum_t\hat\xi_t(a)},\quad
-\hat p_{ab}=\tfrac{\sum_t\hat\xi_t(a,b)}{\sum_t\hat\xi_t(a)} .
+\hat p_{ab}=\tfrac{\sum_t\hat\xi_t(a,b)}{\sum_t\hat\xi_t(a)},\quad
+\hat\pi^{(0)}=\hat\xi_1 .
 \]
-$\hat V_a$ \emph{pleine} (corrélations intra-Groupe~B par régime estimées). Ascension monotone garantie~; planchers de variance contre les maxima dégénérés~; tri des états par volatilité décroissante (régime~1 = stress).
+$\hat V_a$ \emph{pleine} (corrélations intra-Groupe~B par régime estimées). Ascension monotone garantie~; planchers de variance $V_a\succeq\underline v I$ contre les maxima dégénérés~; tri des états par volatilité décroissante (régime~1 = stress). La loi invariante (initialisation, simulation) résout $\hat\pi\transp\hat P=\hat\pi\transp$, $\sum_a\hat\pi_a=1$ (vecteur propre gauche de $\hat P$).
 
 \subsection{Étape 3 --- dépendance pleine, par régime}
 \label{sec:etape3}
@@ -431,7 +442,18 @@ Marges et $\hat\xi_t(a)$ figées, soit $\widehat\eps_t$ le résidu standardisé 
 \widehat\Omega(a)=\frac{\sum_t\hat\xi_t(a)\,\widehat\eps_t\widehat\eps_t\transp}{\sum_t\hat\xi_t(a)},\qquad a=1,\dots,K^\star .
 \]
 \end{definitionbox}
-\noindent En échantillon fini, $\widehat\Omega(a)$ d'un régime peu peuplé peut être quasi singulière~: on applique un \emph{rétrécissement} (shrinkage) vers la cible poolée, d'intensité fonction de la taille d'échantillon \emph{effective} du régime, puis la projection sur le cône SDP le plus proche (Higham), \emph{régime par régime}. Toutes les entrées (intra-V2F, intra-Groupe~B, croisées) sont estimées, jamais imposées. Un masque de sensibilité $S$ permet de rendre certaines corrélations communes aux régimes (\S\ref{sec:algo}).
+\noindent\textbf{Masque de sensibilité.} $S\in\{0,1\}^{d\times d}$ symétrique rend certaines corrélations communes aux régimes~:
+\[
+\widehat\Omega(a)_{ij}=S_{ij}\,G^{\mathrm{reg}}_{ij}(a)+(1-S_{ij})\,G^{\mathrm{pool}}_{ij}\ \ (i\neq j),\quad \widehat\Omega(a)_{ii}=1,
+\]
+$G^{\mathrm{reg}}(a)$ étant la corrélation pondérée par $\hat\xi_t(a)$ (ci-dessus) et $G^{\mathrm{pool}}=\frac1n\sum_t\widehat\eps_t\widehat\eps_t\transp$ la corrélation poolée.
+\textbf{Rétrécissement.} En échantillon fini, $\widehat\Omega(a)$ d'un régime peu peuplé est quasi singulière~; on rétrécit vers la cible poolée~:
+\[
+\widehat\Omega^{\mathrm{sh}}(a)=(1-\delta_a)\widehat\Omega(a)+\delta_a\,G^{\mathrm{pool}},\qquad
+\delta_a=\min\!\Big(\tfrac{d}{n^{\mathrm{eff}}_a},1\Big),\qquad
+n^{\mathrm{eff}}_a=\frac{\big(\sum_t\hat\xi_t(a)\big)^2}{\sum_t\hat\xi_t(a)^2},
+\]
+$n^{\mathrm{eff}}_a$ étant la taille d'échantillon \emph{effective} de Kish. \textbf{Projection SDP.} $\Omega^{\mathrm{SDP}}(a)=\textsc{NearestCorr}(\widehat\Omega^{\mathrm{sh}}(a))$ (Higham, \S\ref{sec:algo}), condition de la décomposition de Cholesky $L(a)L(a)\transp=\Omega^{\mathrm{SDP}}(a)$. Toutes les entrées (intra-V2F, intra-Groupe~B, croisées) sont estimées, jamais imposées.
 
 \subsection{Estimateurs des marges (formes et variantes)}
 \label{sec:closed}
@@ -449,7 +471,7 @@ Pour $y_{t+\Dt}=\beta y_t+\theta(1-\beta)+\xi$, $\xi\sim\Ncal(0,v)$, $\beta=e^{-
 Si $\hat\beta\notin(0,1)$ (série peu/non persistante), la forme fermée \emph{sort du domaine}~: l'EMV sous contrainte (ou un avertissement) prévaut. \emph{Moyenne fixée}~: régression \emph{sans constante} sur $(y-\theta_0)$.
 
 \paragraph{(B) V2F --- trois méthodes sélectionnables.}
-La discrétisation est un VAR(1) gaussien $Y_{t+\Dt}=c(\theta)+\Phi(\theta)Y_t+\eta$, $\eta\sim\Ncal(0,\Sigma_{\mathrm{cond}}(\theta))$, $\Phi(\theta)=e^{-A\Dt}$, $\Sigma_{\mathrm{cond}}(\theta)$ par Lyapunov, fonctions \emph{exactes} de $\theta=(\kappa_1,\kappa_2,\sigma_1,\sigma_2,\rho,\mu)$.
+La discrétisation est un VAR(1) gaussien $Y_{t+\Dt}=c(\theta)+\Phi(\theta)Y_t+\eta$, $\eta\sim\Ncal(0,\Sigma_{\mathrm{cond}}(\theta))$, $c(\theta)=(I-\Phi)(\mu,\mu)\transp$, $\Phi(\theta)=e^{-A\Dt}$, et $\Sigma_{\mathrm{cond}}(\theta)=\Sigma_\infty-\Phi\Sigma_\infty\Phi\transp$ où $\vecop(\Sigma_\infty)=(I\otimes A+A\otimes I)^{-1}\vecop(\Sigma_w)$ (solution explicite de $A\Sigma_\infty+\Sigma_\infty A\transp=\Sigma_w$). Toutes ces quantités sont fonctions \emph{exactes} de $\theta=(\kappa_1,\kappa_2,\sigma_1,\sigma_2,\rho,\mu)$.
 \begin{itemize}[nosep]
 \item \texttt{mle} \emph{(défaut)} --- \textbf{EMV joint pur}, court \& long \emph{ensemble}, sur le domaine admissible ($\kappa_1>\kappa_2>0$, $\sigma_i>0$)~:
 \[
@@ -467,16 +489,31 @@ On n'estime que $(\kappa_1,\kappa_2,\sigma_1,\sigma_2)$ ($\mu$ fixé/régression
 B_1(\tau)=\!\int_0^\tau\!e^{-\kappa_1 s}\dd s=\tfrac{1-e^{-\kappa_1\tau}}{\kappa_1},\qquad
 B_2(\tau)=\!\int_0^\tau\!\phi_{12}(s)\dd s=\tfrac{\kappa_1}{\kappa_1-\kappa_2}\Big(\tfrac{1-e^{-\kappa_2\tau}}{\kappa_2}-\tfrac{1-e^{-\kappa_1\tau}}{\kappa_1}\Big),
 \]
-($B_2$ est l'\emph{intégrale} du coefficient de transmission $\phi_{12}$ de \S\ref{sec:v2f}), $B_{ik}=B_k(\tau_i)/\tau_i$. Avec $\Sigma^X_\infty$ (Lyapunov), $\Sigma^{\Delta X}_\infty=2\Sigma^X_\infty-\Phi\Sigma^X_\infty-\Sigma^X_\infty\Phi\transp$, et $\Sigma^Y=B\Sigma^X B\transp$, $\Sigma^{\Delta Y}=B\Sigma^{\Delta X}B\transp$, on ajuste trois cibles (volatilité des variations $\sqrt{(\Sigma^{\Delta Y})_{ii}/\Dt}$, corrélation inter-maturités, écart-type des niveaux $\sqrt{(\Sigma^Y)_{ii}}$) à leurs analogues historiques par moindres carrés relatifs pondérés. \textbf{Mal posé.} Le chargement court $B_1(\tau)/\tau\sim1/(\kappa_1\tau)\to0$ quand $\kappa_1$ croît~: le facteur court \emph{se découple}, l'objectif présente une crête $\sigma^2/\kappa$~; on la lève par une \emph{régularisation ridge faible}. C'est la méthode de la référence. \emph{(Résidus/simulation~: facteurs identifiés aux taux observés, comme \texttt{mle}/\texttt{ols}~; l'estimation distributionnelle ne fournit que les paramètres de marge.)}
+($B_2$ est l'\emph{intégrale} du coefficient de transmission $\phi_{12}$ de \S\ref{sec:v2f}), $B_{ik}=B_k(\tau_i)/\tau_i$. Avec $\Sigma^X_\infty$ (Lyapunov), les incréments $\Sigma^{\Delta X}_\infty=2\Sigma^X_\infty-\Phi\Sigma^X_\infty-\Sigma^X_\infty\Phi\transp$, et $\Sigma^Y_\infty=B\Sigma^X_\infty B\transp$, $\Sigma^{\Delta Y}_\infty=B\Sigma^{\Delta X}_\infty B\transp$, les \emph{cibles modèles} sont
+\[
+\sigma^{\mathrm{mod}}_{\Delta Y}(\tau_i)=\sqrt{\tfrac{(\Sigma^{\Delta Y}_\infty)_{ii}}{\Dt}},\quad
+\rho^{\mathrm{mod}}_{\Delta Y}=\tfrac{(\Sigma^{\Delta Y}_\infty)_{12}}{\sqrt{(\Sigma^{\Delta Y}_\infty)_{11}(\Sigma^{\Delta Y}_\infty)_{22}}},\quad
+\sigma^{\mathrm{mod}}_{Y}(\tau_i)=\sqrt{(\Sigma^{Y}_\infty)_{ii}},
+\]
+ajustées à leurs analogues historiques ($m=2$ maturités)~:
+\begin{definitionbox}
+\[
+(\hat\kappa,\hat\sigma)=\argmin_{\kappa,\sigma>0}\
+\tfrac{\lambda_v}{m}\!\sum_i\!\Big(\tfrac{\sigma^{\mathrm{mod}}_{\Delta Y}(\tau_i)}{\sigma^{\mathrm{hist}}_{\Delta Y}(\tau_i)}-1\Big)^2
++\tfrac{2\lambda_c}{m(m-1)}\!\sum_{i<j}\!\big(\rho^{\mathrm{mod}}_{\Delta Y}-\rho^{\mathrm{hist}}_{\Delta Y}\big)^2
++\tfrac{\lambda_s}{m}\!\sum_i\!\Big(\tfrac{\sigma^{\mathrm{mod}}_{Y}(\tau_i)}{\sigma^{\mathrm{hist}}_{Y}(\tau_i)}-1\Big)^2 .
+\]
+\end{definitionbox}
+\noindent L'écart-type historique des niveaux est corrigé du biais d'autocorrélation~: $\sigma^{\mathrm{hist}}_Y=\sqrt{\widehat\Omega^2}$, $\widehat\Omega^2=\big(\tfrac1n\sum_k(Y_{t_k}-\bar Y)^2\big)\big/\big(1-\tfrac1{n^2}\sum_{l}(n-|l|)\,\rho^Y_\infty(l\Dt)/\rho^Y_\infty(0)\big)$, l'autocorrélation $\rho^Y_\infty(l\Dt)_{ii}=(\Gamma_Y(l))_{ii}/(\Gamma_Y(0))_{ii}$ étant celle \emph{du modèle}, $\Gamma_Y(l)=B\,\Phi^{l}\Sigma^X_\infty B\transp$ (bornée). \textbf{Mal posé.} Le chargement court $B_1(\tau)/\tau\sim1/(\kappa_1\tau)\to0$ quand $\kappa_1$ croît~: le facteur court \emph{se découple}, l'objectif présente une crête $\sigma^2/\kappa$~; on la lève en ajoutant une \emph{régularisation ridge faible} $\varrho\sum_i(\ln\kappa_i-\ln\kappa^{\mathrm{ols}}_i)^2$ ($\varrho$ petit) à l'objectif. C'est la méthode de la référence. \emph{(Résidus/simulation~: facteurs identifiés aux taux observés, comme \texttt{mle}/\texttt{ols}~; l'estimation distributionnelle ne fournit que les paramètres de marge.)}
 
-\paragraph{(C) BS (PE/immo/infra).} Log-rendements i.i.d.\ $\Ncal(m,v)$~: $\hat m=\tfrac1n\sum x_t$, $\hat v=\tfrac1n\sum(x_t-\hat m)^2$, $\hat\sigma=\sqrt{\hat v/\Dt}$. En cadre \emph{monde réel}, la dérive retenue est la moyenne annualisée des log-rendements $\hat\mu=\hat m/\Dt$ (sans terme de convexité $\tfrac12\sigma^2$). Moyenne sur rendements bruts, volatilité sur rendements déslissés.
+\paragraph{(C) BS (PE/immo/infra).} \emph{Déslissage} (Lizieri)~: $r^\ast_t=\tfrac{r_t-\hat b\,r_{t-1}}{1-\hat b}$, $\hat b$ le coefficient AR(1) (MCO de $r_t$ sur $r_{t-1}$)~; facteur d'inflation de variance $(1+\hat b)/(1-\hat b)$. Log-rendements i.i.d.\ $\Ncal(m,v)$~: $\hat m=\tfrac1n\sum x_t$, $\hat v=\tfrac1n\sum(x_t-\hat m)^2$, $\hat\sigma=\sqrt{\hat v/\Dt}$. En cadre \emph{monde réel}, la dérive retenue est la moyenne annualisée des log-rendements $\hat\mu=\hat m/\Dt$ (sans terme de convexité $\tfrac12\sigma^2$). Moyenne sur rendements \emph{bruts}, volatilité sur rendements \emph{déslissés} $r^\ast$.
 
 \paragraph{(D) CIR.} L'EMV ($\chi^2$ décentré) n'a pas de forme fermée. Initialisation par régression d'Euler~:
 \[
 \tfrac{s_{t+\Dt}-s_t}{\sqrt{|s_t|}}\sim c_1\tfrac{1}{\sqrt{|s_t|}}+c_2\sqrt{|s_t|}+\eta
 \ \Rightarrow\ \hat\kappa=-\tfrac{\hat c_2}{\Dt},\ \hat\theta=-\tfrac{\hat c_1}{\hat c_2},\ \hat\sigma^2=\tfrac{\widehat\Var(\eta)}{\Dt},
 \]
-puis maximisation de $\sum_t\log f_{\mathrm{CIR}}$ (variante \texttt{ols}~: init Euler seule).
+puis maximisation de $\sum_t\log f_{\mathrm{CIR}}(s_{t+\Dt}\mid s_t)$, densité $f_{\mathrm{CIR}}=2c_\chi\,f_{\chi'^2}(2c_\chi s_{t+\Dt};\nu,\lambda)$ ($c_\chi,\nu,\lambda$ de \S\ref{sec:facteurs}). Résidu PIT~: $\widehat\eps^{(\mathrm{cr})}=\Phi^{-1}(F_{\chi'^2}(2c_\chi s_{t+\Dt};\nu,\lambda))$. Variante \texttt{ols}~: init Euler seule.
 
 \paragraph{(E) Dépendance.} $\widehat\Omega(a)$~: corrélation des résidus PIT pondérée par $\hat\xi_t(a)$ (\S\ref{sec:etape3}).
 
@@ -500,7 +537,7 @@ $\Omega(a)$ par régime & --- & corrélation des résidus PIT pondérée par $\h
 
 \subsection{Choix du nombre d'états \texorpdfstring{$K^\star$}{K*}}
 \label{sec:K}
-On ajuste le Groupe~B pour $K=1,2,\dots$ et on retient $K^\star$ par critère d'information $\mathrm{BIC}(K)=-2\ell^\star(K)+p_K\ln n$ (ou AIC), $p_K$ le nombre de paramètres libres. Le test du rapport de vraisemblance sur le \emph{nombre} de régimes est non standard~; le critère d'information est le choix pragmatique. Un \emph{unique} régime à $K^\star$ états remplace $k$ chaînes à deux états ($2^k$ états joints $\to K^\star\ll2^k$).
+On ajuste le Groupe~B pour $K=1,2,\dots$ et on retient $K^\star$ par critère d'information $\mathrm{BIC}(K)=-2\ell^\star(K)+p_K\ln n$ (ou $\mathrm{AIC}=-2\ell^\star(K)+2p_K$), avec, pour $D$ émissions gaussiennes $K$-états, $p_K=\underbrace{KD}_{m_a}+\underbrace{K\tfrac{D(D+1)}{2}}_{V_a}+\underbrace{K(K-1)}_{P}+\underbrace{(K-1)}_{\pi}$ paramètres libres. Le test du rapport de vraisemblance sur le \emph{nombre} de régimes est non standard~; le critère d'information est le choix pragmatique. Un \emph{unique} régime à $K^\star$ états remplace $k$ chaînes à deux états ($2^k$ états joints $\to K^\star\ll2^k$).
 
 % =====================================================================
 \section{Technique de simulation}
@@ -509,8 +546,8 @@ On ajuste le Groupe~B pour $K=1,2,\dots$ et on retient $K^\star$ par critère d'
 La simulation utilise \emph{directement} la représentation agrégée~: une seule loi sous-tend estimation et simulation.
 \begin{algobox}[Simulation d'une trajectoire ($t=0,\Dt,\dots,T$)]
 \begin{enumerate}[leftmargin=1.4em,nosep]
-\item \textbf{Régime.} Initialiser $\Ecal_0\sim\hat\pi$~; à chaque pas, tirer $\Ecal_{t+\Dt}\mid\Ecal_t\sim\hat P_{\Ecal_t,\cdot}$ \emph{avant} le rendement (convention de l'estimation).
-\item \textbf{Chocs.} $z\sim\Ncal(0,I_d)$, $\eps_{t+\Dt}=L(\Ecal_t)z$ (copule gaussienne)~; en option, copule de \emph{Student} (scatter $\Omega(\Ecal_t)$, marges restituées $\Ncal(0,1)$).
+\item \textbf{Régime.} Initialiser $\Ecal_0\sim\hat\pi$~; à chaque pas, tirer $\Ecal_{t+\Dt}\mid\Ecal_t=a$ par CDF inverse~: $\Ecal_{t+\Dt}=\min\{b:\sum_{c\le b}p_{ac}\ge u\}$, $u\sim\mathcal U(0,1)$, \emph{avant} le rendement (convention de l'estimation).
+\item \textbf{Chocs.} $z\sim\Ncal(0,I_d)$. Copule \emph{gaussienne}~: $\eps_{t+\Dt}=L(\Ecal_t)z$. Copule de \emph{Student} (option, $\nu$ ddl)~: $g\sim\chi^2_\nu$, $\eps_{t+\Dt}=\Phi^{-1}\!\big(T_\nu(L(\Ecal_t)z\,\sqrt{\nu/g})\big)$ ($T_\nu$ f.d.r.\ de Student)~: dépendance de queue, scatter $\Omega(\Ecal_t)$, marges restituées $\Ncal(0,1)$ (volatilités calibrées préservées).
 \item \textbf{Composantes gaussiennes.} $Y^{(j)}_{t+\Dt}=c_j(\Ecal_t)+[\Phi(\Ecal_t)Y_t]_j+D_j(\Ecal_t)\eps^{(j)}_{t+\Dt}$.
 \item \textbf{CIR.} Inverse-PIT exact $s^{\mathrm{cr}}_{t+\Dt}=\tfrac{1}{2c_\chi}F^{-1}_{\chi'^2}(\Phi(\eps^{(\mathrm{cr})});\nu,\lambda)$ \emph{(défaut)}~; ou Alfonsi $E(0)$ avec $\Dt W=\sqrt\Dt\,\eps^{(\mathrm{cr})}$ si sa condition de positivité tient (bascule automatique sinon).
 \item \textbf{Reconstruction.} Cumuler les log-rendements ($S_{t+\Dt}=S_te^{x_{t+\Dt}}$)~; exponentier les log-spreads ($s=e^{y}$ ou $e^{y/100}$ selon l'échelle).
@@ -604,7 +641,7 @@ On spécifie l'algorithme sous forme directement implémentable. Quatre options 
 \begin{itemize}[nosep]
 \item \textbf{Admissibilité (V2F, OU/BK).} $\hat\kappa=-\Dt^{-1}\ln\hat\beta$ exige $\hat\beta\in(0,1)$~; l'EMV contraint le domaine. Si une variante (MCO) sort de $(0,1)$, écrêtage \emph{avec avertissement}.
 \item \textbf{Alignement temporel.} Séries ramenées en fin de mois à la lecture~: l'intersection inter-facteurs servant à $\Omega$ est \emph{déterministe}.
-\item \textbf{\textsc{NearestCorr}.} Projections alternées de Higham, par régime, après rétrécissement.
+\item \textbf{\textsc{NearestCorr} (Higham).} Projections alternées (Dykstra), à partir de $Y_0=\widehat\Omega^{\mathrm{sh}}(a)$, $\Delta S_0=0$~; itérer $R_k=Y_{k-1}-\Delta S_{k-1}$, $X_k=U\max(\Lambda,0)U\transp$ (projection SDP, $R_k=U\Lambda U\transp$), $\Delta S_k=X_k-R_k$, $Y_k=X_k$ à diagonale forcée à $1$, jusqu'à $\|Y_k-Y_{k-1}\|_F<\text{tol}$. Appliquée \emph{par régime}.
 \item \textbf{CIR.} Inverse-PIT exact par défaut~; Alfonsi seulement si $\sigma^2\le4\kappa\theta$ et $1-\tfrac{\kappa}{2}\Dt>0$ (bascule automatique sinon). Spread BK $s=e^y$ ou $e^{y/100}$ selon l'échelle déclarée.
 \item \textbf{Cohérence.} Méthode, $\mathcal F$, $S$, copule s'appliquent \emph{identiquement} à l'estimation, aux résidus et à la simulation.
 \item \textbf{Reproductibilité.} Graine fixée~; $v_a\ge\underline v$~; régimes ordonnés~; consigner $(\text{méthodes},\mathcal F,S,K^\star)$ avec les sorties.
