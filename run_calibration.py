@@ -137,7 +137,6 @@ def build_section(cal, ref, cfg, sim):
 
     # ---------- R.3 CIR / BK / BS ----------
     cr, bk = cal.margins["credit"].params, cal.margins["dette_privee"].params
-    pe, im, inf2 = cal.margins["pe"].params, cal.margins["immobilier"].params, cal.margins["infra"].params
     csim = cal.margins["credit"].sim
     Es = np.exp(bk["mu"]/100 + 0.5*(bk["sigma"]/100)**2/(2*bk["kappa"]))*100
     a(r"\subsection{Crédit, dette privée et actifs réels}")
@@ -161,12 +160,12 @@ def build_section(cal, ref, cfg, sim):
     row("", "", r"$\mu$ ($100\ln s$)", bk["mu"], ref[("dette_privee","mu")], 1)
     a(f" & & $\\mathbb E[s_\\infty]$ (\\%) & {_f(Es,3)} & -- & --\\\\")
     a(r"\addlinespace")
-    row("PE (non coté)", "BS", r"$\mu$ (\%/an)", pe["mu"], ref[("pe","mu")], 2)
-    row("", "", r"$\sigma$ (\%/an)", pe["sigma"], ref[("pe","sigma")], 2)
-    row("Infrastructure", "BS", r"$\mu$ (\%/an)", inf2["mu"], ref[("infra","mu")], 2)
-    row("", "", r"$\sigma$ (\%/an)", inf2["sigma"], ref[("infra","sigma")], 2)
-    row("Immobilier", "BS", r"$\mu$ (\%/an)", im["mu"], ref[("immobilier","mu")], 2)
-    row("", "", r"$\sigma$ (\%/an)", im["sigma"], ref[("immobilier","sigma")], 2)
+    for nm, lbl in [("pe", "PE (non coté)"), ("infra", "Infrastructure"), ("immobilier", "Immobilier")]:
+        if nm not in cal.margins:        # facteur promu au Groupe B : voir tableaux régime
+            continue
+        p = cal.margins[nm].params
+        row(lbl, "BS", r"$\mu$ (\%/an)", p["mu"], ref[(nm, "mu")], 2)
+        row("", "", r"$\sigma$ (\%/an)", p["sigma"], ref[(nm, "sigma")], 2)
     a(r"\bottomrule\end{tabularx}")
     a(r"\caption{Crédit (CIR, EMV $\chi^2$ décentré), dette privée (BK, sur $100\ln(\text{spread})$) "
       r"et actifs réels (BS).}\label{tab:res-margins}")
@@ -180,6 +179,8 @@ def build_section(cal, ref, cfg, sim):
     a(r"\textbf{Actif} & \textbf{Modèle} & \textbf{AR(1) $b$} & \textbf{$\sigma$ brute} & \textbf{$\sigma$ déslissée} & \textbf{Inflation var.}\\")
     a(r"\midrule")
     for nm, lbl in [("pe", "PE (LPX50)"), ("immobilier", "Immobilier"), ("infra", "Infrastructure")]:
+        if nm not in cal.margins:        # facteur promu au Groupe B
+            continue
         p = cal.margins[nm].params
         a(f"{lbl} & BS & {_f(p['ar1_b'],4)} & {_f(p['sigma_raw'],2)} & {_f(p['sigma_unsmoothed'],2)} & {_f(p['var_inflation'],3)}\\\\")
     a(r"\bottomrule\end{tabularx}")
@@ -218,7 +219,10 @@ def build_section(cal, ref, cfg, sim):
     a("".join([fr"\cmidrule(lr){{{3+2*k}-{4+2*k}}}" for k in range(K)]))
     a(r"\textbf{} & & " + " & ".join([r"$\mu$ & $\sigma$" for _ in range(K)]) + r"\\")
     a(r"\midrule")
-    for sheet, lbl in [("Action_EUR", "Euro"), ("Action_Monde", "Monde"), ("Action_emergent", "Émergent")]:
+    EQLAB = {"Action_EUR": "Euro", "Action_Monde": "Monde", "Action_emergent": "Émergent"}
+    members = list(J["regimes_by_equity"].keys())   # actions + éventuels BS promus
+    for sheet in members:
+        lbl = EQLAB.get(sheet, LAB.get(sheet, sheet))
         regs = J["regimes_by_equity"][sheet]
         cells = " & ".join([f"{_f(regs[k]['mu'])} & {_f(regs[k]['sigma'])}" for k in range(K)])
         a(f"{lbl} & & {cells}\\\\")
@@ -244,12 +248,13 @@ def build_section(cal, ref, cfg, sim):
     a(r"\cmidrule(lr){3-4}\cmidrule(lr){5-6}")
     a(r"\textbf{Actif} & \textbf{Source} & $\mu_1$ & $\sigma_1$ & $\mu_2$ & $\sigma_2$\\")
     a(r"\midrule")
-    for sheet, lbl in [("Action_EUR", "Euro"), ("Action_Monde", "Monde"), ("Action_emergent", "Émergent")]:
+    for sheet in members:
+        lbl = EQLAB.get(sheet, LAB.get(sheet, sheet))
         regs = J["regimes_by_equity"][sheet]
         reg2 = regs[1] if len(regs) >= 2 else regs[0]   # K*<2 : pas de 2e régime
         k = f"equities:{sheet}"
         a(f"{lbl} & Calib.\\ (commun) & {_f(regs[0]['mu'])} & {_f(regs[0]['sigma'])} & {_f(reg2['mu'])} & {_f(reg2['sigma'])}\\\\")
-        a(f" & Réf.\\ (par actif) & {_f(ref[(k,'R1.mu')])} & {_f(ref[(k,'R1.sigma')])} & {_f(ref[(k,'R2.mu')])} & {_f(ref[(k,'R2.sigma')])}\\\\")
+        a(f" & Réf.\\ (par actif) & {_f(ref.get((k,'R1.mu')))} & {_f(ref.get((k,'R1.sigma')))} & {_f(ref.get((k,'R2.mu')))} & {_f(ref.get((k,'R2.sigma')))}\\\\")
         a(r"\addlinespace")
     a(r"\bottomrule\end{tabularx}")
     a(r"\caption{Caractérisation des régimes sous la chaîne \emph{commune} (calibrée), comparée "
@@ -272,11 +277,11 @@ def build_section(cal, ref, cfg, sim):
     a(r"\resizebox{\textwidth}{!}{%")
     a(r"\begin{tabular}{@{}l" + "r" * d + r"@{}}")
     a(r"\toprule")
-    a(" & " + " & ".join(LAB[c] for c in comps) + r"\\")
+    a(" & " + " & ".join(LAB.get(c, c) for c in comps) + r"\\")
     a(r"\midrule")
     for i in range(d):
         cells = [r"\textbf{1}" if i == j else f"{M[i,j]:.2f}" for j in range(d)]
-        a(LAB[comps[i]] + " & " + " & ".join(cells) + r"\\")
+        a(LAB.get(comps[i], comps[i]) + " & " + " & ".join(cells) + r"\\")
     a(r"\bottomrule\end{tabular}}")
     a(r"\caption{Corrélations des résidus standardisés (masque \texttt{groupB}). \emph{Triangle "
       r"sup.} = régime de stress~; \emph{triangle inf.} = régime normal. Hors actions, communes "

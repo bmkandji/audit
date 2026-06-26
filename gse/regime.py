@@ -162,14 +162,22 @@ def _invariant(P):
     return np.clip(pi, 0, None) / np.clip(pi, 0, None).sum()
 
 
-def fit_rsln2(pre: Preprocessed, spec: dict, dt: float) -> RegimeFitResult:
+def fit_rsln2(pre: Preprocessed, spec: dict, dt: float,
+              extra_series: dict | None = None) -> RegimeFitResult:
     restarts = int(pre.meta.get("em_restarts", 20))
     vf = float(pre.meta.get("var_floor", 1e-6))
     common = bool(pre.meta.get("common_regime", True))
     do_kselect = bool(pre.meta.get("k_select", True))
     k_max = int(pre.meta.get("k_max", 5))
-    names = list(pre.data.keys())
-    df = pd.concat([pre.data[nm].rename(nm) for nm in names], axis=1).dropna()
+    # Membres du régime commun : actions + éventuels facteurs BS *promus* au
+    # Groupe B (extra_series). Tous partagent la MÊME chaîne de Markov ; leurs
+    # moyennes/volatilités deviennent propres au régime, et leurs corrélations
+    # varient par régime (masque groupB).
+    series = {nm: pre.data[nm] for nm in pre.data}
+    if extra_series:
+        series.update(extra_series)
+    names = list(series.keys())
+    df = pd.concat([series[nm].rename(nm) for nm in names], axis=1).dropna()
     Xj = df.values
     n, D = Xj.shape
 
@@ -203,10 +211,12 @@ def fit_rsln2(pre: Preprocessed, spec: dict, dt: float) -> RegimeFitResult:
                  s_month=s_month, regimes_by_equity=reg_by_eq, kselect=ks)
 
     # ---- chaînes SÉPARÉES (uniquement pour comparaison à la référence) ----
+    # Restreintes aux actions (pre.data) : les facteurs BS promus n'ont pas de
+    # chaîne de référence par actif.
     sep = {}
     if bool(pre.meta.get("compare_separate", True)):
         Ksep = 2
-        for j, nm in enumerate(names):
+        for j, nm in enumerate(pre.data):
             x = pre.data[nm].values.reshape(-1, 1)
             fit = _em_gaussian_hmm(x, K=Ksep, restarts=restarts, var_floor=vf, seed=j)
             regimes = []

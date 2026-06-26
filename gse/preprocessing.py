@@ -182,7 +182,10 @@ def preprocess_factor(name: str, spec: dict, data_cfg: dict) -> Preprocessed:
         return Preprocessed(name, model, data,
                             meta={"transform": transform,
                                   "common_regime": spec.get("common_regime", False),
+                                  "k_select": spec.get("k_select", True),
+                                  "k_max": spec.get("k_max", 5),
                                   "n_states": spec.get("n_states", 2),
+                                  "compare_separate": spec.get("compare_separate", True),
                                   "em_restarts": spec.get("em_restarts", 12),
                                   "var_floor": spec.get("var_floor", 1e-6)})
 

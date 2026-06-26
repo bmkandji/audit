@@ -31,6 +31,10 @@ data:
 factors:
 
   # ===================== GROUPE A (marges insensibles au régime) =======
+  # Un facteur BS (pe/immobilier/infra) peut être PROMU au Groupe B en mettant
+  # regime_sensitive_params: true : ses moyenne/volatilité deviennent propres
+  # au régime commun (mêmes K* états, même chaîne) et ses corrélations varient
+  # par régime. Nécessite un facteur RSLN2 (chaîne commune) déclaré.
   inflation:
     model: V2F
     method: mle

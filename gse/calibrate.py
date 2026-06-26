@@ -24,6 +24,16 @@ def load_config(path: str) -> dict:
         return yaml.safe_load(f)
 
 
+def _bs_vol_series(pre):
+    """Série de rendements d'un facteur BS pour le régime commun : source de
+    volatilité (déslissée si disponible, sinon brute), cohérente avec la
+    convention BS (vol sur rendements déslissés)."""
+    if (pre.meta.get("vol_source", "unsmoothed") == "unsmoothed"
+            and "ret_unsmoothed" in pre.data):
+        return pre.data["ret_unsmoothed"]
+    return pre.data["ret_raw"]
+
+
 @dataclass
 class CalibrationResult:
     margins: dict = field(default_factory=dict)        # name -> FitResult (Gr.A)
@@ -59,16 +69,34 @@ def calibrate(config) -> CalibrationResult:
             if os.path.exists(cand):
                 data_cfg[key] = cand
 
-    margins, regime = {}, None
+    # Prétraitement de tous les facteurs.
+    pre_map = {}
+    for name, spec in cfg["factors"].items():
+        log.info("Prétraitement : %s (%s)", name, spec["model"])
+        pre_map[name] = preprocess_factor(name, spec, data_cfg)
+
+    # Facteurs BS *promus* au Groupe B (régime commun) : regime_sensitive_params.
+    promoted = [name for name, spec in cfg["factors"].items()
+                if spec["model"] == "BS" and spec.get("regime_sensitive_params", False)]
+
+    margins, regime, rsln = {}, None, None
     for name, spec in cfg["factors"].items():
         model = spec["model"]
-        log.info("Prétraitement + calibrage : %s (%s)", name, model)
-        pre = preprocess_factor(name, spec, data_cfg)
         if model == "RSLN2":
-            regime = fit_rsln2(pre, spec, dt)
+            rsln = (name, spec)
+        elif name in promoted:
+            log.info("Calibrage : %s (BS) promu au Groupe B (régime commun).", name)
         else:
-            fitter = MARGIN_FITTERS[model]
-            margins[name] = fitter(pre, spec, dt)
+            log.info("Calibrage : %s (%s, Groupe A).", name, model)
+            margins[name] = MARGIN_FITTERS[model](pre_map[name], spec, dt)
+
+    if rsln is not None:
+        name, spec = rsln
+        extra = {nm: _bs_vol_series(pre_map[nm]) for nm in promoted}
+        regime = fit_rsln2(pre_map[name], spec, dt, extra_series=extra)
+    elif promoted:
+        raise ValueError("Facteurs BS promus au Groupe B mais aucun facteur "
+                         "RSLN2 (chaîne commune) n'est déclaré.")
 
     dep = compute_dependence(list(margins.values()), regime, cfg)
     return CalibrationResult(margins=margins, regime=regime,

@@ -66,7 +66,9 @@ et `real_rate` sont deux `V2F` traités par le même calibrateur. Ajouter un
 - **BS** (PE, immo, infra) : `transform: log_return_100` (100·log-rendement
   d'indice) ; **déslissage AR(1)** ; moyenne sur rendements bruts, **vol sur
   rendements déslissés** ; `income_yield` optionnel (réinvestissement des
-  loyers, immobilier).
+  loyers, immobilier). **Promotion au Groupe B** possible via
+  `regime_sensitive_params: true` : μ/σ et corrélations deviennent propres au
+  régime latent commun (le facteur rejoint l'émission jointe de l'EM).
 - **RSLN2** (actions) : 100·log-rendements ; `common_regime` (false = une
   chaîne par actif comme la référence ; true = régime latent commun de la
   note) ; `em_restarts` (multi-démarrage).
