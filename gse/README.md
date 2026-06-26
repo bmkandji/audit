@@ -94,10 +94,10 @@ et `real_rate` sont deux `V2F` traités par le même calibrateur. Ajouter un
 
 Cascade séquentielle (IFM) :
 
-1. **Groupe A** — EMV conditionnel exact en forme fermée : V2F = MCO
-   multivarié VAR(1) (κ par log scalaire des termes diagonaux) ; BK = MCO
-   scalaire ; BS = moments ; CIR = init Euler fermée puis EMV χ² décentré
-   numérique. Résidus PIT.
+1. **Groupe A** — V2F = **EMV joint pur** sur la loi gaussienne exacte (court &
+   long ensemble ; `method: mle` par défaut, options `ols` / `distributional`) ;
+   BK = OU exact (EMV = MCO) ; BS = moments ; CIR = init Euler puis EMV χ²
+   décentré (option `ols` = Euler seul). Résidus PIT.
 2. **Groupe B** — EM / Baum-Welch (filtre de Hamilton + lisseur de Kim),
    multi-démarrage, planchers de variance, tri des états par volatilité.
 3. **Dépendance** — Ω(a) = corrélation des résidus standardisés pondérée par
@@ -106,7 +106,8 @@ Cascade séquentielle (IFM) :
 
 ## 7. Validation contre `Parametres_models.xlsx`
 
-|écart| médian ≈ **3,7 %** (≈ 2,8 % hors immobilier) ; correspondances
+|écart| médian ≈ **6,0 %** (méthode V2F par défaut = **EMV pur**, qui s'écarte
+*volontairement* de la référence distributionnelle) ; correspondances
 **exactes** où la méthodologie coïncide :
 
 | Facteur | Résultat |
@@ -114,15 +115,18 @@ Cascade séquentielle (IFM) :
 | Crédit (CIR) | κ, σ, θ **exacts** (0 %) |
 | Dette privée (BK) | κ **exact** ; μ à 1,5 % |
 | PE / Infra (BS) | μ **exacts**, σ à ≈0,2 %/0,9 % |
-| Taux réel (V2F) | μ **exact**, κ court à 1,6 % |
+| Inflation / Taux réel (V2F) | EMV pur : σ plus faibles que la réf. (cf. comparaison des 3 méthodes) |
 | Actions Euro | régime proche de la réf. (μ, σ à ≈1–8 %) |
 | Actions Monde / émergent | s'écartent (jusqu'à ≈30 %) : régime **commun** partagé |
 | Inflation `mu` (fixé) | **exact** (0 %) |
 
-> Le |écart| médian (≈ 3,7 %) est porté par deux familles d'écarts
-> **attendus et documentés** ci-dessous (V2F par cibles distributionnelles,
-> immobilier prix vs rendement total) et par le **partage du régime** des
-> actions. Les facteurs où la méthodologie coïncide sont exacts (0 %).
+> **Trois méthodes V2F** (`method: mle | ols | distributional`) sont sorties
+> côte à côte avec la référence (`outputs/comparaison_methodes_v2f.csv`). Le
+> défaut `mle` (EMV pur, court & long ensemble) restitue des σ **plus faibles** ;
+> la méthode `distributional` (cibles, Phase 1) reproduit la référence de près
+> (taux réels quasi exact). Le |écart| médian (≈ 6 %) est donc porté par ce
+> choix méthodologique (EMV ≠ cibles), par l'immobilier (prix vs rendement
+> total) et par le **partage du régime** des actions — tous documentés.
 
 ### Écarts attendus et leur cause (documentés)
 
