@@ -228,13 +228,15 @@ Toute EDS du GSE, discrétisée, s'écrit comme une \emph{récurrence autorégre
 \section{Notations et conventions}
 \label{sec:notations}
 % =====================================================================
-\begin{itemize}
-\item \textbf{Pas et fenêtre.} $h=\Dt=1/12$ (mensuel), $n\approx240$ (fenêtre 20~ans). Dates $t,t+h,\dots$
-\item \textbf{Régime commun.} $\Ecal_t\in\{1,\dots,K\}$, chaîne de Markov de matrice $P=(p_{ab})$, $p_{ab}=\Prob(\Ecal_{t+h}=b\mid\Ecal_t=a)$, de loi invariante $\pi$ ($\pi\transp P=\pi\transp$).
-\item \textbf{Facteurs.} Indexés par $i$~; état $Y^{(i)}_t\in\R^{d_i}$ ($d_i=2$ pour un Vasicek bi-factoriel V2F, $1$ sinon)~; état global $Y_t\in\R^{d}$, $d=\sum_i d_i$.
-\item \textbf{Innovations.} $\eps_{t+h}\in\R^d$, \emph{standardisées} (marginalement $\Ncal(0,1)$), de matrice de corrélation \emph{pleine, libre, propre au régime} $\Omega(\Ecal_t)$~; $\eps_{t+h}=L(\Ecal_t)z_{t+h}$, $z\sim\Ncal(0,I_d)$, $L(a)L(a)\transp=\Omega(a)$.
-\item \textbf{Lois.} $\Phi,\varphi$~: f.d.r.\ et densité $\Ncal(0,1)$~; $\varphi_p(\cdot;m,V)$~: densité $\Ncal(m,V)$~; $f_i$~: densité de transition exacte du facteur~$i$, $F_i$ sa f.d.r.~; $F_{\chi'^2}(\cdot;\nu,\lambda)$~: f.d.r.\ d'un $\chi^2$ décentré.
-\item \textbf{Estimation.} $\hat\theta_i$~: paramètres de marge~; $\ell$~: log-vraisemblance.
+\noindent\emph{Glossaire de toutes les quantités utilisées dans la note.}
+\begin{itemize}[itemsep=2pt]
+\item \textbf{Temps, indices, dimensions.} $\Dt=1/12$ (pas mensuel), $n\approx240$ observations (20~ans)~; facteur $i$~; régimes $a,b\in\{1,\dots,K\}$~; $d=\sum_i d_i$ dimension de l'état global (ici $d=12$)~; $D$ nombre d'actifs portant le régime ($D=3$ actions).
+\item \textbf{Régime commun $\Ecal_t\in\{1,\dots,K\}$.} Chaîne de Markov de matrice de transition $P=(p_{ab})$, $p_{ab}=\Prob(\Ecal_{t+\Dt}=b\mid\Ecal_t=a)$~; loi invariante $\pi$ ($\pi\transp P=\pi\transp$, probabilités stationnaires)~; $\xi_{t\mid t}(a)$ proba \emph{filtrée} d'être en régime $a$ (vu le passé), $\hat\xi_t(a)$ proba \emph{lissée} (vu tout l'échantillon), $\hat\xi_t(a,b)$ transition lissée (\S\ref{sec:calib}).
+\item \textbf{État et innovations.} $Y_t\in\R^d$ état global, $Y^{(i)}_t\in\R^{d_i}$ facteur $i$ ($d_i=2$ pour le V2F, $1$ sinon)~; $\eps_{t+\Dt}\in\R^d$ innovations \emph{standardisées} (marginalement $\Ncal(0,1)$), de matrice de corrélation $\Omega(\Ecal_t)$ \emph{propre au régime}~; $\eps=L(\Ecal_t)z$, $z\sim\Ncal(0,I_d)$, $L(a)$ facteur de Cholesky de $\Omega(a)$.
+\item \textbf{Coefficients de la récurrence AR (par facteur).} $\Phi_i$ matrice autorégressive (persistance), $c_i$ constante (niveau), $D_i$ échelle du bruit. Pour le V2F~: $\Phi=e^{-A\Dt}$, $\phi_{12}$ couplage court$\leftarrow$long, $\Sigma_{\mathrm{cond}}=\bigl(\begin{smallmatrix}V_r&C_{mr}\\C_{mr}&V_m\end{smallmatrix}\bigr)$ covariance conditionnelle ($V_r,V_m$ variances, $C_{mr}$ covariance), $\rho_c=C_{mr}/\sqrt{V_rV_m}$ corrélation conditionnelle.
+\item \textbf{Paramètres de marge.} \emph{V2F}~: $\kappa_1,\kappa_2$ vitesses de retour à la moyenne (court/long), $\sigma_1,\sigma_2$ volatilités, $\rho$ corrélation des browniens, $\mu$ cible long terme. \emph{CIR}~: $\kappa,\theta,\sigma$ (vitesse, cible, vol)~; $c_\chi,\nu,\lambda$ paramètres d'échelle/degrés/non-centralité du $\chi^2$ décentré. \emph{BK}~: $k,\theta,\sigma$. \emph{Hardy/BS}~: $\mu_a,\sigma_a$ drift/vol (par régime pour Hardy)~; moments par pas $m_a=(\mu_a-\tfrac{\sigma_a^2}{2})\Dt$, $v_a=\sigma_a^2\Dt$.
+\item \textbf{Lois et estimation.} $f_i$ densité de transition exacte du facteur $i$, $F_i$ sa f.d.r.~; $\Phi,\varphi$ f.d.r./densité $\Ncal(0,1)$, $\varphi_p(\cdot;m,V)$ densité $\Ncal(m,V)$, $F_{\chi'^2}(\cdot;\nu,\lambda)$ f.d.r.\ du $\chi^2$ décentré~; $\hat\theta$ paramètres estimés, $\ell$ log-vraisemblance, $p_K$ nombre de paramètres libres (pour le BIC).
+\item \textbf{Dépendance.} $\widehat\eps_t$ résidu PIT \emph{complet} (tous facteurs empilés)~; $G^{\mathrm{reg}}(a)$ corrélation des résidus dans le régime $a$, $G^{\mathrm{pool}}$ corrélation poolée (tous régimes)~; $S$ masque (corrélations propres au régime ou communes)~; $\delta_a$ intensité de rétrécissement, $n^{\mathrm{eff}}_a$ taille d'échantillon effective du régime~; $\Omega^{\mathrm{SDP}}(a)$ corrélation finale, définie-positive.
 \end{itemize}
 
 % =====================================================================
@@ -413,8 +415,8 @@ Pour une marge gaussienne à discrétisation exacte, le MCO de la récurrence $y
 Pour chaque $i\in A$, on estime $\hat\theta_i$ par la méthode retenue (ci-dessous), puis les résidus PIT $\widehat\eps^{(i)}$. La consistance des marges est garantie indépendamment de la dépendance (propriété IFM).
 
 \subsection{Étape 2 --- régime commun (EM / Baum--Welch)}
-Les facteurs du Groupe~B partagent le régime \emph{commun} $\Ecal_t$~; ils s'estiment \emph{conjointement} par EM.
-\paragraph{Étape E (récurrences fermées).} Densité d'émission $f_a(x_t)=\varphi_p(x_t;m_a,V_a)$. \emph{Filtre de Hamilton} (avant), initialisé par $\hat\pi$~:
+Les facteurs du Groupe~B (actions) partagent un même \emph{régime de marché caché} $\Ecal_t$~; on les estime \emph{conjointement} par l'algorithme EM. \emph{En clair}~: EM alterne deux pas jusqu'à convergence --- \textbf{(E)} calculer la probabilité d'être dans chaque régime à chaque date~; \textbf{(M)} mettre à jour moyennes, volatilités et transitions, pondérées par ces probabilités.
+\paragraph{Étape E (récurrences fermées).} \emph{En clair}~: le \emph{filtre} (avant) propage la probabilité de régime de proche en proche au vu du passé~; le \emph{lisseur} (arrière) la révise avec l'information future. Densité d'émission $f_a(x_t)=\varphi_p(x_t;m_a,V_a)$ (vraisemblance du vecteur d'observations en régime $a$). \emph{Filtre de Hamilton} (avant), initialisé par $\hat\pi$~:
 \[
 \xi_{t\mid t-1}(a)=\sum_b\xi_{t-1\mid t-1}(b)\,p_{ba},\qquad
 \xi_{t\mid t}(a)=\frac{\xi_{t\mid t-1}(a)\,f_a(x_t)}{\sum_{a'}\xi_{t\mid t-1}(a')\,f_{a'}(x_t)},
@@ -436,7 +438,9 @@ $\hat V_a$ \emph{pleine} (corrélations intra-Groupe~B par régime estimées). A
 
 \subsection{Étape 3 --- dépendance pleine, par régime}
 \label{sec:etape3}
-Marges et $\hat\xi_t(a)$ figées, soit $\widehat\eps_t$ le résidu standardisé \emph{complet}. À marges fixées, la corrélation empirique \emph{pondérée par le régime} maximise la log-vraisemblance de la copule gaussienne~:
+\emph{En clair}~: une fois les marges figées, on mesure la corrélation des résidus \emph{séparément dans chaque régime}, on la \emph{stabilise} (rétrécissement) puis on la rend \emph{définie-positive} (Higham) pour pouvoir simuler.
+
+\noindent Marges et $\hat\xi_t(a)$ figées, soit $\widehat\eps_t$ le résidu standardisé \emph{complet}. À marges fixées, la corrélation empirique \emph{pondérée par le régime} maximise la log-vraisemblance de la copule gaussienne~:
 \begin{definitionbox}
 \[
 \widehat\Omega(a)=\frac{\sum_t\hat\xi_t(a)\,\widehat\eps_t\widehat\eps_t\transp}{\sum_t\hat\xi_t(a)},\qquad a=1,\dots,K^\star .
@@ -484,7 +488,7 @@ Aucun passage par une régression ni back-out implicite~; $\mu$ fixé (cible) ou
 Les trois sont reportées en regard de la référence (tableau~\ref{tab:res-v2f-meth}). L'EMV restitue des $\sigma$ plus faibles que la méthode distributionnelle (plus proche de la référence).
 
 \paragraph{(B bis) V2F --- cibles distributionnelles (Phase 1).}
-On n'estime que $(\kappa_1,\kappa_2,\sigma_1,\sigma_2)$ ($\mu$ fixé/régression~; browniens \emph{indépendants}, $\Sigma_w=\diag(\sigma_1^2,\sigma_2^2)$) pour répliquer la distribution des taux observés aux maturités $\tau_1,\tau_2$. Sous l'hypothèse des espérances, le taux est affine~: $R(t,t+\tau)=\mu+\tfrac1\tau[B_1(\tau)(q^s_t-\mu)+B_2(\tau)(q^l_t-\mu)]$, avec
+\emph{En clair}~: au lieu de la vraisemblance, on choisit $(\kappa_1,\kappa_2,\sigma_1,\sigma_2)$ pour que le modèle \emph{reproduise trois statistiques observées} des taux (volatilité des variations, corrélation entre maturités, dispersion des niveaux). On n'estime que $(\kappa_1,\kappa_2,\sigma_1,\sigma_2)$ ($\mu$ fixé/régression~; browniens \emph{indépendants}, $\Sigma_w=\diag(\sigma_1^2,\sigma_2^2)$) pour répliquer la distribution des taux observés aux maturités $\tau_1,\tau_2$. Sous l'hypothèse des espérances, le taux est affine~: $R(t,t+\tau)=\mu+\tfrac1\tau[B_1(\tau)(q^s_t-\mu)+B_2(\tau)(q^l_t-\mu)]$, avec
 \[
 B_1(\tau)=\!\int_0^\tau\!e^{-\kappa_1 s}\dd s=\tfrac{1-e^{-\kappa_1\tau}}{\kappa_1},\qquad
 B_2(\tau)=\!\int_0^\tau\!\phi_{12}(s)\dd s=\tfrac{\kappa_1}{\kappa_1-\kappa_2}\Big(\tfrac{1-e^{-\kappa_2\tau}}{\kappa_2}-\tfrac{1-e^{-\kappa_1\tau}}{\kappa_1}\Big),
