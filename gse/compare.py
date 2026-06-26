@@ -1,8 +1,15 @@
-"""Comparaison des paramètres calibrés avec la référence Parametres_models.xlsx."""
+"""Comparaison des paramètres calibrés avec la référence Parametres_models.xlsx.
+
+Inclut aussi les diagnostics d'adéquation des résidus PIT (normalité/queue),
+support de l'hypothèse de copule gaussienne : ils signalent automatiquement,
+sur tout nouveau jeu de données, un facteur dont la marge standardisée s'écarte
+de la normalité.
+"""
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from scipy.stats import kstest, kurtosis
 
 # (ligne 0-based, colonne 2026=3) -> valeur de référence
 _REF_CELLS = {
@@ -85,4 +92,36 @@ def comparison_table(cal, ref_path: str) -> pd.DataFrame:
                          calibre=round(float(myv), 4) if myv == myv else np.nan,
                          reference=round(float(refv), 4) if refv == refv else np.nan,
                          ecart_pct=round(float(rel), 1) if rel == rel else np.nan))
+    return pd.DataFrame(rows)
+
+
+def pit_diagnostics(cal, alpha: float = 0.05) -> pd.DataFrame:
+    """Adéquation des résidus PIT : moyenne, écart-type, KS (normalité), queue.
+
+    Sous bonne spécification, chaque résidu standardisé est N(0,1) i.i.d. et la
+    dépendance est une copule gaussienne. On teste la normalité (Kolmogorov–
+    Smirnov) et on mesure l'excès de kurtosis (queue). Un rejet (p < alpha) ou
+    un excès de kurtosis marqué signale un facteur où une copule/marge à queues
+    (Student) serait préférable — cf. option `correlations.copula`.
+    """
+    series = {c: cal.margins[m].resid[c].dropna().values
+              for m in cal.margins for c in cal.margins[m].resid.columns}
+    # Groupe B : résidus standardisés (régime le plus probable a posteriori).
+    if cal.regime is not None:
+        J = cal.regime.joint
+        rets, xi = J["returns"], J["xi"].values
+        a_star = xi.argmax(axis=1)
+        m_m, s_m = J["m_month"], J["s_month"]
+        for j, nm in enumerate(rets.columns):
+            x = rets[nm].values
+            series[nm] = (x - m_m[a_star, j]) / s_m[a_star, j]
+    rows = []
+    for c, x in series.items():
+        z = (x - x.mean()) / x.std(ddof=0)
+        p = float(kstest(z, "norm").pvalue)
+        rows.append(dict(composante=c, n=len(x), moyenne=round(float(x.mean()), 3),
+                         ecart_type=round(float(x.std(ddof=0)), 3),
+                         KS_p=round(p, 3),
+                         kurtosis_exces=round(float(kurtosis(x)), 2),
+                         normal=(p >= alpha)))
     return pd.DataFrame(rows)

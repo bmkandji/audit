@@ -53,6 +53,30 @@ def _pooled_corr(E):
     return M / np.outer(d, d)
 
 
+def _kish_neff(w):
+    """Taille d'échantillon effective de Kish pour des poids w : (Σw)²/Σw²."""
+    sw = float(w.sum())
+    return sw * sw / float(np.sum(w ** 2)) if sw > 0 else 0.0
+
+
+def _shrink_intensity(shrink_cfg, d, n_eff):
+    """Intensité de rétrécissement delta ∈ [0,1].
+
+    - "auto"  : delta = dimension / taille d'échantillon effective, bornée à 1.
+      Décroît vers 0 quand l'échantillon est riche (delta -> corrélation
+      empirique) et tend vers 1 quand un régime est rare (delta -> cible
+      poolée, bien conditionnée). Aucun réglage manuel à refaire par jeu de
+      données.
+    - "none"  : delta = 0 (corrélation empirique brute, ancien comportement).
+    - <float> : intensité fixe imposée.
+    """
+    if shrink_cfg in (None, "none", False):
+        return 0.0
+    if shrink_cfg == "auto":
+        return float(np.clip(d / n_eff, 0.0, 1.0)) if n_eff > 0 else 1.0
+    return float(np.clip(float(shrink_cfg), 0.0, 1.0))
+
+
 # --------------------------------------------------------------------------- #
 def build_mask(components, groupB_set, kind):
     """Masque symétrique S (1 = entrée propre au régime)."""
@@ -81,6 +105,7 @@ def compute_dependence(margins, regime, cfg):
     kind = corr_cfg.get("regime_sensitivity", "groupB")
     htol = float(corr_cfg.get("higham_tol", 1e-8))
     hmax = int(corr_cfg.get("higham_max_iter", 200))
+    shrink_cfg = corr_cfg.get("shrinkage", "auto")
 
     # --- résidus Groupe A (régime-indépendants) ---
     A_resid = pd.concat([m.resid for m in margins], axis=1)
@@ -119,18 +144,27 @@ def compute_dependence(margins, regime, cfg):
     E_pool = np.column_stack([EA, EB_pool])
     G_pool = _pooled_corr(E_pool)
 
-    regimes, Ls = {}, {}
+    d = len(components)
+    regimes, Ls, shrink_info = {}, {}, {}
     for a in range(K):
         # résidus Groupe B standardisés AU régime a
         EB_a = (Xb - m_month[a]) / s_month[a]
         E_a = np.column_stack([EA, EB_a])
         G_reg = _weighted_corr(E_a, W[:, a])
+        # Rétrécissement vers la cible poolée : Omega(a) par régime est estimée
+        # sur peu de points (régime peu peuplé x dimension élevée) et peut être
+        # quasi singulière. delta s'adapte à la taille d'échantillon effective.
+        n_eff = _kish_neff(W[:, a])
+        delta = _shrink_intensity(shrink_cfg, d, n_eff)
+        G_reg = (1.0 - delta) * G_reg + delta * G_pool
         Om = S * G_reg + (1.0 - S) * G_pool
         np.fill_diagonal(Om, 1.0)
         Om = nearest_corr_higham(Om, htol, hmax)
         lbl = f"reg{a+1}"
         regimes[lbl] = pd.DataFrame(Om, index=components, columns=components)
         Ls[lbl] = np.linalg.cholesky(Om)
+        shrink_info[lbl] = dict(n_eff=round(n_eff, 1), delta=round(delta, 3),
+                                min_eig=float(np.linalg.eigvalsh(Om).min()))
     return dict(components=components, regimes=regimes, L=Ls, K=K,
-                groupB=B_cols, mask=kind,
+                groupB=B_cols, mask=kind, shrinkage=shrink_info,
                 pooled=pd.DataFrame(G_pool, index=components, columns=components))

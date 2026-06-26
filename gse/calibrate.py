@@ -34,10 +34,14 @@ class CalibrationResult:
     def params_table(self) -> dict:
         out = {n: fr.params for n, fr in self.margins.items()}
         if self.regime is not None:
-            out["equities_separate"] = self.regime.params_separate
+            J = self.regime.joint
             out["equities_joint"] = dict(
-                P=self.regime.joint["P"].tolist(),
-                pi=self.regime.joint["pi"].tolist())
+                K=int(J["K"]),
+                P=J["P"].tolist(),
+                pi=J["pi"].tolist(),
+                regimes_by_equity=J["regimes_by_equity"])   # mu/sigma par actif et régime
+            if self.regime.params_separate:                 # vide si compare_separate=false
+                out["equities_separate"] = self.regime.params_separate
         return out
 
 

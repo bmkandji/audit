@@ -417,7 +417,7 @@ $F_j$ étant la fonction de répartition conditionnelle \emph{marginale} de la c
 
 \noindent Pour une composante \emph{gaussienne} (V2F, BK, BS, Hardy conditionnellement au régime), $\Phi^{-1}\!\circ F_j$ se réduit à la \emph{standardisation} par l'écart-type conditionnel~: $\widehat\eps^{(j)}_{t+\Dt}=(Y^{(j)}_{t+\Dt}-[\Phi Y_t]_j-c_j)/D_j$, sans inversion numérique. On standardise \emph{chaque} composante scalaire (y compris les deux composantes du V2F) par sa propre dispersion conditionnelle, \emph{sans blanchir} le bloc~: les corrélations conditionnelles --- dont la corrélation interne $\rho_c$ du V2F --- sont alors entièrement portées par $\Omega$. Pour le CIR, $F_j$ est la fonction de répartition du $\chi^2$ décentré (\S\ref{sec:appli}).
 
-La dépendance est alors une \textbf{copule gaussienne} sur ces scores~: $\widehat\eps_{t+\Dt}\sim\Ncal\big(0,\Omega(\Ecal_t)\big)$, $\Omega$ \emph{pleine, libre et dépendante du régime}, estimée \emph{sur les résidus} (et non sur les niveaux). Trois bénéfices~: traitement \emph{uniforme} des marges (gaussiennes et $\chi^2$ décentrée), corrélations sur un \emph{bruit blanc stationnaire}, et \emph{cohérence interne} entre la loi estimée et la loi simulée. Aucune entrée de $\Omega$ n'est contrainte.
+La dépendance est alors une \textbf{copule gaussienne} sur ces scores~: $\widehat\eps_{t+\Dt}\sim\Ncal\big(0,\Omega(\Ecal_t)\big)$, $\Omega$ \emph{pleine, libre et dépendante du régime}, estimée \emph{sur les résidus} (et non sur les niveaux). Trois bénéfices~: traitement \emph{uniforme} des marges (gaussiennes et $\chi^2$ décentrée), corrélations sur un \emph{bruit blanc stationnaire}, et \emph{cohérence interne} entre la loi estimée et la loi simulée. Aucune entrée de $\Omega$ n'est contrainte. L'adéquation des résidus (uniformité PIT, normalité, queue) est contrôlée \emph{a posteriori}~; si les queues l'exigent, une copule de \emph{Student} (scatter $\Omega(\Ecal_t)$, marges restituées $\Ncal(0,1)$) est disponible en option, sans modifier les marges calibrées.
 
 % =====================================================================
 \section{Modèle AR agrégé à régime latent commun (MS-VAR)}
@@ -507,7 +507,7 @@ On \emph{fige} les marges (Étapes~1--2) et les probabilités lissées $\hat\xi_
 \[
 \widehat\Omega(a)=\frac{\sum_t \hat\xi_t(a)\,\widehat\eps_t\,\widehat\eps_t\transp}{\sum_t \hat\xi_t(a)}\,,\qquad a=1,\dots,K^\star,
 \]
-puis projection sur le cône SDP le plus proche (Higham), \emph{régime par régime}~: $\widehat\Omega(a)\xrightarrow{\text{Higham}}\Omega^{\mathrm{SDP}}(a)$, condition de la décomposition de Cholesky.
+puis, en échantillon fini, un \emph{rétrécissement} (shrinkage) vers la cible poolée --- d'intensité fonction de la taille d'échantillon \emph{effective} du régime (forte pour un régime peu peuplé, nulle en grand échantillon) --- pour parer la quasi-singularité de $\widehat\Omega(a)$, et enfin la projection sur le cône SDP le plus proche (Higham), \emph{régime par régime}~: $\widehat\Omega(a)\xrightarrow{\text{Higham}}\Omega^{\mathrm{SDP}}(a)$, condition de la décomposition de Cholesky.
 \end{definitionbox}
 \noindent Toutes les entrées (intra-V2F, intra-Groupe~B, croisées A--B, et leur variation selon $a$) sont ainsi \emph{estimées}, jamais imposées. Comme les résidus sont standardisés (marginalement et, pour le Groupe~B, conditionnellement au régime), $\widehat\Omega(a)$ est bien une matrice de corrélation (diagonale unité). Le bloc intra-Groupe~B coïncide avec la corrélation déduite de $\hat V_a$ (Étape~2).
 
@@ -836,9 +836,10 @@ puis projeter~: $\Omega^{\mathrm{SDP}}(a)=\textsc{NearestCorr}(\widehat\Omega(a)
 
 \subsection{Détails numériques et garde-fous}
 \begin{itemize}[nosep]
-\item \textbf{Retours à la moyenne du V2F}~: $\hat\kappa_i=-\Dt^{-1}\ln\widehat\Phi_{ii}$ sur les termes diagonaux de $\widehat\Phi$ (triangulaire)~; exiger $\widehat\Phi_{ii}\in(0,1)$ (stabilité)~; sinon contraindre/retirer la composante instable.
-\item \textbf{\textsc{NearestCorr}}~: projections alternées de Higham (symétrisation, diagonale unité, troncature SDP du spectre) jusqu'à tolérance~; appliquée \emph{par régime}.
-\item \textbf{CIR}~: PIT $\widehat\eps^{(\mathrm{cr})}=\Phi^{-1}\!\big(F_{\chi'^2}(2c_\chi s_{t+\Dt};\nu,\lambda)\big)$ et inverse-PIT par le quantile $\chi'^2$~; vérifier $\sigma^2\le4\kappa\theta$ (Alfonsi) et $1-\tfrac{\kappa}{2}\Dt>0$.
+\item \textbf{Retours à la moyenne (V2F, OU/BK)}~: $\hat\kappa=-\Dt^{-1}\ln\hat\beta$ sur le coefficient AR(1) (termes diagonaux de $\widehat\Phi$ pour le V2F, triangulaire)~; exiger $\hat\beta\in(0,1)$ (stabilité)~; sinon écrêtage \emph{avec avertissement} (retour à la moyenne peu fiable sur la série).
+\item \textbf{Alignement temporel}~: toutes les séries sont ramenées sur une grille \emph{mensuelle} (fin de mois) à la lecture~; l'intersection inter-facteurs servant à $\Omega$ devient \emph{déterministe}, indépendante du jour d'observation de chaque source (sans quoi des mois sont perdus silencieusement).
+\item \textbf{\textsc{NearestCorr}}~: projections alternées de Higham (symétrisation, diagonale unité, troncature SDP du spectre) jusqu'à tolérance~; appliquée \emph{par régime}, après rétrécissement.
+\item \textbf{CIR}~: PIT $\widehat\eps^{(\mathrm{cr})}=\Phi^{-1}\!\big(F_{\chi'^2}(2c_\chi s_{t+\Dt};\nu,\lambda)\big)$ et inverse-PIT par le quantile $\chi'^2$ (schéma \emph{par défaut}, exact)~; le schéma d'Alfonsi (rapide) n'est retenu que si $\sigma^2\le4\kappa\theta$ et $1-\tfrac{\kappa}{2}\Dt>0$, sinon bascule \emph{automatique} sur l'inverse-PIT. Reconstruction du spread BK $s=e^{y}$ ou $e^{y/100}$ selon l'échelle (log\,/\,$100\ln$) déclarée, non codée en dur.
 \item \textbf{Cohérence options}~: $\mathcal F$ et $S$ s'appliquent \emph{identiquement} à l'estimation, aux résidus et à la simulation, garantissant une seule loi par régime de bout en bout.
 \item \textbf{Reproductibilité}~: graine fixée~; $v_a\ge\underline v$~; régimes ordonnés~; consigner $(\mathcal F,S,K^\star)$ avec les sorties.
 \end{itemize}
@@ -982,18 +983,18 @@ Monde & Calib.\ (commun) & -8.97 & 19.54 & 17.35 & 9.18\\
 \toprule
  & Inf.C & Inf.L & TxR.C & TxR.L & Créd & DetP & PE & Immo & Infra & Act.EU & Act.Mo & Act.EM\\
 \midrule
-Inf.C & \textbf{1} & 0.81 & -0.75 & -0.31 & -0.26 & -0.30 & 0.31 & 0.05 & 0.28 & 0.44 & 0.42 & 0.46\\
-Inf.L & 0.81 & \textbf{1} & -0.55 & -0.31 & -0.28 & -0.31 & 0.29 & -0.02 & 0.19 & 0.39 & 0.32 & 0.44\\
-TxR.C & -0.75 & -0.55 & \textbf{1} & 0.57 & 0.08 & 0.10 & -0.23 & -0.05 & -0.26 & -0.28 & -0.30 & -0.31\\
-TxR.L & -0.30 & -0.31 & 0.57 & \textbf{1} & 0.15 & 0.11 & -0.31 & -0.19 & -0.36 & -0.38 & -0.39 & -0.34\\
-Créd & -0.26 & -0.28 & 0.09 & 0.15 & \textbf{1} & 0.90 & -0.70 & -0.22 & -0.52 & -0.81 & -0.69 & -0.79\\
-DetP & -0.30 & -0.31 & 0.10 & 0.10 & 0.90 & \textbf{1} & -0.71 & -0.22 & -0.56 & -0.81 & -0.73 & -0.72\\
-PE & 0.31 & 0.29 & -0.23 & -0.31 & -0.70 & -0.71 & \textbf{1} & 0.23 & 0.72 & 0.91 & 0.90 & 0.78\\
-Immo & 0.05 & -0.02 & -0.05 & -0.19 & -0.22 & -0.22 & 0.23 & \textbf{1} & 0.09 & 0.33 & 0.29 & 0.40\\
-Infra & 0.28 & 0.19 & -0.26 & -0.36 & -0.51 & -0.56 & 0.71 & 0.09 & \textbf{1} & 0.76 & 0.81 & 0.55\\
-Act.EU & -0.03 & 0.13 & 0.04 & -0.01 & -0.50 & -0.60 & 0.69 & -0.02 & 0.48 & \textbf{1} & 0.91 & 0.79\\
-Act.Mo & -0.01 & 0.13 & -0.04 & -0.13 & -0.21 & -0.27 & 0.70 & 0.02 & 0.52 & 0.58 & \textbf{1} & 0.66\\
-Act.EM & -0.07 & -0.02 & 0.07 & 0.10 & -0.50 & -0.54 & 0.43 & 0.05 & 0.18 & 0.51 & 0.23 & \textbf{1}\\
+Inf.C & \textbf{1} & 0.80 & -0.74 & -0.21 & -0.26 & -0.28 & 0.28 & 0.08 & 0.27 & 0.43 & 0.39 & 0.42\\
+Inf.L & 0.80 & \textbf{1} & -0.55 & -0.24 & -0.27 & -0.29 & 0.28 & 0.04 & 0.24 & 0.41 & 0.36 & 0.38\\
+TxR.C & -0.74 & -0.55 & \textbf{1} & 0.54 & 0.10 & 0.11 & -0.24 & -0.10 & -0.31 & -0.30 & -0.35 & -0.28\\
+TxR.L & -0.21 & -0.24 & 0.54 & \textbf{1} & 0.12 & 0.09 & -0.31 & -0.15 & -0.38 & -0.34 & -0.41 & -0.23\\
+Créd & -0.26 & -0.27 & 0.10 & 0.12 & \textbf{1} & 0.89 & -0.65 & -0.17 & -0.49 & -0.77 & -0.62 & -0.77\\
+DetP & -0.28 & -0.29 & 0.11 & 0.09 & 0.89 & \textbf{1} & -0.66 & -0.16 & -0.52 & -0.78 & -0.66 & -0.70\\
+PE & 0.28 & 0.28 & -0.24 & -0.31 & -0.65 & -0.66 & \textbf{1} & 0.18 & 0.73 & 0.88 & 0.88 & 0.70\\
+Immo & 0.08 & 0.04 & -0.10 & -0.15 & -0.17 & -0.16 & 0.18 & \textbf{1} & 0.11 & 0.25 & 0.18 & 0.33\\
+Infra & 0.27 & 0.24 & -0.31 & -0.38 & -0.49 & -0.52 & 0.73 & 0.11 & \textbf{1} & 0.77 & 0.82 & 0.52\\
+Act.EU & 0.02 & 0.15 & -0.02 & -0.11 & -0.56 & -0.61 & 0.68 & -0.00 & 0.52 & \textbf{1} & 0.88 & 0.74\\
+Act.Mo & 0.01 & 0.07 & -0.11 & -0.19 & -0.25 & -0.29 & 0.71 & 0.03 & 0.57 & 0.59 & \textbf{1} & 0.57\\
+Act.EM & -0.05 & 0.03 & 0.06 & 0.04 & -0.53 & -0.52 & 0.37 & 0.04 & 0.19 & 0.52 & 0.24 & \textbf{1}\\
 \bottomrule\end{tabular}}
 \caption{Corrélations des résidus standardisés (masque \texttt{groupB}). \emph{Triangle sup.} = régime de stress~; \emph{triangle inf.} = régime normal. Hors actions, communes aux régimes~; SDP (Higham). (Étiquettes~: Inf=inflation, TxR=taux réel, Créd=crédit, DetP=dette privée, Act.=actions.)}\label{tab:res-corr}
 \end{table}
@@ -1003,19 +1004,19 @@ Act.EM & -0.07 & -0.02 & 0.07 & 0.10 & -0.50 & -0.54 & 0.43 & 0.05 & 0.18 & 0.51
 \toprule
 \textbf{Sortie} & \textbf{Mesure} & \textbf{Val.} & \textbf{} & \textbf{E[terminal]}\\
 \midrule
-inflation.short & vol(diff)/an & 0.887 & E[terminal] & 1.5214\\
-inflation.long & vol(diff)/an & 0.436 & E[terminal] & 1.7393\\
-real\_rate.short & vol(diff)/an & 0.948 & E[terminal] & -0.2749\\
-real\_rate.long & vol(diff)/an & 0.738 & E[terminal] & 0.4042\\
-credit & log-vol\%/an & 48.480 & E[terminal] & 1.4333\\
-dette\_privee.y & vol(diff)/an & 40.850 & E[terminal] & -315.8468\\
-dette\_privee.spread & log-vol\%/an & 40.850 & E[terminal] & 0.0468\\
-pe & log-vol\%/an & 29.670 & E[terminal] & 31.9870\\
-immobilier & log-vol\%/an & 3.850 & E[terminal] & 0.9268\\
-infra & log-vol\%/an & 13.380 & E[terminal] & 9.2323\\
-Action\_EUR & log-vol\%/an & 14.310 & E[terminal] & 8.7744\\
-Action\_Monde & log-vol\%/an & 13.590 & E[terminal] & 21.3677\\
-Action\_emergent & log-vol\%/an & 20.630 & E[terminal] & 5.7907\\
+inflation.short & vol(diff)/an & 0.887 & E[terminal] & 1.5183\\
+inflation.long & vol(diff)/an & 0.436 & E[terminal] & 1.7594\\
+real\_rate.short & vol(diff)/an & 0.949 & E[terminal] & -0.2504\\
+real\_rate.long & vol(diff)/an & 0.737 & E[terminal] & 0.4246\\
+credit & log-vol\%/an & 48.040 & E[terminal] & 1.4134\\
+dette\_privee.y & vol(diff)/an & 40.852 & E[terminal] & -316.3513\\
+dette\_privee.spread & log-vol\%/an & 40.850 & E[terminal] & 0.0465\\
+pe & log-vol\%/an & 29.630 & E[terminal] & 32.7300\\
+immobilier & log-vol\%/an & 3.850 & E[terminal] & 0.9250\\
+infra & log-vol\%/an & 13.370 & E[terminal] & 9.3323\\
+Action\_EUR & log-vol\%/an & 14.320 & E[terminal] & 8.6338\\
+Action\_Monde & log-vol\%/an & 13.580 & E[terminal] & 21.5415\\
+Action\_emergent & log-vol\%/an & 20.620 & E[terminal] & 5.5359\\
 \bottomrule\end{tabular}
 \caption{Contrôle sur 5000 trajectoires $\times$ 360 pas (30~ans). Occupation simulée du régime de stress~: 29.1\,\% (cf.\ $\pi_1$). Les volatilités simulées reproduisent les paramètres calibrés.}\label{tab:res-sim}
 \end{table}

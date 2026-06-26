@@ -80,19 +80,27 @@ et `real_rate` sont deux `V2F` traités par le même calibrateur. Ajouter un
    `full` (tout par régime), `none` (une seule Ω), `groupB` (seules les
    corrélations impliquant les actions varient selon le régime — défaut,
    cohérent avec les entrées « …fort vol » de la référence).
+3. **Robustesse au changement de données** (cadre général) : dates
+   canonicalisées en fin de mois (alignement inter-facteurs déterministe) ;
+   `correlations.shrinkage` (`auto`/`none`/valeur) contre la quasi-singularité
+   des régimes peu peuplés ; `simulation.cir_scheme` (`inverse_pit` par défaut,
+   exact ; `alfonsi` avec bascule auto si sa condition est violée) ;
+   `simulation.copula` (`gaussian`/`student` pour la dépendance de queue) ;
+   diagnostics PIT auto (`outputs/diagnostics_pit.csv`).
 
 ## 6. Méthodologie de calibrage
 
 Cascade séquentielle (IFM) :
 
 1. **Groupe A** — EMV conditionnel exact en forme fermée : V2F = MCO
-   multivarié VAR(1) (+ log matriciel) ; BK = MCO scalaire ; BS = moments ;
-   CIR = init Euler fermée puis EMV χ² décentré numérique. Résidus PIT.
+   multivarié VAR(1) (κ par log scalaire des termes diagonaux) ; BK = MCO
+   scalaire ; BS = moments ; CIR = init Euler fermée puis EMV χ² décentré
+   numérique. Résidus PIT.
 2. **Groupe B** — EM / Baum-Welch (filtre de Hamilton + lisseur de Kim),
    multi-démarrage, planchers de variance, tri des états par volatilité.
 3. **Dépendance** — Ω(a) = corrélation des résidus standardisés pondérée par
-   les probabilités lissées du régime commun, masque de sensibilité, puis
-   projection SDP (Higham).
+   les probabilités lissées du régime commun, masque de sensibilité,
+   rétrécissement (régimes peu peuplés) puis projection SDP (Higham).
 
 ## 7. Validation contre `Parametres_models.xlsx`
 

@@ -28,6 +28,15 @@ def load_sheet(path: str, sheet: str) -> pd.Series:
     s = df.dropna().set_index("Date")["value"].astype(float).sort_index()
     if s.empty:
         raise ValueError(f"Feuille '{sheet}' : série vide après nettoyage.")
+    # Canonicalisation mensuelle : toutes les feuilles sont ramenées sur une
+    # grille de FIN DE MOIS, quel que soit le jour d'observation (26-31 selon
+    # les sources). L'alignement inter-séries devient déterministe et
+    # indépendant des conventions de date — sans cela, l'intersection sur
+    # timestamps exacts perd silencieusement les mois où deux séries diffèrent
+    # d'un jour. En cas d'observations multiples dans un mois, on garde la
+    # dernière.
+    s = s.groupby(s.index.to_period("M")).last()
+    s.index = s.index.to_timestamp("M")
     return s
 
 

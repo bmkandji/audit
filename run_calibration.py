@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 from gse.calibrate import calibrate, load_config
-from gse.compare import comparison_table, load_reference
+from gse.compare import comparison_table, load_reference, pit_diagnostics
 from gse.preprocessing import preprocess_factor
 from gse.simulate import simulate, summarize
 
@@ -389,6 +389,22 @@ def main():
 
     for lbl, Om in cal.dependence["regimes"].items():
         Om.to_csv(os.path.join(args.out, f"correlation_{lbl}.csv"))
+
+    # diagnostics : conditionnement des corrélations + adéquation des résidus
+    shr = cal.dependence.get("shrinkage")
+    if shr:
+        print("\nDépendance par régime (rétrécissement) :")
+        for lbl, info in shr.items():
+            print(f"  {lbl}: n_eff={info['n_eff']}  delta={info['delta']}  "
+                  f"min_eig(Omega)={info['min_eig']:.3e}")
+    try:
+        diag = pit_diagnostics(cal)
+        diag.to_csv(os.path.join(args.out, "diagnostics_pit.csv"), index=False)
+        rej = diag.loc[~diag["normal"], "composante"].tolist()
+        print("\nDiagnostics résidus PIT (adéquation N(0,1)) — "
+              f"rejets KS : {', '.join(rej) if rej else 'aucun'}")
+    except Exception as e:
+        print("Diagnostics PIT indisponibles :", e)
 
     # simulation (une seule fois, partagée avec la note)
     sim = None
