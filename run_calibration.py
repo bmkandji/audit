@@ -246,8 +246,9 @@ def build_section(cal, ref, cfg, sim):
     a(r"\midrule")
     for sheet, lbl in [("Action_EUR", "Euro"), ("Action_Monde", "Monde"), ("Action_emergent", "Émergent")]:
         regs = J["regimes_by_equity"][sheet]
+        reg2 = regs[1] if len(regs) >= 2 else regs[0]   # K*<2 : pas de 2e régime
         k = f"equities:{sheet}"
-        a(f"{lbl} & Calib.\\ (commun) & {_f(regs[0]['mu'])} & {_f(regs[0]['sigma'])} & {_f(regs[1]['mu'])} & {_f(regs[1]['sigma'])}\\\\")
+        a(f"{lbl} & Calib.\\ (commun) & {_f(regs[0]['mu'])} & {_f(regs[0]['sigma'])} & {_f(reg2['mu'])} & {_f(reg2['sigma'])}\\\\")
         a(f" & Réf.\\ (par actif) & {_f(ref[(k,'R1.mu')])} & {_f(ref[(k,'R1.sigma')])} & {_f(ref[(k,'R2.mu')])} & {_f(ref[(k,'R2.sigma')])}\\\\")
         a(r"\addlinespace")
     a(r"\bottomrule\end{tabularx}")
@@ -260,8 +261,9 @@ def build_section(cal, ref, cfg, sim):
 
     # ---------- R.8 corrélations ----------
     comps = cal.dependence["components"]
-    O1 = cal.dependence["regimes"]["reg1"].values
-    O2 = cal.dependence["regimes"]["reg2"].values
+    regs_dep = cal.dependence["regimes"]
+    O1 = regs_dep["reg1"].values
+    O2 = regs_dep.get("reg2", regs_dep["reg1"]).values   # K*<2 : matrice unique
     d = len(comps)
     M = np.where(np.triu(np.ones((d, d)), 1) > 0, O1, O2)
     np.fill_diagonal(M, 1.0)
@@ -369,8 +371,9 @@ def main():
         J = cal.regime.joint
         print(f"\nRégime latent COMMUN : K* = {J['K']} (BIC)  |  pi = {np.round(J['pi'],4)}")
         for nm, regs in J["regimes_by_equity"].items():
-            print(f"  {nm:16} R1 {regs[0]['mu']:.2f}/{regs[0]['sigma']:.2f}  "
-                  f"R2 {regs[1]['mu']:.2f}/{regs[1]['sigma']:.2f}")
+            cells = "  ".join(f"R{i+1} {r['mu']:.2f}/{r['sigma']:.2f}"
+                              for i, r in enumerate(regs))
+            print(f"  {nm:16} {cells}")
 
     # comparaison
     print("\n" + "=" * 78 + "\n COMPARAISON À LA RÉFÉRENCE (2026)\n" + "=" * 78)

@@ -96,8 +96,8 @@ Cascade séquentielle (IFM) :
 
 ## 7. Validation contre `Parametres_models.xlsx`
 
-|écart| médian ≈ **1,2 %** ; correspondances **exactes** où la méthodologie
-coïncide :
+|écart| médian ≈ **3,7 %** (≈ 2,8 % hors immobilier) ; correspondances
+**exactes** où la méthodologie coïncide :
 
 | Facteur | Résultat |
 |---|---|
@@ -105,8 +105,14 @@ coïncide :
 | Dette privée (BK) | κ **exact** ; μ à 1,5 % |
 | PE / Infra (BS) | μ **exacts**, σ à ≈0,2 %/0,9 % |
 | Taux réel (V2F) | μ **exact**, κ court à 1,6 % |
-| Actions Euro / Monde | régimes & transitions **< 1,5 %** |
+| Actions Euro | régime proche de la réf. (μ, σ à ≈1–8 %) |
+| Actions Monde / émergent | s'écartent (jusqu'à ≈30 %) : régime **commun** partagé |
 | Inflation `mu` (fixé) | **exact** (0 %) |
+
+> Le |écart| médian (≈ 3,7 %) est porté par deux familles d'écarts
+> **attendus et documentés** ci-dessous (V2F par cibles distributionnelles,
+> immobilier prix vs rendement total) et par le **partage du régime** des
+> actions. Les facteurs où la méthodologie coïncide sont exacts (0 %).
 
 ### Écarts attendus et leur cause (documentés)
 
@@ -120,10 +126,14 @@ coïncide :
 - **Dette privée σ** : même nature (la référence vise une dispersion
   stationnaire) ; l'EMV restitue la volatilité d'innovation. κ et μ
   concordent.
-- **Actions émergentes** : l'EMV de cet outil atteint une **vraisemblance
-  plus élevée** (−746,9 contre −754,5) que la solution de référence sur la
-  fenêtre 20 ans ; notre solution est donc l'estimateur du maximum de
-  vraisemblance correct (la référence est un optimum local sous-optimal).
+- **Actions Monde / émergentes** : sous le **régime latent commun**, les
+  caractéristiques par régime (μ, σ) de Monde et émergent s'écartent de la
+  référence *par actif* (jusqu'à ≈30 %). C'est l'effet **recherché** du
+  partage d'une **unique** chaîne de transition entre les trois actions
+  (entrée en stress simultanée), non un défaut de calage : la référence
+  calibre une chaîne distincte par actif. Euro, dominant dans la dynamique
+  commune, reste proche de la référence. Cf. note, tableau « Régimes :
+  moyennes et volatilités vs référence ».
 - **Immobilier** : la série fournie est un **indice de prix** (1000→943) ;
   la référence suppose un **rendement total** avec réinvestissement des
   loyers (μ≈5,6 %). Renseigner `income_yield` (et fournir l'indice de

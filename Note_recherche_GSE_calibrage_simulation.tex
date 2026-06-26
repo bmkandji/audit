@@ -271,7 +271,7 @@ X_{t+\Dt}=\Phi\,X_t+(I-\Phi)\,\mu_\infty+\eta_{t+\Dt},\quad \eta_{t+\Dt}\sim\Nca
 \Sigma_{\mathrm{cond}}=\!\int_0^{\Dt}\! e^{-Au}\Sigma_w e^{-A\transp u}\dd u.
 \]
 \end{definitionbox}
-\noindent La dérive $\Phi$ ne dépend que de $(\kappa_1,\kappa_2)$~; toute la dépendance de bruit est dans la matrice \emph{pleine} $\Sigma_{\mathrm{cond}}=\bigl(\begin{smallmatrix}V_r&C_{mr}\\ C_{mr}&V_m\end{smallmatrix}\bigr)$, de corrélation conditionnelle $\rho_c=C_{mr}/\sqrt{V_rV_m}$ (libre). De façon équivalente, $\Sigma_{\mathrm{cond}}=\Sigma_\infty-\Phi\,\Sigma_\infty\Phi\transp$ avec $\Sigma_\infty$ solution de $A\Sigma_\infty+\Sigma_\infty A\transp=\Sigma_w$ (équation de Lyapunov). En pratique, $\Sigma_{\mathrm{cond}}$ \emph{n'a pas à être développée}~: elle est estimée directement comme covariance des résidus (\S\ref{sec:closed}). Le schéma est sans biais quel que soit $\Dt$.
+\noindent La dérive $\Phi$ ne dépend que de $(\kappa_1,\kappa_2)$~; toute la dépendance de bruit est dans la matrice \emph{pleine} $\Sigma_{\mathrm{cond}}=\bigl(\begin{smallmatrix}V_r&C_{mr}\\ C_{mr}&V_m\end{smallmatrix}\bigr)$, de corrélation conditionnelle $\rho_c=C_{mr}/\sqrt{V_rV_m}$ (libre). En pratique, $\Sigma_{\mathrm{cond}}$ \emph{n'a pas à être développée}~: elle est estimée directement comme covariance des résidus (\S\ref{sec:closed}), et ce sont ses termes $(V_r,V_m,C_{mr})$ --- et non des volatilités structurelles --- qui pilotent résidus et simulation. Le schéma est sans biais quel que soit $\Dt$.
 
 \subsection{Taux réels --- Vasicek à deux facteurs (V2F)}
 \begin{definitionbox}
@@ -539,7 +539,7 @@ La discrétisation exacte (\S\ref{sec:v2f}) est un VAR(1) gaussien $Y_{t+\Dt}=c+
 (\hat c,\widehat\Phi)=\argmin_{c,\Phi}\sum_t\big\|Y_{t+\Dt}-c-\Phi Y_t\big\|^2,\qquad
 \widehat\Sigma_{\mathrm{cond}}=\frac1n\sum_t\hat\eta_{t+\Dt}\hat\eta_{t+\Dt}\transp=\begin{pmatrix}\hat V_r&\hat C_{mr}\\ \hat C_{mr}&\hat V_m\end{pmatrix},
 \]
-puis $\hat A=-\Dt^{-1}\log\widehat\Phi$ (logarithme matriciel) de valeurs propres $(\hat\kappa_1,\hat\kappa_2)$, $\hat\mu$ via $(\widehat\Phi,\hat c)$, et la corrélation conditionnelle \emph{estimée} $\hat\rho_c=\hat C_{mr}/\sqrt{\hat V_r\hat V_m}$. Les volatilités structurelles --- \emph{si requises} --- suivent de l'équation de Lyapunov~: $\widehat\Sigma_\infty$ résout $\widehat\Sigma_{\mathrm{cond}}=\widehat\Sigma_\infty-\widehat\Phi\,\widehat\Sigma_\infty\widehat\Phi\transp$, puis $\widehat\Sigma_w=\hat A\,\widehat\Sigma_\infty+\widehat\Sigma_\infty\hat A\transp$ donne $(\sigma_1^2,\sigma_2^2,\rho)$.
+puis les retours à la moyenne $\hat\kappa_i=-\Dt^{-1}\ln\widehat\Phi_{ii}$ (logarithmes scalaires des termes diagonaux de $\widehat\Phi$, triangulaire), $\hat\mu$ via $(\widehat\Phi,\hat c)$, et la corrélation conditionnelle \emph{estimée} $\hat\rho_c=\hat C_{mr}/\sqrt{\hat V_r\hat V_m}$. Calibrage et simulation n'emploient que la forme réduite $(\widehat\Phi,\hat c,\widehat\Sigma_{\mathrm{cond}})$. Les volatilités structurelles annualisées $(\sigma_1,\sigma_2)$, \emph{si reportées pour comparaison}, s'obtiennent par inversion OU \emph{par facteur} (facteur long~: OU scalaire~; facteur court~: net de la variance transmise par le facteur long), sans résoudre d'équation de Lyapunov.
 \end{definitionbox}
 \noindent Les quantités réduites $(\widehat\Phi,\hat c,\widehat\Sigma_{\mathrm{cond}})$ sont \emph{exactement} ce dont ont besoin les résidus PIT (\S\ref{sec:appli}) et la simulation~; aucune n'est contrainte (en particulier $\hat\rho_c$ est libre). Le facteur long étant autonome ($\Phi_{21}=0$ en population), on peut estimer $q^l$ seul puis $q^s$ sur $(1,q^s_t,q^l_t)$~: simplification \emph{consistante}.
 
@@ -553,8 +553,9 @@ La matrice pleine $\widehat\Omega(a)$ est donnée à l'Étape~3 (corrélation de
 Les log-rendements $x_t$ étant i.i.d.\ $\Ncal(m,v)$, l'EMV est
 \[
 \hat m=\tfrac1n\sum_t x_t,\qquad \hat v=\tfrac1n\sum_t(x_t-\hat m)^2,\qquad
-\hat\sigma=\sqrt{\hat v/\Dt},\qquad \hat\mu=\hat m/\Dt+\tfrac12\hat\sigma^2 .
+\hat\sigma=\sqrt{\hat v/\Dt},\qquad \hat\mu=\hat m/\Dt .
 \]
+En cadre \emph{monde réel}, la dérive retenue est la \emph{moyenne annualisée des log-rendements} $\hat\mu=\hat m/\Dt$~: le terme de convexité $\tfrac12\sigma^2$ n'est pas ajouté.
 
 \paragraph{(E) CIR --- initialisation fermée, EMV numérique.}
 La loi de transition étant un $\chi^2$ décentré, l'EMV n'a \emph{pas} de forme fermée. L'initialisation par schéma d'Euler l'est~: la régression sans constante
@@ -572,7 +573,7 @@ fournit le point de départ de la maximisation de $\sum_t\log f_{\mathrm{CIR}}$ 
 \toprule
 \textbf{Facteur / quantité} & \textbf{Forme fermée ?} & \textbf{Estimateur} \\
 \midrule
-V2F (infl., taux réels) & Oui ($=$ EMV exact) & MCO multivarié VAR(1) $+$ log matriciel ($\kappa_i$) $+$ Lyapunov ($\sigma_i,\rho$) \\
+V2F (infl., taux réels) & Oui ($=$ EMV exact) & MCO multivarié VAR(1) $+$ inversion OU par facteur ($\kappa_i,\sigma_i$)~; $\rho_c$ lue sur $\widehat\Sigma_{\mathrm{cond}}$ \\
 Black--Karasinski & Oui ($=$ EMV exact) & MCO scalaire $+$ inversion $(k,\theta,\sigma)$ \\
 BS (PE/immo/infra) & Oui & Moyenne/variance des log-rendements \\
 Hardy RSLN (actions) & Oui \emph{par itération} EM & Étape M pondérée fermée $+$ E-step récursif \\
@@ -674,10 +675,10 @@ s^{\mathrm{cr}}_{t+\Dt}=\tfrac{1}{2c_\chi}\,F^{-1}_{\chi'^2}\!\big(\Phi(\eps^{(\
 \subsection{Recette d'estimation complète (toutes les expressions littérales)}
 
 \begin{algobox}[Étape 1 --- Groupe A (marges, EMV exact)]
-\textbf{(a) V2F inflation.} \emph{Facteur long} ($q^l$, OU autonome), brique (A)~: $\hat\beta=\frac{\sum_t(q^l_t-\bar q^l_-)(q^l_{t+\Dt}-\bar q^l_+)}{\sum_t(q^l_t-\bar q^l_-)^2}$, $\hat\kappa^I_2=-\frac{\ln\hat\beta}{\Dt}$, $\hat\mu_l=\frac{\bar q^l_+-\hat\beta\bar q^l_-}{1-\hat\beta}$, résidus $\hat\xi^l$, $\hat V^I_m=\frac1n\sum_t\hat\xi^{l\,2}_{t+\Dt}$. \emph{Facteur court}~: MCO de $q^s_{t+\Dt}$ sur $(1,q^s_t,q^l_t)$ $\Rightarrow(\hat\Phi^I_{11},\hat\phi^I_{12},\hat c^I_s)$ et résidus $\hat\xi^s$, d'où $\hat\kappa^I_1=-\frac{\ln\hat\Phi^I_{11}}{\Dt}$, $\hat V^I_r=\frac1n\sum_t\hat\xi^{s\,2}_{t+\Dt}$ (les $\sigma^I_i,\rho^I$ par Lyapunov, (A bis), si requis).\\[2pt]
+\textbf{(a) V2F inflation.} \emph{Facteur long} ($q^l$, OU autonome), brique (A)~: $\hat\beta=\frac{\sum_t(q^l_t-\bar q^l_-)(q^l_{t+\Dt}-\bar q^l_+)}{\sum_t(q^l_t-\bar q^l_-)^2}$, $\hat\kappa^I_2=-\frac{\ln\hat\beta}{\Dt}$, $\hat\mu_l=\frac{\bar q^l_+-\hat\beta\bar q^l_-}{1-\hat\beta}$, résidus $\hat\xi^l$, $\hat V^I_m=\frac1n\sum_t\hat\xi^{l\,2}_{t+\Dt}$. \emph{Facteur court}~: MCO de $q^s_{t+\Dt}$ sur $(1,q^s_t,q^l_t)$ $\Rightarrow(\hat\Phi^I_{11},\hat\phi^I_{12},\hat c^I_s)$ et résidus $\hat\xi^s$, d'où $\hat\kappa^I_1=-\frac{\ln\hat\Phi^I_{11}}{\Dt}$, $\hat V^I_r=\frac1n\sum_t\hat\xi^{s\,2}_{t+\Dt}$ (les $\sigma^I_i$ par inversion OU par facteur, (A bis), si requis~; $\hat\rho^I_c$ lue sur $\widehat\Sigma^I_{\mathrm{cond}}$).\\[2pt]
 \textbf{(b) V2F taux réels.} Idem (a) sur $(l_t)$ puis $(r_t)$, donnant $(\hat\kappa^R_2,\hat\mu,\hat\kappa^R_1,\hat\Phi^R_{12},\hat V^R_m,\hat V^R_r)$.\\[2pt]
 \textbf{(c) BK dette privée.} Brique (A) sur $(y^{\mathrm{pd}}_t)$~: $(\hat k,\hat\theta^{p},\hat\sigma^{p})$.\\[2pt]
-\textbf{(d) BS PE/immo/infra.} $\hat m_j=\frac1n\sum_t x^j_t$, $\hat v_j=\frac1n\sum_t(x^j_t-\hat m_j)^2$, $\hat\sigma_j=\sqrt{\hat v_j/\Dt}$, $\hat\mu_j=\hat m_j/\Dt+\frac12\hat\sigma_j^2$.\\[2pt]
+\textbf{(d) BS PE/immo/infra.} $\hat m_j=\frac1n\sum_t x^j_t$, $\hat v_j=\frac1n\sum_t(x^j_t-\hat m_j)^2$, $\hat\sigma_j=\sqrt{\hat v_j/\Dt}$, $\hat\mu_j=\hat m_j/\Dt$ (dérive log-rendement, monde réel).\\[2pt]
 \textbf{(e) CIR crédit.} Init.\ Euler fermée ($\hat\kappa^{c}=-\hat c_2/\Dt$, $\hat\theta^{c}=-\hat c_1/\hat c_2$, $(\hat\sigma^{c})^2=\widehat\Var(\eta)/\Dt$) puis EMV $\chi^2$ décentré numérique.\\[2pt]
 \textbf{(f) Résidus PIT.} Calculer $\widehat\eps^{(i)}$ pour tout $i\in A$ (\S\ref{sec:residus})~; aucune corrélation à ce stade.
 \end{algobox}
@@ -810,14 +811,14 @@ Puis $\hat k=-\ln\hat\beta/\Dt$, résidus $\widehat\xi_{t+\Dt}=y_{t+\Dt}-\hat\be
 \item \emph{Moyenne libre}~: MCO multivarié \emph{avec constante} de $X_{t+\Dt}=(q^s_{t+\Dt},q^l_{t+\Dt})$ sur $(1,q^s_t,q^l_t)$ $\Rightarrow\widehat\Phi,\hat c,\widehat\Sigma_{\mathrm{cond}}$ (covariance résiduelle).
 \item \emph{Moyenne fixée $\mu_\infty^0=(\mu^0,\mu^0)$}~: MCO \emph{sans constante} de $(X_{t+\Dt}-\mu_\infty^0)$ sur $(X_t-\mu_\infty^0)$ $\Rightarrow\widehat\Phi$~; $\hat c=(I-\widehat\Phi)\mu_\infty^0$~; $\widehat\Sigma_{\mathrm{cond}}$ = covariance résiduelle.
 \end{itemize}
-Puis $\hat A=-\Dt^{-1}\log\widehat\Phi$ (valeurs propres $\hat\kappa_1,\hat\kappa_2$), $(V_r,V_m)=\diag(\widehat\Sigma_{\mathrm{cond}})$. Fixer un $\kappa_i$ ou une volatilité~: profiler la vraisemblance gaussienne sur les paramètres libres (initialisée par le cas libre, via Lyapunov pour $\sigma_i,\rho$).
+Puis $\hat\kappa_i=-\Dt^{-1}\ln\widehat\Phi_{ii}$ (termes diagonaux de $\widehat\Phi$, triangulaire), $(V_r,V_m)=\diag(\widehat\Sigma_{\mathrm{cond}})$. Fixer un $\kappa_i$ ou une volatilité~: profiler la vraisemblance gaussienne sur les paramètres libres (initialisée par le cas libre).
 \end{definitionbox}
 
-\paragraph{\textsc{FitBS}$(x;\mathcal F)$.} $\hat m=\frac1n\sum x_t$, $\hat v=\frac1n\sum(x_t-\hat m)^2$~; $\hat\sigma=\sqrt{\hat v/\Dt}$, $\hat\mu=\hat m/\Dt+\frac12\hat\sigma^2$. Si $\mu$ (resp.\ $\sigma$) $\in\mathcal F$, ne pas l'estimer et déduire l'autre du moment correspondant.
+\paragraph{\textsc{FitBS}$(x;\mathcal F)$.} $\hat m=\frac1n\sum x_t$, $\hat v=\frac1n\sum(x_t-\hat m)^2$~; $\hat\sigma=\sqrt{\hat v/\Dt}$, $\hat\mu=\hat m/\Dt$ (dérive log-rendement, monde réel). Si $\mu$ (resp.\ $\sigma$) $\in\mathcal F$, ne pas l'estimer et déduire l'autre du moment correspondant.
 
 \paragraph{\textsc{FitCIR}$(s;\mathcal F)$.} Initialisation Euler fermée ($\hat\kappa=-\hat c_2/\Dt$, $\hat\theta=-\hat c_1/\hat c_2$, $(\hat\sigma)^2=\widehat\Var(\eta)/\Dt$), puis EMV $\chi^2$ décentré \emph{profilé} sur les paramètres libres de $\mathcal F$.
 
-\paragraph{\textsc{FitGroupB-EM}$(X^B,K;\mathcal F)$.} EM (Hamilton $+$ Kim, \S\ref{sec:calib}). À l'étape M, ne mettre à jour que les paramètres \emph{libres}~; les $m_a,v_a,p_{ab}$ listés dans $\mathcal F$ restent à leur valeur. Imposer $v_a\ge\underline v$ et ordonner les régimes par volatilité croissante (anti-\emph{label switching}). Renvoyer $\ell^\star(K),\hat P,\hat\pi,\{m^j_a,v^j_a\},\hat\xi_t(a)$ et les résidus $\widehat\eps^B$.
+\paragraph{\textsc{FitGroupB-EM}$(X^B,K;\mathcal F)$.} EM (Hamilton $+$ Kim, \S\ref{sec:calib}). À l'étape M, ne mettre à jour que les paramètres \emph{libres}~; les $m_a,v_a,p_{ab}$ listés dans $\mathcal F$ restent à leur valeur. Imposer $v_a\ge\underline v$ et ordonner les régimes par volatilité décroissante (régime~1 = forte volatilité = stress~; anti-\emph{label switching}). Renvoyer $\ell^\star(K),\hat P,\hat\pi,\{m^j_a,v^j_a\},\hat\xi_t(a)$ et les résidus $\widehat\eps^B$.
 
 \subsection{Estimation de la dépendance à sensibilité réglable (O2)}
 \begin{algobox}[\textsc{EstimateDependence}$(\widehat\eps,\hat\xi,S)$]
@@ -835,7 +836,7 @@ puis projeter~: $\Omega^{\mathrm{SDP}}(a)=\textsc{NearestCorr}(\widehat\Omega(a)
 
 \subsection{Détails numériques et garde-fous}
 \begin{itemize}[nosep]
-\item \textbf{Logarithme matriciel} ($\hat A=-\Dt^{-1}\log\widehat\Phi$)~: via décomposition de Schur réelle~; exiger les valeurs propres de $\widehat\Phi$ dans $(0,1)$ (stabilité)~; sinon contraindre/retirer la composante instable.
+\item \textbf{Retours à la moyenne du V2F}~: $\hat\kappa_i=-\Dt^{-1}\ln\widehat\Phi_{ii}$ sur les termes diagonaux de $\widehat\Phi$ (triangulaire)~; exiger $\widehat\Phi_{ii}\in(0,1)$ (stabilité)~; sinon contraindre/retirer la composante instable.
 \item \textbf{\textsc{NearestCorr}}~: projections alternées de Higham (symétrisation, diagonale unité, troncature SDP du spectre) jusqu'à tolérance~; appliquée \emph{par régime}.
 \item \textbf{CIR}~: PIT $\widehat\eps^{(\mathrm{cr})}=\Phi^{-1}\!\big(F_{\chi'^2}(2c_\chi s_{t+\Dt};\nu,\lambda)\big)$ et inverse-PIT par le quantile $\chi'^2$~; vérifier $\sigma^2\le4\kappa\theta$ (Alfonsi) et $1-\tfrac{\kappa}{2}\Dt>0$.
 \item \textbf{Cohérence options}~: $\mathcal F$ et $S$ s'appliquent \emph{identiquement} à l'estimation, aux résidus et à la simulation, garantissant une seule loi par régime de bout en bout.
