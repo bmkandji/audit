@@ -185,10 +185,19 @@ def fit_bs(pre: Preprocessed, spec: dict, dt: float) -> FitResult:
     mu_ann = 12.0 * m_month + income
     sig_ann = s_month * np.sqrt(12.0)
 
+    # diagnostics de déslissage (smoothing)
+    sigma_raw = float(pre.data["ret_raw"].std(ddof=0) * np.sqrt(12.0))
+    has_uns = "ret_unsmoothed" in pre.data
+    sigma_uns = float(pre.data["ret_unsmoothed"].std(ddof=0) * np.sqrt(12.0)) if has_uns else np.nan
+    b = float(pre.meta.get("ar1_b", np.nan))
+    var_infl = (sigma_uns / sigma_raw) ** 2 if has_uns else np.nan
+
     eps = ((r_vol - r_vol.mean()) / s_month)
     resid = pd.DataFrame({pre.name: eps.values}, index=r_vol.index)
 
-    params = dict(mu=mu_ann, sigma=sig_ann, ar1_b=pre.meta.get("ar1_b", np.nan))
+    params = dict(mu=mu_ann, sigma=sig_ann, ar1_b=b, income_yield=income,
+                  sigma_raw=sigma_raw, sigma_unsmoothed=sigma_uns,
+                  var_inflation=var_infl)
     sim = dict(kind="BS", m_month=m_month + income / 12.0, s_month=s_month,
                x0=None)
     return FitResult(pre.name, "BS", params, resid, sim, [pre.name])
