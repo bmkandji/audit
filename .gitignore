@@ -3,6 +3,7 @@ outputs/
 *.npy
 
 # Artefacts LaTeX
+*.pdf
 *.aux
 *.log
 *.out
