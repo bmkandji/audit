@@ -61,9 +61,12 @@ def _calibrated_value(cal, factor, param):
     if factor.startswith("equities:"):
         sheet = factor.split(":", 1)[1]
         regs = cal.regime.joint["regimes_by_equity"][sheet]   # régime COMMUN
-        if param.startswith("R1."):
+        # La référence ne décrit que 2 régimes (R1 = stress, R2 = normal) ;
+        # la chaîne commune peut en compter K* != 2. On compare les régimes
+        # disponibles et on renvoie NaN au-delà (pas d'IndexError).
+        if param.startswith("R1.") and len(regs) >= 1:
             return regs[0][param[3:]]
-        if param.startswith("R2."):
+        if param.startswith("R2.") and len(regs) >= 2:
             return regs[1][param[3:]]
         return np.nan
     fr = cal.margins.get(factor)

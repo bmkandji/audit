@@ -10,7 +10,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
-from scipy.linalg import logm
 from scipy.optimize import minimize
 from scipy.stats import norm, ncx2
 
