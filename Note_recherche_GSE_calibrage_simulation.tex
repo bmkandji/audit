@@ -226,13 +226,13 @@ Une fois discrétisée, toute EDS du GSE devient une récurrence autorégressive
 \section{Notations}
 \label{sec:notations}
 % =====================================================================
-Le pas est mensuel, $\Dt=1/12$, sur $n\approx240$ observations. Les facteurs sont indexés par $i$ et les régimes par $a,b\in\{1,\dots,K\}$. L'état global $Y_t\in\R^{d}$ ($d=\sum_i d_i=12$) empile les états $Y^{(i)}_t\in\R^{d_i}$ ($d_i=2$ pour un Vasicek bi-factoriel, $1$ sinon)~; $D=3$ actifs portent le régime.
+Le pas est mensuel, $\Dt=1/12$, et les facteurs sont observés aux dates $t_k=k\Dt$ ($k=0,\dots,n$, avec $n\approx240$), de trajectoire $Y_{0:n}=(Y_{t_0},\dots,Y_{t_n})$. Les facteurs sont indexés par $i$ et les régimes par $a,b\in\{1,\dots,K\}$. L'état global $Y_t\in\R^{d}$ ($d=\sum_i d_i=12$) empile les états $Y^{(i)}_t\in\R^{d_i}$ ($d_i=2$ pour un Vasicek bi-factoriel, $1$ sinon)~; $D=3$ actifs portent le régime.
 
 Le régime $\Ecal_t\in\{1,\dots,K\}$ suit une chaîne de Markov de transition $p_{ab}=\Prob(\Ecal_{t+\Dt}=b\mid\Ecal_t=a)$, $P=(p_{ab})$, et de loi invariante $\pi$ solution de $\pi\transp P=\pi\transp$, $\sum_a\pi_a=1$.
 
 Les innovations $\eps_{t+\Dt}\in\R^d$ sont standardisées ($\Ncal(0,1)$ par composante) et corrélées par $\Omega(\Ecal_t)$~: $\eps_{t+\Dt}=L(\Ecal_t)z_{t+\Dt}$ avec $z_{t+\Dt}\sim\Ncal(0,I_d)$ et $L(a)L(a)\transp=\Omega(a)$. La récurrence du facteur $i$ s'écrit $Y^{(i)}_{t+\Dt}=\Phi_i\,Y^{(i)}_t+c_i+D_i\,\eps^{(i)}_{t+\Dt}$, de matrice autorégressive $\Phi_i$, constante $c_i$ et échelle $D_i$ (\S\ref{sec:ar}).
 
-On note $\Phi$ et $\varphi$ la f.d.r.\ et la densité de $\Ncal(0,1)$, $\varphi_p(\cdot;m,V)$ la densité $\Ncal(m,V)$ en dimension $p$, $F_{\chi'^2}(\cdot;\nu,\lambda)$ la f.d.r.\ du $\chi^2$ décentré, et $f_i$ (resp.\ $F_i$) la densité (resp.\ f.d.r.) de transition exacte du facteur $i$~; $\hat\theta$ désigne les paramètres estimés et $\ell$ la log-vraisemblance. Les paramètres et quantités propres à chaque facteur sont définis avec son modèle (\S\ref{sec:facteurs}) et sa procédure d'estimation (\S\ref{sec:calib}).
+On note $\Phi$ et $\varphi$ la f.d.r.\ et la densité de $\Ncal(0,1)$, $\varphi_p(\cdot;m,V)$ la densité $\Ncal(m,V)$ en dimension $p$, $F_{\chi'^2}(\cdot;\nu,\lambda)$ la f.d.r.\ du $\chi^2$ décentré, et $f_i(\cdot\mid Y^{(i)}_t,\Ecal_t;\theta)$ (resp.\ $F_i$) la densité (resp.\ f.d.r.) de transition exacte du facteur $i$, c.-à-d.\ $F_i(y\mid Y^{(i)}_t,\Ecal_t)=\Prob\big(Y^{(i)}_{t+\Dt}\le y\mid Y^{(i)}_t,\Ecal_t\big)$~; $\hat\theta$ désigne les paramètres estimés et $\ell$ la log-vraisemblance. Les paramètres et quantités propres à chaque facteur sont définis avec son modèle (\S\ref{sec:facteurs}) et sa procédure d'estimation (\S\ref{sec:calib}).
 
 % =====================================================================
 \section{Modèles de diffusion et discrétisation}
@@ -247,7 +247,7 @@ Un facteur court $q^s_t$ revient vers un facteur long stochastique $q^l_t$, qui 
 \dd q^s_t=\kappa_1(q^l_t-q^s_t)\dd t+\sigma_1\dd W^1_t,\qquad
 \dd q^l_t=\kappa_2(\mu-q^l_t)\dd t+\sigma_2\dd W^2_t,\quad \dd\langle W^1,W^2\rangle=\rho\,\dd t .
 \]
-En posant $X_t=(q^s_t,q^l_t)\transp$, $A=\bigl(\begin{smallmatrix}\kappa_1&-\kappa_1\\0&\kappa_2\end{smallmatrix}\bigr)$ et $\Sigma_w=\bigl(\begin{smallmatrix}\sigma_1^2&\rho\sigma_1\sigma_2\\\rho\sigma_1\sigma_2&\sigma_2^2\end{smallmatrix}\bigr)$, le système s'écrit $\dd X_t=A(\mu_\infty-X_t)\dd t+\Sigma_w^{1/2}\dd W_t$ avec $\mu_\infty=(\mu,\mu)\transp$. Sa loi de transition est gaussienne et exacte~:
+En posant $X_t=(q^s_t,q^l_t)\transp$, $A=\bigl(\begin{smallmatrix}\kappa_1&-\kappa_1\\0&\kappa_2\end{smallmatrix}\bigr)$ et $\Sigma_w=\bigl(\begin{smallmatrix}\sigma_1^2&\rho\sigma_1\sigma_2\\\rho\sigma_1\sigma_2&\sigma_2^2\end{smallmatrix}\bigr)$, le système s'écrit $\dd X_t=A(\mu_\infty-X_t)\dd t+\Sigma_w^{1/2}\dd W_t$ avec $\mu_\infty=(\mu,\mu)\transp$. Sa loi de transition conditionnelle est gaussienne exacte, $X_{t+\Dt}\mid X_t\sim\Ncal\big(\Phi X_t+(I-\Phi)\mu_\infty,\ \Sigma_{\mathrm{cond}}\big)$, soit~:
 \begin{definitionbox}
 \[
 X_{t+\Dt}=\Phi X_t+(I-\Phi)\mu_\infty+\eta_{t+\Dt},\qquad \eta_{t+\Dt}\sim\Ncal(0,\Sigma_{\mathrm{cond}}),
@@ -263,17 +263,17 @@ Le spread $s_t$ suit une diffusion à racine carrée, $\dd s_t=\kappa(\theta-s_t
 \]
 
 \subsection{Dette privée : log-Vasicek (Black--Karasinski)}
-Le logarithme du spread suit un Ornstein--Uhlenbeck, $\dd\ln s_t=k(\theta-\ln s_t)\dd t+\sigma\dd W_t$, ce qui maintient le spread strictement positif. La discrétisation est gaussienne et exacte~:
+Le logarithme du spread suit un Ornstein--Uhlenbeck, $\dd\ln s_t=k(\theta-\ln s_t)\dd t+\sigma\dd W_t$, ce qui maintient le spread strictement positif. La loi de transition conditionnelle est gaussienne exacte, $y_{t+\Dt}\mid y_t\sim\Ncal\big(e^{-k\Dt}y_t+\theta(1-e^{-k\Dt}),\ \tfrac{\sigma^2}{2k}(1-e^{-2k\Dt})\big)$, soit~:
 \[
 y_{t+\Dt}=e^{-k\Dt}y_t+\theta(1-e^{-k\Dt})+\sigma\sqrt{\tfrac{1-e^{-2k\Dt}}{2k}}\,\eps_{t+\Dt},\qquad y=\ln s,\ \eps\sim\Ncal(0,1),
 \]
 de loi stationnaire $\ln s_\infty\sim\Ncal(\theta,\sigma^2/2k)$.
 
 \subsection{Actions cotées : changement de régime de Hardy (RSLN-2)}
-Conditionnellement au régime $\Ecal_t$, les rendements suivent un Black--Scholes, $\dd S_t/S_t=\mu_{\Ecal_t}\dd t+\sigma_{\Ecal_t}\dd W_t$. Le log-rendement se discrétise alors exactement par $x_{t+\Dt}=m_{\Ecal_t}+\sqrt{v_{\Ecal_t}}\,\eps_{t+\Dt}$, avec $m_a=(\mu_a-\tfrac{\sigma_a^2}{2})\Dt$ et $v_a=\sigma_a^2\Dt$. C'est le seul facteur dont les coefficients de marge dépendent du régime.
+Conditionnellement au régime $\Ecal_t$, les rendements suivent un Black--Scholes, $\dd S_t/S_t=\mu_{\Ecal_t}\dd t+\sigma_{\Ecal_t}\dd W_t$. Le log-rendement se discrétise alors exactement, de loi conditionnelle au régime $x_{t+\Dt}\mid\{\Ecal_t=a\}\sim\Ncal(m_a,v_a)$, soit $x_{t+\Dt}=m_{\Ecal_t}+\sqrt{v_{\Ecal_t}}\,\eps_{t+\Dt}$ avec $m_a=(\mu_a-\tfrac{\sigma_a^2}{2})\Dt$ et $v_a=\sigma_a^2\Dt$. C'est le seul facteur dont les coefficients de marge dépendent du régime.
 
 \subsection{Actifs à valorisation espacée (PE, immobilier, infrastructure) : Black--Scholes}
-Après déslissage, les rendements suivent un Black--Scholes à coefficients constants, dont le log-rendement se discrétise exactement par $x_{t+\Dt}=m+\sqrt{v}\,\eps_{t+\Dt}$, avec $m=(\mu-\tfrac{\sigma^2}{2})\Dt$ et $v=\sigma^2\Dt$. Les log-rendements sont alors indépendants et gaussiens. Ces facteurs peuvent être promus au Groupe~B (régime propre) si les données le justifient (\S\ref{sec:msvar}).
+Après déslissage, les rendements suivent un Black--Scholes à coefficients constants, dont le log-rendement se discrétise exactement par $x_{t+\Dt}=m+\sqrt{v}\,\eps_{t+\Dt}$, avec $m=\mu\Dt$ et $v=\sigma^2\Dt$, où $\mu$ est la dérive en log annualisée (monde réel, sans correction de convexité). Les log-rendements sont alors indépendants et gaussiens. Ces facteurs peuvent être promus au Groupe~B (régime propre) si les données le justifient (\S\ref{sec:msvar}).
 
 \begin{table}[H]
 \centering\small\renewcommand{\arraystretch}{1.25}\setlength{\tabcolsep}{6pt}
@@ -315,7 +315,7 @@ V2F & VAR(1) gaussien $2{\times}2$ & $\Phi=e^{-A\Dt}$, $D=\diag(\sqrt{V_r},\sqrt
 Black--Karasinski & AR(1) sur $y=\ln s$ & $\Phi=e^{-k\Dt}$, $c=\theta(1-e^{-k\Dt})$, $D=\sigma\sqrt{\tfrac{1-e^{-2k\Dt}}{2k}}$ & A\\
 CIR & AR « racine carrée » non linéaire & $\sqrt{\bar s_{t+\Dt}}\approx|a\sqrt{\bar s_t}+b\,\Dt W|$, bruit gaussien & A\\
 Hardy RSLN-2 & AR(0) par régime & $\Phi=0$, $c(\Ecal)=m_\Ecal$, $D(\Ecal)=\sqrt{v_\Ecal}$ & B\\
-BS déslissé & AR(0) gaussien & $\Phi=0$, $c=(\mu-\tfrac{\sigma^2}{2})\Dt$, $D=\sigma\sqrt{\Dt}$ & A$^{(\dagger)}$\\
+BS déslissé & AR(0) gaussien & $\Phi=0$, $c=\mu\Dt$, $D=\sigma\sqrt{\Dt}$ & A$^{(\dagger)}$\\
 \bottomrule
 \end{tabularx}
 \caption{Mise sous forme AR de chaque facteur, où $(V_r,V_m)=\diag(\Sigma_{\mathrm{cond}})$ pour le V2F. Le symbole $^{(\dagger)}$ rappelle qu'un BS est promouvable au Groupe~B. Le CIR n'étant pas affine en $s$, sa récurrence est non linéaire mais son bruit reste gaussien~; $\rho_c$ et toutes les corrélations croisées résident dans $\Omega(\Ecal_t)$.}
@@ -331,7 +331,7 @@ Pour traiter de façon homogène les facteurs gaussiens et non gaussiens et pour
 \[
 \widehat\eps^{(j)}_{t+\Dt}=\Phi^{-1}\big(F_j(Y^{(j)}_{t+\Dt}\mid Y_t,\Ecal_t;\hat\theta)\big),
 \]
-où $F_j$ est la fonction de répartition conditionnelle marginale de la composante $j$. Sous bonne spécification, $\widehat\eps^{(j)}$ est i.i.d.\ $\Ncal(0,1)$.
+où $F_j(y\mid Y_t,\Ecal_t)=\Prob\big(Y^{(j)}_{t+\Dt}\le y\mid Y_t,\Ecal_t\big)$ est la f.d.r.\ conditionnelle marginale de la composante $j$. Sous bonne spécification, $\widehat\eps^{(j)}$ est i.i.d.\ $\Ncal(0,1)$.
 \end{definitionbox}
 \noindent Pour une composante gaussienne (V2F, BK, BS, ou Hardy conditionnellement au régime), cette transformation se réduit à une division par l'écart-type conditionnel~; nous ne blanchissons pas le bloc, de sorte que les corrélations conditionnelles, dont $\rho_c$ du V2F, restent portées par $\Omega$. Pour le CIR, $F_j$ est la f.d.r.\ du $\chi^2$ décentré.
 
@@ -385,14 +385,27 @@ où $\Theta_i$ est le domaine admissible des paramètres ($\kappa>0$, $\sigma>0$
 Pour chaque facteur $i\in A$, nous estimons $\hat\theta_i$ par la méthode retenue (\S\ref{sec:closed}), puis nous en déduisons les résidus PIT $\widehat\eps^{(i)}$. La propriété IFM garantit la consistance de ces marges indépendamment de la dépendance croisée.
 
 \subsection{Étape 2 --- régime commun par EM}
-Les actions partageant un même régime de marché caché $\Ecal_t$, nous les estimons conjointement par l'algorithme EM, qui alterne jusqu'à convergence deux pas~: le pas E calcule la probabilité d'occuper chaque régime à chaque date, et le pas M met à jour les moyennes, les volatilités et les transitions pondérées par ces probabilités.
+Les actions (Groupe~B) partagent un même régime caché $\Ecal_t\in\{1,\dots,K\}$. À chaque date $t=1,\dots,n$ nous observons leur vecteur de log-rendements $x_t\in\R^{D}$~; nous notons $x_{1:n}=(x_1,\dots,x_n)$ la séquence observée et $x_{1:t}=(x_1,\dots,x_t)$ son préfixe jusqu'à $t$. Conditionnellement au régime, l'émission est gaussienne, de densité conditionnelle
+\[
+f_a(x)=\varphi_D(x;m_a,V_a),\qquad f_a(x)\,\dd x=\Prob\!\big(x_t\in[x,x+\dd x]\mid\Ecal_t=a\big).
+\]
+Nous estimons $(m_a,V_a)_{a}$, $P$ et $\pi$ par l'algorithme EM, qui alterne un pas~E (probabilités de régime) et un pas~M (paramètres). Le pas~E met en jeu quatre probabilités conditionnelles, que nous définissons avant de les calculer~:
+\[
+\xi_{t\mid t-1}(a)=\Prob(\Ecal_t=a\mid x_{1:t-1}),\qquad
+\xi_{t\mid t}(a)=\Prob(\Ecal_t=a\mid x_{1:t}),
+\]
+\[
+\hat\xi_t(a)=\Prob(\Ecal_t=a\mid x_{1:n}),\qquad
+\hat\xi_t(a,b)=\Prob(\Ecal_t=a,\,\Ecal_{t+1}=b\mid x_{1:n}),
+\]
+respectivement \emph{prédite} (au vu du passé strict), \emph{filtrée} (au vu du passé), \emph{lissée} et \emph{jointe lissée} (au vu de tout l'échantillon).
 
-\paragraph{Pas E.} Le pas E enchaîne un filtre vers l'avant et un lisseur vers l'arrière. Le \emph{filtre de Hamilton}, initialisé par $\hat\pi$, propage de proche en proche la probabilité de régime au vu du passé, à partir de la densité d'émission $f_a(x_t)=\varphi_p(x_t;m_a,V_a)$~:
+\paragraph{Pas E.} Le \emph{filtre de Hamilton}, initialisé par $\xi_{1\mid0}=\hat\pi$, calcule par récurrence avant la probabilité prédite puis la filtrée~:
 \[
 \xi_{t\mid t-1}(a)=\sum_b\xi_{t-1\mid t-1}(b)\,p_{ba},\qquad
 \xi_{t\mid t}(a)=\frac{\xi_{t\mid t-1}(a)\,f_a(x_t)}{\sum_{a'}\xi_{t\mid t-1}(a')\,f_{a'}(x_t)},
 \]
-et fournit au passage la log-vraisemblance $\ell=\sum_t\log\!\big(\sum_a\xi_{t\mid t-1}(a)\,f_a(x_t)\big)$. Le \emph{lisseur de Kim} révise ensuite ces probabilités à la lumière du futur~:
+et fournit au passage la log-vraisemblance $\ell=\sum_t\log\!\big(\sum_a\xi_{t\mid t-1}(a)\,f_a(x_t)\big)$. Le \emph{lisseur de Kim}, initialisé par $\hat\xi_n=\xi_{n\mid n}$, parcourt ensuite les dates à rebours et en déduit les probabilités lissées~:
 \[
 \hat\xi_t(a)=\sum_b\hat\xi_{t+1}(b)\,\frac{\xi_{t\mid t}(a)\,p_{ab}}{\xi_{t+1\mid t}(b)},\qquad
 \hat\xi_t(a,b)=\hat\xi_{t+1}(b)\,\frac{\xi_{t\mid t}(a)\,p_{ab}}{\xi_{t+1\mid t}(b)}.
@@ -408,7 +421,7 @@ La covariance $\hat V_a$ est pleine, ce qui revient à estimer sans contrainte l
 
 \subsection{Étape 3 --- dépendance par régime}
 \label{sec:etape3}
-Une fois les marges figées, nous mesurons la corrélation des résidus séparément dans chaque régime, nous la stabilisons par rétrécissement, puis nous la rendons définie-positive afin de pouvoir simuler. Plus précisément, en notant $\widehat\eps_t$ le vecteur complet des résidus standardisés, la corrélation pondérée par les probabilités de régime maximise, à marges fixées, la log-vraisemblance de la copule gaussienne~:
+Une fois les marges figées, nous mesurons la corrélation des résidus séparément dans chaque régime, nous la stabilisons par rétrécissement, puis nous la rendons définie-positive afin de pouvoir simuler. En notant $\widehat\eps_t\in\R^d$ le vecteur complet des résidus standardisés, la cible est la corrélation conditionnelle au régime, $\Omega(a)=\E\big[\widehat\eps_{t+\Dt}\widehat\eps_{t+\Dt}\transp\mid\Ecal_t=a\big]$ (une matrice de corrélation, les marges étant $\Ncal(0,1)$). À marges fixées, son estimateur du maximum de vraisemblance de la copule gaussienne est la moyenne empirique pondérée par les probabilités lissées $\hat\xi_t(a)$~:
 \begin{definitionbox}
 \[
 \widehat\Omega(a)=\frac{\sum_t\hat\xi_t(a)\,\widehat\eps_t\widehat\eps_t\transp}{\sum_t\hat\xi_t(a)},\qquad a=1,\dots,K^\star .
@@ -530,7 +543,7 @@ Y_t=\big(\underbrace{q^s,q^l}_{\text{infl.}},\underbrace{r,l}_{\text{taux réels
 les composantes $1$ à $9$ formant le Groupe~A (marges constantes) et les composantes $10$ à $12$ le Groupe~B (marges par régime), toutes pilotées par la même chaîne $\Ecal_t$.
 
 \subsection{Blocs autorégressifs}
-Chaque facteur se propage par sa carte propre. Pour le V2F (avec $\phi^I_{12}=\tfrac{\kappa^I_1}{\kappa^I_1-\kappa^I_2}(e^{-\kappa^I_2\Dt}-e^{-\kappa^I_1\Dt})$), on a $\Phi^I=\bigl(\begin{smallmatrix}e^{-\kappa^I_1\Dt}&\phi^I_{12}\\0&e^{-\kappa^I_2\Dt}\end{smallmatrix}\bigr)$, $c^I=(I-\Phi^I)(\mu,\mu)\transp$ et $D=\diag(\sqrt{V^I_r},\sqrt{V^I_m})$. Pour le Black--Karasinski, $\Phi=e^{-k\Dt}$, $c=\theta^p(1-e^{-k\Dt})$ et $D=\sigma^p\sqrt{\tfrac{1-e^{-2k\Dt}}{2k}}$. Pour les facteurs Black--Scholes, $\Phi=0$, $c=(\mu_j-\tfrac{\sigma_j^2}{2})\Dt$ et $D=\sigma_j\sqrt\Dt$, et pour les facteurs Hardy, $\Phi=0$, $c(a)=m^j_a$ et $D(a)=\sqrt{v^j_a}$. Le CIR, non linéaire, se propage par sa carte d'inverse-PIT (avec $c_\chi=\tfrac{2\kappa^c}{(\sigma^c)^2(1-e^{-\kappa^c\Dt})}$, $\nu=\tfrac{4\kappa^c\theta^c}{(\sigma^c)^2}$ et $\lambda=2c_\chi s^{\mathrm{cr}}_te^{-\kappa^c\Dt}$). Le modèle agrégé s'écrit alors $Y_{t+\Dt}=c(\Ecal_t)+\Phi(\Ecal_t)Y_t+D(\Ecal_t)\eps_{t+\Dt}$ avec $\eps_{t+\Dt}\sim\Ncal(0,\Omega^{\mathrm{SDP}}(\Ecal_t))$, seules les composantes Hardy dépendant de $\Ecal_t$ et toute la dépendance résidant dans $\Omega^{\mathrm{SDP}}(\Ecal_t)$.
+Chaque facteur se propage par sa carte propre. Pour le V2F (avec $\phi^I_{12}=\tfrac{\kappa^I_1}{\kappa^I_1-\kappa^I_2}(e^{-\kappa^I_2\Dt}-e^{-\kappa^I_1\Dt})$), on a $\Phi^I=\bigl(\begin{smallmatrix}e^{-\kappa^I_1\Dt}&\phi^I_{12}\\0&e^{-\kappa^I_2\Dt}\end{smallmatrix}\bigr)$, $c^I=(I-\Phi^I)(\mu,\mu)\transp$ et $D=\diag(\sqrt{V^I_r},\sqrt{V^I_m})$. Pour le Black--Karasinski, $\Phi=e^{-k\Dt}$, $c=\theta^p(1-e^{-k\Dt})$ et $D=\sigma^p\sqrt{\tfrac{1-e^{-2k\Dt}}{2k}}$. Pour les facteurs Black--Scholes, $\Phi=0$, $c=\mu_j\Dt$ et $D=\sigma_j\sqrt\Dt$, et pour les facteurs Hardy, $\Phi=0$, $c(a)=m^j_a$ et $D(a)=\sqrt{v^j_a}$. Le CIR, non linéaire, se propage par sa carte d'inverse-PIT (avec $c_\chi=\tfrac{2\kappa^c}{(\sigma^c)^2(1-e^{-\kappa^c\Dt})}$, $\nu=\tfrac{4\kappa^c\theta^c}{(\sigma^c)^2}$ et $\lambda=2c_\chi s^{\mathrm{cr}}_te^{-\kappa^c\Dt}$). Le modèle agrégé s'écrit alors $Y_{t+\Dt}=c(\Ecal_t)+\Phi(\Ecal_t)Y_t+D(\Ecal_t)\eps_{t+\Dt}$ avec $\eps_{t+\Dt}\sim\Ncal(0,\Omega^{\mathrm{SDP}}(\Ecal_t))$, seules les composantes Hardy dépendant de $\Ecal_t$ et toute la dépendance résidant dans $\Omega^{\mathrm{SDP}}(\Ecal_t)$.
 
 \subsection{Résidus standardisés}
 \label{sec:residus}
