@@ -388,10 +388,6 @@ Chaque facteur possède une densité de transition exacte (Tableau~\ref{tab:disc
 \]
 $\Theta_i$ étant le domaine \emph{admissible} ($\kappa>0$, $\sigma>0$, stationnarité). C'est l'estimateur \emph{par défaut} (efficient, borne de Cramér--Rao). Mais le cadre est \textbf{général}~: selon le facteur, plusieurs méthodes coexistent et sont \emph{sélectionnables} --- EMV, moindres carrés ordinaires (MCO) / régression, appariement de moments, ou \emph{cibles distributionnelles}.
 
-\begin{insightbox}[L'EMV n'est \emph{pas} le MCO]
-Pour une marge gaussienne à discrétisation exacte, le MCO de la récurrence $y_{t+\Dt}=\beta y_t+c+\xi$ \emph{coïncide} avec l'EMV \textbf{tant que l'estimateur reste dans le domaine admissible}. Mais le MCO ne contraint pas $\beta$~: rien n'empêche $\hat\beta\le0$ (et alors $\hat\kappa=-\ln\hat\beta/\Dt$ \emph{n'est pas défini}) ou $\hat\beta\ge1$ (processus \emph{non stationnaire}). L'\textbf{EMV direct} maximise la vraisemblance \emph{sur le domaine admissible} $\Theta$ et reste défini et stationnaire par construction --- il \emph{exclut} ces cas pathologiques. On préfère donc partout l'écriture par la vraisemblance~; le MCO en est une variante rapide, valable \emph{à l'intérieur} de $\Theta$, et non un synonyme.
-\end{insightbox}
-
 \noindent L'estimation conjointe directe (toutes marges + chaîne + corrélations) est numériquement fragile (grande dimension, multimodalité). On adopte une stratégie \textbf{séquentielle} de type IFM (\emph{Inference Functions for Margins})~: consistante, modulaire, stable (Fig.~\ref{fig:cascade}).
 
 \begin{figure}[H]
@@ -689,9 +685,9 @@ equities & RSLN2 & \footnotesize Action\_EUR, Action\_Monde, Action\_emergent & 
 $\kappa_1$ (court) & \%/an & 53.98 & 78.01 & -30.8 & 37.18 & 61.75 & -39.8\\
 $\kappa_2$ (long) & \%/an & 30.11 & 26.18 & 15.0 & 19.03 & 11.89 & 60.0\\
 $\sigma_1$ (court) & \% & 0.90 & 1.57 & -42.7 & 0.95 & 1.54 & -38.4\\
-$\sigma_2$ (long) & \% & 0.44 & 1.06 & -58.5 & 0.74 & 1.09 & -31.8\\
-$\mu$ (moy.\ LT) & \% & 1.75 & 1.75 & 0.0 & 0.41 & 0.41 & -0.0\\
-$\rho_c$ (corr.\ int.) & -- & 0.796 & -- & -- & 0.541 & -- & --\\
+$\sigma_2$ (long) & \% & 0.44 & 1.06 & -58.8 & 0.74 & 1.09 & -31.8\\
+$\mu$ (moy.\ LT) & \% & 1.75 & 1.75 & 0.0 & 0.41 & 0.41 & 0.0\\
+$\rho_c$ (corr.\ int.) & -- & 0.806 & -- & -- & 0.541 & -- & --\\
 \addlinespace
 Demi-vie court & an & 1.28 & -- & -- & 1.86 & -- & --\\
 Demi-vie long & an & 2.30 & -- & -- & 3.64 & -- & --\\
