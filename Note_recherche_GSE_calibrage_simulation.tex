@@ -226,13 +226,13 @@ Une fois discrétisée, toute EDS du GSE devient une récurrence autorégressive
 \section{Notations}
 \label{sec:notations}
 % =====================================================================
-Nous fixons ici les notations employées dans toute la note. Le temps est discrétisé au pas mensuel $\Dt=1/12$, sur une fenêtre d'environ $n\approx240$ observations (vingt ans). Nous indexons les facteurs par $i$ et les régimes par $a,b\in\{1,\dots,K\}$. L'état global empile tous les facteurs en un vecteur $Y_t\in\R^{d}$ de dimension $d=\sum_i d_i$ (ici $d=12$), chaque facteur $i$ ayant un état $Y^{(i)}_t\in\R^{d_i}$ ($d_i=2$ pour le Vasicek bi-factoriel, $1$ sinon)~; les actions, qui portent le régime, sont au nombre de $D=3$.
+Le pas est mensuel, $\Dt=1/12$, sur $n\approx240$ observations. Les facteurs sont indexés par $i$ et les régimes par $a,b\in\{1,\dots,K\}$. L'état global $Y_t\in\R^{d}$ ($d=\sum_i d_i=12$) empile les états $Y^{(i)}_t\in\R^{d_i}$ ($d_i=2$ pour un Vasicek bi-factoriel, $1$ sinon)~; $D=3$ actifs portent le régime.
 
-L'\textbf{état économique} est résumé par une chaîne de Markov commune $\Ecal_t\in\{1,\dots,K\}$, de matrice de transition $P=(p_{ab})$ où $p_{ab}=\Prob(\Ecal_{t+\Dt}=b\mid\Ecal_t=a)$. Sa loi invariante $\pi$ vérifie $\pi\transp P=\pi\transp$ et donne les probabilités stationnaires des régimes. Lorsqu'on estime ce régime, $\xi_{t\mid t}(a)$ désigne la probabilité \emph{filtrée} d'être dans le régime $a$ (au vu du passé) et $\hat\xi_t(a)$ la probabilité \emph{lissée} (au vu de tout l'échantillon)~; $\hat\xi_t(a,b)$ est la probabilité lissée de transition (\S\ref{sec:calib}).
+Le régime $\Ecal_t\in\{1,\dots,K\}$ suit une chaîne de Markov de transition $p_{ab}=\Prob(\Ecal_{t+\Dt}=b\mid\Ecal_t=a)$, $P=(p_{ab})$, et de loi invariante $\pi$ solution de $\pi\transp P=\pi\transp$, $\sum_a\pi_a=1$.
 
-Les \textbf{innovations} $\eps_{t+\Dt}\in\R^d$ sont standardisées (chaque composante est marginalement $\Ncal(0,1)$) et corrélées selon une matrice $\Omega(\Ecal_t)$ propre au régime~; on les obtient par $\eps=L(\Ecal_t)z$, où $z\sim\Ncal(0,I_d)$ et $L(a)$ est le facteur de Cholesky de $\Omega(a)$. La récurrence de chaque facteur fait intervenir une matrice autorégressive $\Phi_i$, une constante $c_i$ et une échelle de bruit $D_i$. Pour le Vasicek bi-factoriel en particulier, $\Phi=e^{-A\Dt}$, $\phi_{12}$ mesure le couplage du court vers le long, $\Sigma_{\mathrm{cond}}=\bigl(\begin{smallmatrix}V_r&C_{mr}\\C_{mr}&V_m\end{smallmatrix}\bigr)$ est la covariance conditionnelle (de variances $V_r,V_m$ et de covariance $C_{mr}$), et $\rho_c=C_{mr}/\sqrt{V_rV_m}$ la corrélation conditionnelle.
+Les innovations $\eps_{t+\Dt}\in\R^d$ sont standardisées ($\Ncal(0,1)$ par composante) et corrélées par $\Omega(\Ecal_t)$~: $\eps_{t+\Dt}=L(\Ecal_t)z_{t+\Dt}$ avec $z_{t+\Dt}\sim\Ncal(0,I_d)$ et $L(a)L(a)\transp=\Omega(a)$. La récurrence du facteur $i$ s'écrit $Y^{(i)}_{t+\Dt}=\Phi_i\,Y^{(i)}_t+c_i+D_i\,\eps^{(i)}_{t+\Dt}$, de matrice autorégressive $\Phi_i$, constante $c_i$ et échelle $D_i$ (\S\ref{sec:ar}).
 
-Côté \textbf{paramètres de marge}, le Vasicek bi-factoriel est décrit par les vitesses de retour à la moyenne $\kappa_1,\kappa_2$ (court et long), les volatilités $\sigma_1,\sigma_2$, la corrélation $\rho$ de ses browniens et la cible long terme $\mu$~; le CIR par $(\kappa,\theta,\sigma)$ et les paramètres $c_\chi,\nu,\lambda$ de sa loi $\chi^2$ décentrée~; le Black--Karasinski par $(k,\theta,\sigma)$~; les facteurs Black--Scholes (et Hardy par régime) par un drift et une volatilité $(\mu_a,\sigma_a)$, dont on déduit les moments par pas $m_a=(\mu_a-\tfrac{\sigma_a^2}{2})\Dt$ et $v_a=\sigma_a^2\Dt$. Enfin, $f_i$ et $F_i$ désignent la densité et la fonction de répartition de transition exacte du facteur $i$, $\Phi$ et $\varphi$ celles de la loi $\Ncal(0,1)$, $\varphi_p(\cdot;m,V)$ la densité $\Ncal(m,V)$ et $F_{\chi'^2}(\cdot;\nu,\lambda)$ la f.d.r.\ du $\chi^2$ décentré~; on note $\hat\theta$ les paramètres estimés, $\ell$ la log-vraisemblance et $p_K$ le nombre de paramètres libres servant au critère d'information.
+On note $\Phi$ et $\varphi$ la f.d.r.\ et la densité de $\Ncal(0,1)$, $\varphi_p(\cdot;m,V)$ la densité $\Ncal(m,V)$ en dimension $p$, $F_{\chi'^2}(\cdot;\nu,\lambda)$ la f.d.r.\ du $\chi^2$ décentré, et $f_i$ (resp.\ $F_i$) la densité (resp.\ f.d.r.) de transition exacte du facteur $i$~; $\hat\theta$ désigne les paramètres estimés et $\ell$ la log-vraisemblance. Les paramètres et quantités propres à chaque facteur sont définis avec son modèle (\S\ref{sec:facteurs}) et sa procédure d'estimation (\S\ref{sec:calib}).
 
 % =====================================================================
 \section{Modèles de diffusion et discrétisation}
@@ -252,9 +252,9 @@ En posant $X_t=(q^s_t,q^l_t)\transp$, $A=\bigl(\begin{smallmatrix}\kappa_1&-\kap
 \[
 X_{t+\Dt}=\Phi X_t+(I-\Phi)\mu_\infty+\eta_{t+\Dt},\qquad \eta_{t+\Dt}\sim\Ncal(0,\Sigma_{\mathrm{cond}}),
 \]
-où $\Phi=e^{-A\Dt}=\bigl(\begin{smallmatrix}e^{-\kappa_1\Dt}&\phi_{12}\\0&e^{-\kappa_2\Dt}\end{smallmatrix}\bigr)$, $\phi_{12}=\tfrac{\kappa_1}{\kappa_1-\kappa_2}(e^{-\kappa_2\Dt}-e^{-\kappa_1\Dt})$, et $\Sigma_{\mathrm{cond}}=\Sigma_\infty-\Phi\Sigma_\infty\Phi\transp$ avec $\Sigma_\infty$ solution de l'équation de Lyapunov $A\Sigma_\infty+\Sigma_\infty A\transp=\Sigma_w$.
+où $\Phi=e^{-A\Dt}=\bigl(\begin{smallmatrix}e^{-\kappa_1\Dt}&\phi_{12}\\0&e^{-\kappa_2\Dt}\end{smallmatrix}\bigr)$, $\phi_{12}=\tfrac{\kappa_1}{\kappa_1-\kappa_2}(e^{-\kappa_2\Dt}-e^{-\kappa_1\Dt})$, et $\Sigma_{\mathrm{cond}}=\Sigma_\infty-\Phi\Sigma_\infty\Phi\transp=\bigl(\begin{smallmatrix}V_r&C_{mr}\\C_{mr}&V_m\end{smallmatrix}\bigr)$ avec $\Sigma_\infty$ solution de l'équation de Lyapunov $A\Sigma_\infty+\Sigma_\infty A\transp=\Sigma_w$.
 \end{definitionbox}
-\noindent La corrélation conditionnelle $\rho_c=(\Sigma_{\mathrm{cond}})_{12}/\sqrt{(\Sigma_{\mathrm{cond}})_{11}(\Sigma_{\mathrm{cond}})_{22}}$ demeure libre, car elle est portée par $\Omega$ et non fixée. Les taux réels suivent la même structure, en remplaçant $(q^s,q^l)$ par $(r,l)$.
+\noindent La corrélation conditionnelle $\rho_c=C_{mr}/\sqrt{V_r V_m}$ demeure libre, car elle est portée par $\Omega$ et non fixée. Les taux réels suivent la même structure, en remplaçant $(q^s,q^l)$ par $(r,l)$.
 
 \subsection{Crédit \emph{investment grade} : spread CIR}
 Le spread $s_t$ suit une diffusion à racine carrée, $\dd s_t=\kappa(\theta-s_t)\dd t+\sigma\sqrt{s_t}\,\dd W_t$, qui garantit la positivité. Sa loi de transition est exacte mais non gaussienne~: en posant $c_\chi=\tfrac{2\kappa}{\sigma^2(1-e^{-\kappa\Dt})}$, la variable $2c_\chi s_{t+\Dt}\mid s_t$ suit un $\chi^2$ décentré de paramètres $\nu=\tfrac{4\kappa\theta}{\sigma^2}$ et $\lambda=2c_\chi s_te^{-\kappa\Dt}$. Lorsqu'on préfère un schéma explicite et positif, on retient le schéma d'Alfonsi $E(0)$, valable sous $\sigma^2\le4\kappa\theta$~:
@@ -335,7 +335,7 @@ où $F_j$ est la fonction de répartition conditionnelle marginale de la composa
 \end{definitionbox}
 \noindent Pour une composante gaussienne (V2F, BK, BS, ou Hardy conditionnellement au régime), cette transformation se réduit à une division par l'écart-type conditionnel~; nous ne blanchissons pas le bloc, de sorte que les corrélations conditionnelles, dont $\rho_c$ du V2F, restent portées par $\Omega$. Pour le CIR, $F_j$ est la f.d.r.\ du $\chi^2$ décentré.
 
-La dépendance prend alors la forme d'une copule sur ces scores~: $\widehat\eps_{t+\Dt}\sim\Ncal(0,\Omega(\Ecal_t))$, où $\Omega$ est pleine, libre et propre au régime, et s'estime sur les résidus plutôt que sur les niveaux. Cette construction présente trois avantages~: elle traite les marges de manière uniforme, elle estime les corrélations sur un bruit blanc stationnaire, et elle assure la cohérence entre la loi estimée et la loi simulée. Nous contrôlons l'adéquation a posteriori (uniformité des PIT, normalité, queues)~; lorsque les queues l'exigent, une copule de Student, de matrice d'échelle $\Omega(\Ecal_t)$ et de marges restituées $\Ncal(0,1)$, est disponible en option.
+La dépendance prend alors la forme d'une copule sur ces scores~: $\widehat\eps_{t+\Dt}\sim\Ncal(0,\Omega(\Ecal_t))$, où $\Omega$ est pleine, libre et propre au régime, et s'estime sur les résidus plutôt que sur les niveaux. Nous contrôlons l'adéquation a posteriori (uniformité des PIT, normalité, queues)~; lorsque les queues l'exigent, une copule de Student, de matrice d'échelle $\Omega(\Ecal_t)$ et de marges restituées $\Ncal(0,1)$, est disponible en option.
 
 % =====================================================================
 \section{Modèle agrégé à régime commun (MS-VAR)}
@@ -348,7 +348,7 @@ Nous empilons enfin tous les facteurs en un unique modèle vectoriel à changeme
 \]
 où $\Phi(a)$, $c(a)$ et $D(a)$ sont bloc-diagonaux par facteur --- constants en $a$ pour le Groupe~A, fonction de $a$ pour le Groupe~B --- et $\Omega(a)$ est la corrélation pleine et propre au régime.
 \end{definitionbox}
-\noindent La dépendance repose ainsi sur deux véhicules, dont aucun n'est imposé. La chaîne $\Ecal_t$ capte le co-mouvement systémique, c'est-à-dire l'entrée conjointe en stress, tandis que la matrice $\Omega(\Ecal_t)$ capte la dépendance intra-régime, sans contrainte ni a priori. Le rattachement d'un facteur au Groupe~B relève d'un choix de configuration.
+\noindent La dépendance repose ainsi sur deux mécanismes non imposés~: la chaîne $\Ecal_t$ porte le co-mouvement systémique (entrée conjointe en stress) et la matrice $\Omega(\Ecal_t)$ la dépendance intra-régime. Le rattachement d'un facteur au Groupe~B relève d'un choix de configuration.
 
 % =====================================================================
 \section{Méthodologie de calibrage}
@@ -518,9 +518,6 @@ La simulation déroule directement la représentation agrégée, de sorte qu'une
 \item \textbf{Reconstruction.} On cumule les log-rendements ($S_{t+\Dt}=S_te^{x_{t+\Dt}}$) et l'on exponentie les log-spreads ($s=e^{y}$ ou $e^{y/100}$ selon l'échelle déclarée).
 \end{enumerate}
 \end{algobox}
-\begin{mabox}[Propriétés du dispositif]
-L'estimation et la simulation partagent une même copule par régime, ce qui en assure la cohérence. Aucune corrélation n'est imposée. La chaîne commune reproduit l'entrée conjointe en stress, donc la dépendance de queue, tandis que le choix de $K^\star$ assure la parcimonie. Enfin, les estimateurs restent sur le domaine admissible et les corrélations sont rétrécies sur des résidus stationnaires, ce qui confère robustesse au dispositif.
-\end{mabox}
 
 % =====================================================================
 \section{Application à l'ensemble des facteurs}
