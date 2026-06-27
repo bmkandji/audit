@@ -130,7 +130,7 @@ def build_section(cal, ref, cfg, sim):
     a(f"Demi-vie court & an & {_f(hl(inf['kappa_short']),2)} & -- & -- & {_f(hl(rea['kappa_short']),2)} & -- & --\\\\")
     a(f"Demi-vie long & an & {_f(hl(inf['kappa_long']),2)} & -- & -- & {_f(hl(rea['kappa_long']),2)} & -- & --\\\\")
     a(r"\bottomrule\end{tabularx}")
-    a(r"\caption{V2F sous la méthode configurée (EMV pur par défaut~; $\mu$ "
+    a(r"\caption{V2F sous la méthode configurée (EMV séquentiel par défaut~; $\mu$ "
       r"inflation fixé à la cible COR). Demi-vie $=\ln 2/\kappa$. Comparaison des "
       r"méthodologies au tableau~\ref{tab:res-v2f-meth}.}\label{tab:res-v2f}")
     a(r"\end{table}")
@@ -140,7 +140,7 @@ def build_section(cal, ref, cfg, sim):
     a(r"\begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{6pt}")
     a(r"\begin{tabularx}{\textwidth}{@{}l X r r r r@{}}")
     a(r"\toprule")
-    a(r"\textbf{Facteur} & \textbf{Paramètre} & \textbf{MLE pur} & \textbf{MCO} & \textbf{Distrib.} & \textbf{Réf.}\\")
+    a(r"\textbf{Facteur} & \textbf{Paramètre} & \textbf{MLE séq.} & \textbf{MCO} & \textbf{Distrib.} & \textbf{Réf.}\\")
     a(r"\midrule")
     vc = v2f_method_comparison(cfg, cfg.get("reference", {}).get("path", "Parametres_models.xlsx"))
     disp = [("kappa_short", r"$\kappa_1$ (court, \%/an)", 100, 2),
@@ -161,11 +161,11 @@ def build_section(cal, ref, cfg, sim):
         a(r"\addlinespace")
     a(r"\bottomrule\end{tabularx}")
     a(r"\caption{Paramètres V2F sous les trois méthodologies, en regard de la "
-      r"référence. \textbf{MLE pur}~: vraisemblance gaussienne jointe (court \& "
-      r"long ensemble). \textbf{MCO}~: cascade en forme réduite. \textbf{Distrib.}~: "
-      r"cibles distributionnelles (Phase 1), ridge faible levant la crête "
-      r"$\sigma^2/\kappa$. L'EMV restitue des $\sigma$ plus faibles~; la méthode "
-      r"distributionnelle, plus proche de la référence.}\label{tab:res-v2f-meth}")
+      r"référence. \textbf{MLE séq.}~: EMV séquentiel (long seul, puis court \& "
+      r"corrélation à long fixé). \textbf{MCO}~: cascade en forme réduite. "
+      r"\textbf{Distrib.}~: cibles distributionnelles (Phase 1), ridge faible "
+      r"levant la crête $\sigma^2/\kappa$. L'EMV restitue des $\sigma$ plus faibles~; "
+      r"la méthode distributionnelle, plus proche de la référence.}\label{tab:res-v2f-meth}")
     a(r"\end{table}")
 
     # ---------- R.3 CIR / BK / BS ----------

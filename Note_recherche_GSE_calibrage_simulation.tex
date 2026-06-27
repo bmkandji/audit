@@ -473,11 +473,15 @@ Si $\hat\beta\notin(0,1)$ (série peu/non persistante), la forme fermée \emph{s
 \paragraph{(B) V2F --- trois méthodes sélectionnables.}
 La discrétisation est un VAR(1) gaussien $Y_{t+\Dt}=c(\theta)+\Phi(\theta)Y_t+\eta$, $\eta\sim\Ncal(0,\Sigma_{\mathrm{cond}}(\theta))$, $c(\theta)=(I-\Phi)(\mu,\mu)\transp$, $\Phi(\theta)=e^{-A\Dt}$, et $\Sigma_{\mathrm{cond}}(\theta)=\Sigma_\infty-\Phi\Sigma_\infty\Phi\transp$ où $\vecop(\Sigma_\infty)=(I\otimes A+A\otimes I)^{-1}\vecop(\Sigma_w)$ (solution explicite de $A\Sigma_\infty+\Sigma_\infty A\transp=\Sigma_w$). Toutes ces quantités sont fonctions \emph{exactes} de $\theta=(\kappa_1,\kappa_2,\sigma_1,\sigma_2,\rho,\mu)$.
 \begin{itemize}[nosep]
-\item \texttt{mle} \emph{(défaut)} --- \textbf{EMV joint pur}, court \& long \emph{ensemble}, sur le domaine admissible ($\kappa_1>\kappa_2>0$, $\sigma_i>0$)~:
+\item \texttt{mle} \emph{(défaut)} --- \textbf{EMV séquentiel en deux temps} (le facteur long est \emph{autonome}, ce qui justifie la séquence)~:
+\begin{enumerate}[nosep,leftmargin=1.6em,label=(\arabic*)]
+\item \emph{Facteur long seul} --- EMV de l'OU scalaire (brique (A)) $\Rightarrow(\hat\kappa_2,\hat\sigma_2,\hat\mu)$, que l'on \textbf{fixe}.
+\item \emph{Facteur court} --- EMV du vecteur $(q^s,q^l)$, paramètres du long \emph{figés}, sur $(\kappa_1,\sigma_1,\rho)$ (vitesse, vol du court, corrélation court--long)~:
 \[
-\hat\theta=\argmax_\theta\sum_t\log\varphi_2\big(Y_{t+\Dt};c(\theta)+\Phi(\theta)Y_t,\Sigma_{\mathrm{cond}}(\theta)\big).
+(\hat\kappa_1,\hat\sigma_1,\hat\rho)=\argmax_{\kappa_1,\sigma_1,\rho}\ \sum_t\log\varphi_2\big(Y_{t+\Dt};c(\theta)+\Phi(\theta)Y_t,\Sigma_{\mathrm{cond}}(\theta)\big),\quad (\kappa_2,\sigma_2,\mu)\text{ figés}.
 \]
-Aucun passage par une régression ni back-out implicite~; $\mu$ fixé (cible) ou estimé.
+\end{enumerate}
+Tout sur le domaine admissible ($\kappa_i>0,\sigma_i>0,|\rho|<1$). $\rho$ est ainsi estimée explicitement~; aucun passage par une régression ni back-out implicite. La séquence rend $\kappa_2$ robuste (EMV de l'OU scalaire), évitant la dégénérescence d'un EMV pleinement joint.
 \item \texttt{ols} --- \textbf{MCO en cascade} (forme réduite)~: long OU autonome, puis $q^s$ régressé sur $(1,q^s_t,q^l_t)$~; $\hat\kappa_i=-\Dt^{-1}\ln\widehat\Phi_{ii}$, $\hat\rho_c$ lu sur $\widehat\Sigma_{\mathrm{cond}}$~; $\sigma$ structurels par inversion OU par facteur (approchée). Rapide, mais peut sortir du domaine (cf.\ ci-dessus).
 \item \texttt{distributional} --- \textbf{cibles distributionnelles} (\S(B~bis)).
 \end{itemize}
@@ -523,7 +527,7 @@ puis maximisation de $\sum_t\log f_{\mathrm{CIR}}(s_{t+\Dt}\mid s_t)$, densité 
 \toprule
 \textbf{Facteur} & \textbf{Méthodes} & \textbf{Estimateur(s)}\\
 \midrule
-V2F (taux) & \texttt{mle}/\texttt{ols}/\texttt{distrib.} & EMV joint~; MCO cascade~; cibles distributionnelles\\
+V2F (taux) & \texttt{mle}/\texttt{ols}/\texttt{distrib.} & EMV séquentiel (long puis court)~; MCO cascade~; cibles distributionnelles\\
 Black--Karasinski & \texttt{mle}$=$\texttt{ols} & OU exact (forme fermée sur le domaine admissible)\\
 BS (PE/immo/infra) & \texttt{moments} & moyenne/variance des log-rendements\\
 Hardy RSLN & \texttt{em} & EM (Hamilton$+$Kim), étape M pondérée fermée\\
@@ -595,7 +599,7 @@ Chaque composante est marginalement $\Ncal(0,1)$~; toute corrélation (y compris
 \toprule
 \textbf{Facteur} & \textbf{$d_i$} & \textbf{Gr.} & \textbf{Estimation (défaut) / simulation}\\
 \midrule
-\rowcolor{nxlightblue} Inflation, taux réels & 2 & A & EMV joint (mle~; ols/distrib.\ en option) / récurrence gaussienne exacte\\
+\rowcolor{nxlightblue} Inflation, taux réels & 2 & A & EMV séquentiel (mle~; ols/distrib.\ en option) / récurrence gaussienne exacte\\
 Crédit CIR & 1 & A & Euler $+$ EMV $\chi^2$ décentré / inverse-PIT ou Alfonsi\\
 \rowcolor{nxlightblue} Dette privée BK & 1 & A & OU exact / récurrence log-OU exacte\\
 PE / Immo / Infra & 3 & A & Moyenne/variance / log-rendement BS\\
@@ -678,38 +682,38 @@ equities & RSLN2 & \footnotesize Action\_EUR, Action\_Monde, Action\_emergent & 
 \cmidrule(lr){3-5}\cmidrule(lr){6-8}
 \textbf{Paramètre} & \textbf{Unité} & \textbf{Calib.} & \textbf{Réf.} & \textbf{Éc.} & \textbf{Calib.} & \textbf{Réf.} & \textbf{Éc.}\\
 \midrule
-$\kappa_1$ (court) & \%/an & 52.57 & 78.01 & -32.6 & 36.97 & 61.75 & -40.1\\
-$\kappa_2$ (long) & \%/an & 2.00 & 26.18 & -92.4 & 17.41 & 11.89 & 46.4\\
+$\kappa_1$ (court) & \%/an & 53.98 & 78.01 & -30.8 & 37.18 & 61.75 & -39.8\\
+$\kappa_2$ (long) & \%/an & 30.11 & 26.18 & 15.0 & 19.03 & 11.89 & 60.0\\
 $\sigma_1$ (court) & \% & 0.90 & 1.57 & -42.7 & 0.95 & 1.54 & -38.4\\
 $\sigma_2$ (long) & \% & 0.44 & 1.06 & -58.8 & 0.74 & 1.09 & -31.8\\
 $\mu$ (moy.\ LT) & \% & 1.75 & 1.75 & 0.0 & 0.41 & 0.41 & 0.0\\
 $\rho_c$ (corr.\ int.) & -- & 0.806 & -- & -- & 0.541 & -- & --\\
 \addlinespace
-Demi-vie court & an & 1.32 & -- & -- & 1.87 & -- & --\\
-Demi-vie long & an & 34.66 & -- & -- & 3.98 & -- & --\\
+Demi-vie court & an & 1.28 & -- & -- & 1.86 & -- & --\\
+Demi-vie long & an & 2.30 & -- & -- & 3.64 & -- & --\\
 \bottomrule\end{tabularx}
-\caption{V2F sous la méthode configurée (EMV pur par défaut~; $\mu$ inflation fixé à la cible COR). Demi-vie $=\ln 2/\kappa$. Comparaison des méthodologies au tableau~\ref{tab:res-v2f-meth}.}\label{tab:res-v2f}
+\caption{V2F sous la méthode configurée (EMV séquentiel par défaut~; $\mu$ inflation fixé à la cible COR). Demi-vie $=\ln 2/\kappa$. Comparaison des méthodologies au tableau~\ref{tab:res-v2f-meth}.}\label{tab:res-v2f}
 \end{table}
 \subsection{V2F : comparaison des trois méthodologies de calibrage}
 \begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{6pt}
 \begin{tabularx}{\textwidth}{@{}l X r r r r@{}}
 \toprule
-\textbf{Facteur} & \textbf{Paramètre} & \textbf{MLE pur} & \textbf{MCO} & \textbf{Distrib.} & \textbf{Réf.}\\
+\textbf{Facteur} & \textbf{Paramètre} & \textbf{MLE séq.} & \textbf{MCO} & \textbf{Distrib.} & \textbf{Réf.}\\
 \midrule
-Inflation & $\kappa_1$ (court, \%/an) & 52.57 & 46.52 & 49.69 & 78.01\\
- & $\kappa_2$ (long, \%/an) & 2.00 & 30.11 & 21.75 & 26.18\\
+Inflation & $\kappa_1$ (court, \%/an) & 53.98 & 46.52 & 49.69 & 78.01\\
+ & $\kappa_2$ (long, \%/an) & 30.11 & 30.11 & 21.75 & 26.18\\
  & $\sigma_1$ (court, \%) & 0.898 & 0.893 & 1.204 & 1.567\\
- & $\sigma_2$ (long, \%) & 0.437 & 0.439 & 0.788 & 1.059\\
+ & $\sigma_2$ (long, \%) & 0.439 & 0.439 & 0.788 & 1.059\\
  & $\mu$ (moy.\ LT, \%) & 1.750 & 1.750 & 1.750 & 1.750\\
 \addlinespace
-Taux réels & $\kappa_1$ (court, \%/an) & 36.97 & 62.75 & 56.53 & 61.75\\
- & $\kappa_2$ (long, \%/an) & 17.41 & 19.03 & 11.33 & 11.89\\
+Taux réels & $\kappa_1$ (court, \%/an) & 37.18 & 62.75 & 56.53 & 61.75\\
+ & $\kappa_2$ (long, \%/an) & 19.03 & 19.03 & 11.33 & 11.89\\
  & $\sigma_1$ (court, \%) & 0.952 & 0.964 & 1.420 & 1.545\\
  & $\sigma_2$ (long, \%) & 0.740 & 0.740 & 1.130 & 1.086\\
  & $\mu$ (moy.\ LT, \%) & 0.410 & 0.410 & 0.410 & 0.410\\
 \addlinespace
 \bottomrule\end{tabularx}
-\caption{Paramètres V2F sous les trois méthodologies, en regard de la référence. \textbf{MLE pur}~: vraisemblance gaussienne jointe (court \& long ensemble). \textbf{MCO}~: cascade en forme réduite. \textbf{Distrib.}~: cibles distributionnelles (Phase 1), ridge faible levant la crête $\sigma^2/\kappa$. L'EMV restitue des $\sigma$ plus faibles~; la méthode distributionnelle, plus proche de la référence.}\label{tab:res-v2f-meth}
+\caption{Paramètres V2F sous les trois méthodologies, en regard de la référence. \textbf{MLE séq.}~: EMV séquentiel (long seul, puis court \& corrélation à long fixé). \textbf{MCO}~: cascade en forme réduite. \textbf{Distrib.}~: cibles distributionnelles (Phase 1), ridge faible levant la crête $\sigma^2/\kappa$. L'EMV restitue des $\sigma$ plus faibles~; la méthode distributionnelle, plus proche de la référence.}\label{tab:res-v2f-meth}
 \end{table}
 \subsection{Crédit, dette privée et actifs réels}
 \begin{table}[H]\centering\small\renewcommand{\arraystretch}{1.2}\setlength{\tabcolsep}{5pt}
@@ -807,18 +811,18 @@ Monde & Calib.\ (commun) & -8.97 & 19.54 & 17.35 & 9.18\\
 \toprule
  & Inf.C & Inf.L & TxR.C & TxR.L & Créd & DetP & PE & Immo & Infra & Act.EU & Act.Mo & Act.EM\\
 \midrule
-Inf.C & \textbf{1} & 0.81 & -0.74 & -0.22 & -0.27 & -0.29 & 0.29 & 0.08 & 0.27 & 0.43 & 0.40 & 0.43\\
-Inf.L & 0.81 & \textbf{1} & -0.55 & -0.25 & -0.28 & -0.30 & 0.29 & 0.05 & 0.24 & 0.41 & 0.37 & 0.39\\
-TxR.C & -0.74 & -0.55 & \textbf{1} & 0.54 & 0.10 & 0.11 & -0.24 & -0.09 & -0.30 & -0.29 & -0.35 & -0.28\\
-TxR.L & -0.22 & -0.25 & 0.54 & \textbf{1} & 0.12 & 0.09 & -0.31 & -0.15 & -0.38 & -0.34 & -0.41 & -0.23\\
-Créd & -0.27 & -0.28 & 0.10 & 0.12 & \textbf{1} & 0.89 & -0.65 & -0.17 & -0.49 & -0.77 & -0.62 & -0.77\\
-DetP & -0.29 & -0.30 & 0.11 & 0.09 & 0.89 & \textbf{1} & -0.66 & -0.16 & -0.52 & -0.78 & -0.66 & -0.70\\
-PE & 0.29 & 0.29 & -0.24 & -0.31 & -0.65 & -0.66 & \textbf{1} & 0.18 & 0.73 & 0.88 & 0.88 & 0.70\\
-Immo & 0.08 & 0.05 & -0.09 & -0.15 & -0.17 & -0.16 & 0.18 & \textbf{1} & 0.11 & 0.25 & 0.18 & 0.33\\
+Inf.C & \textbf{1} & 0.80 & -0.74 & -0.22 & -0.27 & -0.29 & 0.29 & 0.08 & 0.27 & 0.43 & 0.40 & 0.43\\
+Inf.L & 0.80 & \textbf{1} & -0.54 & -0.24 & -0.27 & -0.29 & 0.28 & 0.04 & 0.24 & 0.41 & 0.36 & 0.38\\
+TxR.C & -0.74 & -0.54 & \textbf{1} & 0.54 & 0.10 & 0.11 & -0.24 & -0.09 & -0.30 & -0.29 & -0.35 & -0.28\\
+TxR.L & -0.22 & -0.24 & 0.54 & \textbf{1} & 0.12 & 0.09 & -0.31 & -0.15 & -0.38 & -0.34 & -0.41 & -0.23\\
+Créd & -0.27 & -0.27 & 0.10 & 0.12 & \textbf{1} & 0.89 & -0.65 & -0.17 & -0.49 & -0.77 & -0.62 & -0.77\\
+DetP & -0.29 & -0.29 & 0.11 & 0.09 & 0.89 & \textbf{1} & -0.66 & -0.16 & -0.52 & -0.78 & -0.66 & -0.70\\
+PE & 0.29 & 0.28 & -0.24 & -0.31 & -0.65 & -0.66 & \textbf{1} & 0.18 & 0.73 & 0.88 & 0.88 & 0.70\\
+Immo & 0.08 & 0.04 & -0.09 & -0.15 & -0.17 & -0.16 & 0.18 & \textbf{1} & 0.11 & 0.25 & 0.18 & 0.33\\
 Infra & 0.27 & 0.24 & -0.30 & -0.38 & -0.49 & -0.52 & 0.73 & 0.11 & \textbf{1} & 0.77 & 0.82 & 0.52\\
 Act.EU & 0.03 & 0.15 & -0.03 & -0.11 & -0.56 & -0.61 & 0.68 & -0.00 & 0.52 & \textbf{1} & 0.88 & 0.74\\
-Act.Mo & 0.02 & 0.08 & -0.12 & -0.20 & -0.25 & -0.29 & 0.71 & 0.03 & 0.57 & 0.59 & \textbf{1} & 0.57\\
-Act.EM & -0.05 & 0.03 & 0.06 & 0.03 & -0.53 & -0.52 & 0.37 & 0.04 & 0.19 & 0.52 & 0.24 & \textbf{1}\\
+Act.Mo & 0.02 & 0.07 & -0.12 & -0.19 & -0.25 & -0.29 & 0.71 & 0.03 & 0.57 & 0.59 & \textbf{1} & 0.57\\
+Act.EM & -0.05 & 0.03 & 0.06 & 0.04 & -0.53 & -0.52 & 0.37 & 0.04 & 0.19 & 0.52 & 0.24 & \textbf{1}\\
 \bottomrule\end{tabular}}
 \caption{Corrélations des résidus standardisés (masque \texttt{groupB}). \emph{Triangle sup.} = régime de stress~; \emph{triangle inf.} = régime normal. Hors actions, communes aux régimes~; SDP (Higham). (Étiquettes~: Inf=inflation, TxR=taux réel, Créd=crédit, DetP=dette privée, Act.=actions.)}\label{tab:res-corr}
 \end{table}
@@ -828,19 +832,19 @@ Act.EM & -0.05 & 0.03 & 0.06 & 0.03 & -0.53 & -0.52 & 0.37 & 0.04 & 0.19 & 0.52 
 \toprule
 \textbf{Sortie} & \textbf{Mesure} & \textbf{Val.} & \textbf{} & \textbf{E[terminal]}\\
 \midrule
-inflation.short & vol(diff)/an & 0.890 & E[terminal] & 1.8318\\
-inflation.long & vol(diff)/an & 0.436 & E[terminal] & 1.8336\\
-real\_rate.short & vol(diff)/an & 0.950 & E[terminal] & 0.4237\\
-real\_rate.long & vol(diff)/an & 0.737 & E[terminal] & 0.4276\\
-credit & log-vol\%/an & 48.040 & E[terminal] & 1.4133\\
-dette\_privee.y & vol(diff)/an & 40.851 & E[terminal] & -316.3549\\
+inflation.short & vol(diff)/an & 0.892 & E[terminal] & 1.7611\\
+inflation.long & vol(diff)/an & 0.436 & E[terminal] & 1.7594\\
+real\_rate.short & vol(diff)/an & 0.950 & E[terminal] & 0.4189\\
+real\_rate.long & vol(diff)/an & 0.737 & E[terminal] & 0.4248\\
+credit & log-vol\%/an & 48.040 & E[terminal] & 1.4134\\
+dette\_privee.y & vol(diff)/an & 40.851 & E[terminal] & -316.3470\\
 dette\_privee.spread & log-vol\%/an & 40.850 & E[terminal] & 0.0465\\
-pe & log-vol\%/an & 29.630 & E[terminal] & 32.7820\\
-immobilier & log-vol\%/an & 3.850 & E[terminal] & 0.9251\\
-infra & log-vol\%/an & 13.370 & E[terminal] & 9.3329\\
-Action\_EUR & log-vol\%/an & 14.320 & E[terminal] & 8.6348\\
-Action\_Monde & log-vol\%/an & 13.580 & E[terminal] & 21.5479\\
-Action\_emergent & log-vol\%/an & 20.620 & E[terminal] & 5.5355\\
+pe & log-vol\%/an & 29.630 & E[terminal] & 32.7670\\
+immobilier & log-vol\%/an & 3.850 & E[terminal] & 0.9250\\
+infra & log-vol\%/an & 13.370 & E[terminal] & 9.3336\\
+Action\_EUR & log-vol\%/an & 14.320 & E[terminal] & 8.6336\\
+Action\_Monde & log-vol\%/an & 13.580 & E[terminal] & 21.5480\\
+Action\_emergent & log-vol\%/an & 20.620 & E[terminal] & 5.5340\\
 \bottomrule\end{tabular}
 \caption{Contrôle sur 5000 trajectoires $\times$ 360 pas (30~ans). Occupation simulée du régime de stress~: 29.1\,\% (cf.\ $\pi_1$). Les volatilités simulées reproduisent les paramètres calibrés.}\label{tab:res-sim}
 \end{table}
@@ -854,7 +858,7 @@ Action\_emergent & log-vol\%/an & 20.620 & E[terminal] & 5.5355\\
 % =====================================================================
 \section{Conclusion}
 % =====================================================================
-Cette note construit, pour le GSE du régime, un cadre unifié d'\emph{estimation} et de \emph{simulation}~: chaque facteur, ramené à sa discrétisation, s'écrit comme une récurrence autorégressive dont les coefficients peuvent dépendre d'un \emph{régime latent commun}~; l'ensemble s'agrège en un \emph{unique} MS-VAR calibré par \emph{maximum de vraisemblance jointe} en trois étapes (marges en formes fermées, régime commun par EM, \emph{matrice de dépendance pleine par régime} sur résidus standardisés), et se simule directement à partir de cette représentation. Le cadre est \emph{général}~: aucune corrélation n'est fixée --- ni à zéro, ni à dire d'expert, ni indépendante du régime --- y compris la corrélation interne des facteurs vectoriels~; toute la dépendance est estimée. Cinq des six familles d'estimateurs admettent une forme fermée (exacte ou par itération EM)~; la dépendance, portée par une copule gaussienne par régime cohérente avec la simulation et par une chaîne d'état unique de cardinalité $K^\star$ parcimonieuse, est estimée sur un bruit blanc stationnaire. Le chapitre d'application en donne toutes les expressions littérales, directement implémentables. Tout calibrage embarque une erreur d'estimation~; le choix final des méthodes et paramètres relève de l'IRCANTEC.
+Cette note construit, pour le GSE du régime, un cadre unifié d'\emph{estimation} et de \emph{simulation}~: chaque facteur, ramené à sa discrétisation, s'écrit comme une récurrence autorégressive dont les coefficients peuvent dépendre d'un \emph{régime latent commun}~; l'ensemble s'agrège en un \emph{unique} MS-VAR calibré par \emph{maximum de vraisemblance} selon une procédure \emph{séquentielle} (IFM) en trois étapes (marges --- V2F par EMV séquentiel long puis court ---, régime commun par EM, \emph{matrice de dépendance pleine par régime} sur résidus standardisés), et se simule directement à partir de cette représentation. Le cadre est \emph{général}~: aucune corrélation n'est fixée --- ni à zéro, ni à dire d'expert, ni indépendante du régime --- y compris la corrélation interne des facteurs vectoriels~; toute la dépendance est estimée. Cinq des six familles d'estimateurs admettent une forme fermée (exacte ou par itération EM)~; la dépendance, portée par une copule gaussienne par régime cohérente avec la simulation et par une chaîne d'état unique de cardinalité $K^\star$ parcimonieuse, est estimée sur un bruit blanc stationnaire. Le chapitre d'application en donne toutes les expressions littérales, directement implémentables. Tout calibrage embarque une erreur d'estimation~; le choix final des méthodes et paramètres relève de l'IRCANTEC.
 
 % --------- RÉFÉRENCES -------------------------------------------------
 \newpage

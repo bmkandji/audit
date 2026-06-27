@@ -164,22 +164,28 @@ def _fit_v2f_ols(pre: Preprocessed, spec: dict, dt: float) -> FitResult:
 
 
 def _fit_v2f_mle(pre: Preprocessed, spec: dict, dt: float) -> FitResult:
-    """EMV joint PUR : maximise la log-vraisemblance gaussienne EXACTE sur les
-    paramètres structurels (court & long ENSEMBLE), Phi(theta), Sigma_cond(theta)
-    exacts à chaque évaluation — sans passage par MCO. Optimisation BORNÉE
-    (L-BFGS-B) avec kappa_1>kappa_2 et multi-démarrage (robustesse). mu est fixé
-    (cible) ou estimé par régression (location bien identifiée)."""
+    """EMV SÉQUENTIEL en deux temps (le facteur long est autonome) :
+      (1) facteur LONG seul -> EMV de l'OU scalaire => (kappa_2, sigma_2, mu),
+          que l'on FIXE ;
+      (2) facteur COURT -> EMV du vecteur (court, long), paramètres du long
+          fixés, sur (kappa_1, sigma_1, rho) [vitesse, vol court, corrélation
+          court-long]. Optimisation bornée (L-BFGS-B) + multi-démarrage.
+    Tout est mené sur le domaine admissible (kappa>0, sigma>0, |rho|<1)."""
     qs = pre.data["short"].values
     ql = pre.data["long"].values
     X0 = np.column_stack([qs[:-1], ql[:-1]])
     X1 = np.column_stack([qs[1:], ql[1:]])
     fix_mu = (spec.get("fix", {}) or {}).get("mu", None)
-    mu = float(fix_mu) if fix_mu is not None else float(fit_ou_scalar(ql, dt)["mean"])
 
-    # paramètres : (k2, dk=k1-k2>0, s1, s2, rho), k1=k2+dk (impose k1>k2)
+    # --- Étape 1 : facteur long autonome (OU scalaire = EMV conditionnel) ---
+    lon = fit_ou_scalar(ql, dt, fix_mean=fix_mu)
+    k2, mu, s2 = lon["kappa"], lon["mean"], lon["sigma"]
+
+    # --- Étape 2 : court + corrélation, (k2, s2, mu) FIXÉS, EMV profilé ---
     def negll(p):
-        k2, dk, s1, s2, rho = p
-        k1 = k2 + dk
+        k1, s1, rho = p
+        if abs(k1 - k2) < 1e-6:
+            return 1e12
         try:
             Phi, Sc, _ = _v2f_matrices(k1, k2, s1, s2, rho, dt)
         except Exception:
@@ -194,13 +200,12 @@ def _fit_v2f_mle(pre: Preprocessed, spec: dict, dt: float) -> FitResult:
         return 0.5 * (len(r) * np.log((2 * np.pi) ** 2 * det) + quad.sum())
 
     o = _fit_v2f_ols(pre, spec, dt).params
-    bounds = [(0.02, 10.0), (1e-2, 10.0), (1e-3, 50.0), (1e-3, 50.0), (-0.98, 0.98)]
-    k2_0 = float(np.clip(o["kappa_long"], 0.05, 8))
-    dk_0 = float(np.clip(o["kappa_short"] - o["kappa_long"], 0.05, 8))
-    s1_0, s2_0 = float(np.clip(o["sigma_short"], 1e-2, 40)), float(np.clip(o["sigma_long"], 1e-2, 40))
-    starts = [[k2_0, dk_0, s1_0, s2_0, np.clip(o["rho_c"], -0.9, 0.9)],
-              [0.2, 0.5, s1_0, s2_0, 0.0],
-              [0.1, 1.0, s1_0, s2_0, 0.5]]
+    bounds = [(0.02, 10.0), (1e-3, 50.0), (-0.98, 0.98)]
+    k1_0 = float(np.clip(o["kappa_short"], 0.05, 8))
+    s1_0 = float(np.clip(o["sigma_short"], 1e-2, 40))
+    starts = [[k1_0, s1_0, float(np.clip(o["rho_c"], -0.9, 0.9))],
+              [max(2 * k2, 0.1), s1_0, 0.0],
+              [0.5, s1_0, 0.5]]
     best = None
     for x0 in starts:
         try:
@@ -209,8 +214,8 @@ def _fit_v2f_mle(pre: Preprocessed, spec: dict, dt: float) -> FitResult:
             continue
         if best is None or r.fun < best.fun:
             best = r
-    k2, dk, s1, s2, rho = best.x
-    return _v2f_result(pre, k2 + dk, k2, s1, s2, float(rho), mu, dt, "mle")
+    k1, s1, rho = best.x
+    return _v2f_result(pre, float(k1), k2, float(s1), s2, float(rho), mu, dt, "mle")
 
 
 def _fit_v2f_distributional(pre: Preprocessed, spec: dict, dt: float) -> FitResult:
